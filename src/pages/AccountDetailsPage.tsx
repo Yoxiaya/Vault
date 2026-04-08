@@ -24,11 +24,6 @@ export default function AccountDetailsPage() {
 
 	return (
 		<ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-			{/* Header */}
-			<TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-				<Ionicons name="arrow-back" size={24} color="#6b7280" />
-			</TouchableOpacity>
-
 			{/* Hero Section */}
 			<View style={styles.heroSection}>
 				<View style={styles.logoContainer}>

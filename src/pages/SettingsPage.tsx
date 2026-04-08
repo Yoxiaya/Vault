@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Image, ScrollView, StyleSheet, Switch } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../App';
 
+type VaultPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Main'>;
 export default function SettingsPage() {
+	const navigation = useNavigation<VaultPageNavigationProp>();
 	const [biometricEnabled, setBiometricEnabled] = useState(true);
 	const [darkModeEnabled, setDarkModeEnabled] = useState(false);
 
@@ -11,7 +16,12 @@ export default function SettingsPage() {
 			title: '账户设置',
 			items: [
 				{ label: '修改主密码', icon: 'lock-closed-outline', type: 'link' },
-				{ label: '自动填充设置', icon: 'document-text-outline', type: 'link' },
+				{
+					label: '自动填充设置',
+					icon: 'document-text-outline',
+					type: 'link',
+					to: 'TestPage',
+				},
 				{
 					label: '生物识别登录',
 					icon: 'finger-print',
@@ -69,7 +79,6 @@ export default function SettingsPage() {
 				</View>
 			</View>
 
-			{/* Settings Groups */}
 			<View style={styles.settingsSections}>
 				{sections.map((section) => (
 					<View key={section.title} style={styles.section}>
@@ -82,6 +91,12 @@ export default function SettingsPage() {
 										styles.settingItem,
 										idx !== section.items.length - 1 && styles.settingItemBorder,
 									]}
+									onPress={() => {
+										if (item.type === 'link' && item.to) {
+											navigation.navigate(item.to);
+										} else {
+										}
+									}}
 								>
 									<View style={styles.settingItemLeft}>
 										<View style={styles.settingIcon}>
