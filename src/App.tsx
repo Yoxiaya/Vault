@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -34,13 +35,13 @@ function MainTabs() {
 					let iconName: keyof typeof Ionicons.glyphMap = 'lock-closed';
 
 					if (route.name === 'Vault') {
-						iconName = focused ? 'lock-closed' : 'lock-closed-outline';
+						iconName = !!focused ? 'lock-closed' : 'lock-closed-outline';
 					} else if (route.name === 'Generator') {
-						iconName = focused ? 'key' : 'key-outline';
+						iconName = !!focused ? 'key' : 'key-outline';
 					} else if (route.name === 'Health') {
-						iconName = focused ? 'pulse' : 'pulse-outline';
+						iconName = !!focused ? 'pulse' : 'pulse-outline';
 					} else if (route.name === 'Settings') {
-						iconName = focused ? 'settings' : 'settings-outline';
+						iconName = !!focused ? 'settings' : 'settings-outline';
 					}
 
 					return <Ionicons name={iconName} size={size} color={color} />;
