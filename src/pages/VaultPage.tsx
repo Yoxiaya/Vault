@@ -27,7 +27,7 @@ export default function VaultPage() {
 		return matchesSearch && matchesCategory;
 	});
 	const onAddAccountPress = () => {
-		navigation.navigate('EditAccount', { id: '' });
+		navigation.navigate('EditAccount', { id: '', mode: 'add' });
 	};
 
 	return (
@@ -84,7 +84,7 @@ export default function VaultPage() {
 							<TouchableOpacity
 								key={account.id}
 								style={styles.accountItem}
-								onPress={() => navigation.navigate('AccountDetails', { id: account.id })}
+								onPress={() => navigation.navigate('AccountDetails', { id: account.id, mode: 'edit' })}
 							>
 								<View style={styles.accountInfo}>
 									<View style={[styles.logoContainer, !account.logoUrl && styles.logoPlaceholder]}>

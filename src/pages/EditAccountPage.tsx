@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, StyleSheet } from 'react-native';
+import { useForm, Controller } from 'react-hook-form';
+import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, StyleSheet, Alert } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -9,20 +11,44 @@ import { RootStackParamList } from '../App';
 type EditAccountPageRouteProp = RouteProp<RootStackParamList, 'EditAccount'>;
 type EditAccountPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'EditAccount'>;
 
+type FormData = {
+	accountName: string;
+	category: string;
+	website: string;
+	username: string;
+	password: string;
+};
+
 export default function EditAccountPage() {
 	const route = useRoute<EditAccountPageRouteProp>();
 	const navigation = useNavigation<EditAccountPageNavigationProp>();
-	const { id } = route.params;
+	const { id, mode } = route.params;
 	const account = MOCK_ACCOUNTS.find((a) => a.id === id);
 
-	const [accountName, setAccountName] = useState(account?.name || '');
-	const [category, setCategory] = useState(account?.category || 'other');
-	const [website, setWebsite] = useState(account?.website || '');
-	const [username, setUsername] = useState(account?.username || '');
-	const [password, setPassword] = useState(account?.password || '');
 	const [showPassword, setShowPassword] = useState(false);
 
-	if (!account)
+	const {
+		control,
+		handleSubmit,
+		formState: { errors },
+	} = useForm<FormData>({
+		defaultValues: {
+			accountName: account?.name || '',
+			category: account?.category || 'other',
+			website: account?.website || '',
+			username: account?.username || '',
+			password: account?.password || '',
+		},
+	});
+
+	const onSubmit = (data: FormData) => {
+		// 这里可以添加保存逻辑
+		console.log('Form submitted:', data);
+		Alert.alert('成功', '账号信息已更新');
+		// navigation.goBack();
+	};
+
+	if (!account && mode === 'edit')
 		return (
 			<View style={styles.errorContainer}>
 				<Text>Account not found</Text>
@@ -31,21 +57,17 @@ export default function EditAccountPage() {
 
 	return (
 		<ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-			{/* Header */}
-			{/* <TouchableOpacity 
-        onPress={() => navigation.goBack()}
-        style={styles.backButton}
-      >
-        <Ionicons name="arrow-back" size={24} color="#6b7280" />
-      </TouchableOpacity> */}
+			{/* <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+				<Ionicons name="arrow-back" size={24} color="#6b7280" />
+			</TouchableOpacity> */}
 
 			{/* Icon Edit */}
 			<View style={styles.iconSection}>
 				<View style={styles.logoContainer}>
-					{account.logoUrl ? (
+					{account?.logoUrl ? (
 						<Image source={{ uri: account.logoUrl }} style={styles.logo} />
 					) : (
-						<Text style={styles.logoText}>{account.name[0]}</Text>
+						<Text style={styles.logoText}>{account?.name[0]}</Text>
 					)}
 					<View style={styles.cameraOverlay}>
 						<Ionicons name="camera" size={32} color="white" />
@@ -63,74 +85,121 @@ export default function EditAccountPage() {
 					{/* Account Name */}
 					<View style={styles.formGroup}>
 						<Text style={styles.formLabel}>账号名称</Text>
-						<TextInput value={accountName} onChangeText={setAccountName} style={styles.formInput} />
+						<Controller
+							control={control}
+							name="accountName"
+							rules={{ required: '账号名称不能为空' }}
+							render={({ field: { onChange, value } }) => (
+								<TextInput
+									value={value}
+									onChangeText={onChange}
+									style={[styles.formInput, errors.accountName && styles.inputError]}
+								/>
+							)}
+						/>
+						{errors.accountName && <Text style={styles.errorText}>{errors.accountName.message}</Text>}
 					</View>
 					{/* Category */}
 					<View style={styles.formGroup}>
 						<Text style={styles.formLabel}>账号类型</Text>
-						<View style={styles.selectContainer}>
-							<TextInput
-								value={
-									category === 'social'
-										? '社交媒体'
-										: category === 'work'
-											? '工作/开发'
-											: category === 'finance'
-												? '金融服务'
-												: category === 'entertainment'
-													? '娱乐'
-													: '其他'
-								}
-								editable={false}
-								style={styles.formInput}
-							/>
-							<Ionicons name="chevron-down" size={20} color="#6b7280" style={styles.selectIcon} />
-						</View>
+						<Controller
+							control={control}
+							name="category"
+							rules={{ required: '账号类型不能为空' }}
+							render={({ field: { value, onChange } }) => (
+								<View style={[styles.formInput, errors.category && styles.inputError]}>
+									<Picker selectedValue={value} onValueChange={onChange} style={styles.picker}>
+										<Picker.Item label="其他" value="other" />
+										<Picker.Item label="社交媒体" value="social" />
+										<Picker.Item label="工作/开发" value="work" />
+										<Picker.Item label="金融服务" value="finance" />
+										<Picker.Item label="娱乐" value="entertainment" />
+									</Picker>
+								</View>
+							)}
+						/>
+						{errors.category && <Text style={styles.errorText}>{errors.category.message}</Text>}
 					</View>
 					{/* Website */}
 					<View style={styles.formGroup}>
 						<Text style={styles.formLabel}>官方网址</Text>
-						<View style={styles.inputWithIcon}>
-							<TextInput
-								value={website}
-								onChangeText={setWebsite}
-								style={styles.formInput}
-								placeholder="https://"
-							/>
-							<Ionicons name="globe-outline" size={20} color="#6b7280" style={styles.inputIcon} />
-						</View>
+						<Controller
+							control={control}
+							name="website"
+							rules={{
+								pattern: {
+									value: /^https?:\/\/.*/,
+									message: '请输入有效的网址',
+								},
+							}}
+							render={({ field: { onChange, value } }) => (
+								<View style={styles.inputWithIcon}>
+									<TextInput
+										value={value}
+										onChangeText={onChange}
+										style={[styles.formInput, errors.website && styles.inputError]}
+										placeholder="https://"
+									/>
+									<Ionicons name="globe-outline" size={20} color="#6b7280" style={styles.inputIcon} />
+								</View>
+							)}
+						/>
+						{errors.website && <Text style={styles.errorText}>{errors.website.message}</Text>}
 					</View>
 					{/* Username */}
 					<View style={styles.formGroup}>
 						<Text style={styles.formLabel}>用户名 / 邮箱</Text>
-						<View style={styles.inputWithIcon}>
-							<TextInput value={username} onChangeText={setUsername} style={styles.formInput} />
-							<Ionicons name="mail-outline" size={20} color="#6b7280" style={styles.inputIcon} />
-						</View>
+						<Controller
+							control={control}
+							name="username"
+							rules={{ required: '用户名不能为空' }}
+							render={({ field: { onChange, value } }) => (
+								<View style={styles.inputWithIcon}>
+									<TextInput
+										value={value}
+										onChangeText={onChange}
+										style={[styles.formInput, errors.username && styles.inputError]}
+									/>
+									<Ionicons name="mail-outline" size={20} color="#6b7280" style={styles.inputIcon} />
+								</View>
+							)}
+						/>
+						{errors.username && <Text style={styles.errorText}>{errors.username.message}</Text>}
 					</View>
 					{/* Password */}
 					<View style={[styles.formGroup, styles.fullWidth]}>
 						<Text style={styles.formLabel}>密码</Text>
-						<View style={styles.inputWithIcon}>
-							<TextInput
-								value={password}
-								onChangeText={setPassword}
-								style={styles.formInput}
-								secureTextEntry={!showPassword}
-							/>
-							<View style={styles.passwordActions}>
-								<TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-									<Ionicons
-										name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-										size={20}
-										color="#6b7280"
+						<Controller
+							control={control}
+							name="password"
+							rules={{
+								required: '密码不能为空',
+								minLength: {
+									value: 6,
+									message: '密码至少6位',
+								},
+							}}
+							render={({ field: { onChange, value } }) => (
+								<View style={styles.inputWithIcon}>
+									<TextInput
+										value={value}
+										onChangeText={onChange}
+										style={[styles.formInput, errors.password && styles.inputError]}
+										secureTextEntry={!showPassword}
 									/>
-								</TouchableOpacity>
-								<TouchableOpacity>
-									<Ionicons name="magic-outline" size={20} color="#3b82f6" />
-								</TouchableOpacity>
-							</View>
-						</View>
+									<View style={styles.passwordActions}>
+										<TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+											<Ionicons
+												name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+												size={20}
+												color="#6b7280"
+											/>
+										</TouchableOpacity>
+									</View>
+								</View>
+							)}
+						/>
+						{errors.password && <Text style={styles.errorText}>{errors.password.message}</Text>}
 						{/* Strength Meter */}
 						<View style={styles.strengthMeter}>
 							<View style={[styles.strengthBar, styles.strengthBarFull]} />
@@ -144,7 +213,7 @@ export default function EditAccountPage() {
 
 			{/* Actions */}
 			<View style={styles.actionsContainer}>
-				<TouchableOpacity style={styles.primaryButton} onPress={() => navigation.goBack()}>
+				<TouchableOpacity style={styles.primaryButton} onPress={handleSubmit(onSubmit)}>
 					<Ionicons name="checkmark-circle" size={20} color="white" />
 					<Text style={styles.primaryButtonText}>保存修改</Text>
 				</TouchableOpacity>
@@ -344,5 +413,21 @@ const styles = StyleSheet.create({
 		fontSize: 16,
 		fontWeight: '500',
 		color: '#4b5563',
+	},
+	inputError: {
+		borderColor: '#ef4444',
+		borderWidth: 1,
+	},
+	errorText: {
+		fontSize: 12,
+		color: '#ef4444',
+		marginTop: 4,
+	},
+	picker: {
+		padding: 0,
+		margin: 0,
+		// height: 20,
+		// width: '100%',
+		// height: '100%',
 	},
 });

@@ -6,11 +6,13 @@ import EditAccountPage from './pages/EditAccountPage';
 import MainTabs from './components/Footer';
 import TestPage from './pages/TestPage';
 
+export type EditAccountMode = 'add' | 'edit';
+
 export type RootStackParamList = {
 	Main: undefined;
-	AccountDetails: { id: string };
-	EditAccount: { id: string };
-	TestPage: { id: string };
+	AccountDetails: { id: string; mode: EditAccountMode };
+	EditAccount: { id: string; mode: EditAccountMode };
+	TestPage: { id: string; mode: EditAccountMode };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
