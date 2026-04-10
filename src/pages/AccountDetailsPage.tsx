@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, Text, TouchableOpacity, Image, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
+import { useRoute, useNavigation, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { MOCK_ACCOUNTS } from '../types';
+import { MOCK_ACCOUNTS, deleteAccount } from '../mock';
 import { RootStackParamList } from '../App';
+import { Account } from '../types';
 
 type AccountDetailsPageRouteProp = RouteProp<RootStackParamList, 'AccountDetails'>;
 type AccountDetailsPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'AccountDetails'>;
@@ -13,8 +14,23 @@ export default function AccountDetailsPage() {
 	const route = useRoute<AccountDetailsPageRouteProp>();
 	const navigation = useNavigation<AccountDetailsPageNavigationProp>();
 	const { id } = route.params;
-	const account = MOCK_ACCOUNTS.find((a) => a.id === id);
 
+	const [account, setAccount] = useState<Account>();
+
+	useFocusEffect(
+		useCallback(() => {
+			const refreshData = () => {
+				const accountDetails = MOCK_ACCOUNTS.find((a) => a.id === id);
+
+				setAccount({ ...accountDetails } as Account);
+			};
+			refreshData();
+		}, []),
+	);
+	const deleteAccountPress = useCallback(() => {
+		deleteAccount(id);
+		navigation.goBack();
+	}, [id]);
 	if (!account)
 		return (
 			<View style={styles.errorContainer}>
@@ -116,7 +132,7 @@ export default function AccountDetailsPage() {
 				<View style={styles.actionPanel}>
 					<TouchableOpacity
 						style={styles.primaryButton}
-						onPress={() => navigation.navigate('EditAccount', { id: account.id })}
+						onPress={() => navigation.navigate('EditAccount', { id: account.id, mode: 'edit' })}
 					>
 						<Ionicons name="create-outline" size={20} color="white" />
 						<Text style={styles.primaryButtonText}>编辑账号详情</Text>
@@ -134,7 +150,7 @@ export default function AccountDetailsPage() {
 						<Ionicons name="alert-triangle-outline" size={16} color="#ef4444" />
 						<Text style={styles.dangerTitle}>危险区域</Text>
 					</View>
-					<TouchableOpacity style={styles.dangerButton}>
+					<TouchableOpacity style={styles.dangerButton} onPress={deleteAccountPress}>
 						<Ionicons name="trash-outline" size={20} color="#ef4444" />
 						<Text style={styles.dangerButtonText}>永久删除账号</Text>
 					</TouchableOpacity>

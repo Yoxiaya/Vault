@@ -5,8 +5,9 @@ import { Picker } from '@react-native-picker/picker';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { MOCK_ACCOUNTS } from '../types';
+import { MOCK_ACCOUNTS, addAccount, updateAccount } from '../mock';
 import { RootStackParamList } from '../App';
+import { Account, AccountCategory } from '../types';
 
 type EditAccountPageRouteProp = RouteProp<RootStackParamList, 'EditAccount'>;
 type EditAccountPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'EditAccount'>;
@@ -23,7 +24,7 @@ export default function EditAccountPage() {
 	const route = useRoute<EditAccountPageRouteProp>();
 	const navigation = useNavigation<EditAccountPageNavigationProp>();
 	const { id, mode } = route.params;
-	const account = MOCK_ACCOUNTS.find((a) => a.id === id);
+	const account = MOCK_ACCOUNTS.find((a) => a.id === id) as Account;
 
 	const [showPassword, setShowPassword] = useState(false);
 
@@ -45,7 +46,33 @@ export default function EditAccountPage() {
 		// 这里可以添加保存逻辑
 		console.log('Form submitted:', data);
 		Alert.alert('成功', '账号信息已更新');
-		// navigation.goBack();
+		if (mode === 'add') {
+			const newAccount: Account = {
+				id: Date.now().toString(),
+				name: data.accountName,
+				category: data.category as AccountCategory,
+				website: data.website,
+				username: data.username,
+				password: data.password,
+				lastUpdated: new Date().toLocaleDateString(),
+				twoFactorEnabled: false,
+				storageType: '明文存储',
+			};
+			addAccount(newAccount);
+		}
+		if (mode === 'edit') {
+			const updatedAccount: Account = {
+				...account,
+				name: data.accountName,
+				category: data.category as AccountCategory,
+				website: data.website,
+				username: data.username,
+				password: data.password,
+			};
+			updateAccount(updatedAccount);
+		}
+
+		navigation.goBack();
 	};
 
 	if (!account && mode === 'edit')
@@ -99,27 +126,7 @@ export default function EditAccountPage() {
 						/>
 						{errors.accountName && <Text style={styles.errorText}>{errors.accountName.message}</Text>}
 					</View>
-					{/* Category */}
-					<View style={styles.formGroup}>
-						<Text style={styles.formLabel}>账号类型</Text>
-						<Controller
-							control={control}
-							name="category"
-							rules={{ required: '账号类型不能为空' }}
-							render={({ field: { value, onChange } }) => (
-								<View style={[styles.formInput, errors.category && styles.inputError]}>
-									<Picker selectedValue={value} onValueChange={onChange} style={styles.picker}>
-										<Picker.Item label="其他" value="other" />
-										<Picker.Item label="社交媒体" value="social" />
-										<Picker.Item label="工作/开发" value="work" />
-										<Picker.Item label="金融服务" value="finance" />
-										<Picker.Item label="娱乐" value="entertainment" />
-									</Picker>
-								</View>
-							)}
-						/>
-						{errors.category && <Text style={styles.errorText}>{errors.category.message}</Text>}
-					</View>
+
 					{/* Website */}
 					<View style={styles.formGroup}>
 						<Text style={styles.formLabel}>官方网址</Text>
@@ -207,6 +214,27 @@ export default function EditAccountPage() {
 							<View style={[styles.strengthBar, styles.strengthBarFull]} />
 							<View style={[styles.strengthBar, styles.strengthBarEmpty]} />
 						</View>
+					</View>
+					{/* Category */}
+					<View style={styles.formGroup}>
+						<Text style={styles.formLabel}>账号类型</Text>
+						<Controller
+							control={control}
+							name="category"
+							rules={{ required: '账号类型不能为空' }}
+							render={({ field: { value, onChange } }) => (
+								<View style={[styles.formInput, errors.category && styles.inputError]}>
+									<Picker selectedValue={value} onValueChange={onChange} style={styles.picker}>
+										<Picker.Item label="社交媒体" value="social" style={styles.pickerItem} />
+										<Picker.Item label="工作/开发" value="work" style={styles.pickerItem} />
+										<Picker.Item label="金融服务" value="finance" style={styles.pickerItem} />
+										<Picker.Item label="娱乐" value="entertainment" style={styles.pickerItem} />
+										<Picker.Item label="其他" value="other" style={styles.pickerItem} />
+									</Picker>
+								</View>
+							)}
+						/>
+						{errors.category && <Text style={styles.errorText}>{errors.category.message}</Text>}
 					</View>
 				</View>
 			</View>
@@ -424,10 +452,9 @@ const styles = StyleSheet.create({
 		marginTop: 4,
 	},
 	picker: {
-		padding: 0,
-		margin: 0,
-		// height: 20,
-		// width: '100%',
-		// height: '100%',
+		fontSize: 12,
+	},
+	pickerItem: {
+		fontSize: 16,
 	},
 });
