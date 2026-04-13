@@ -5,9 +5,10 @@ import { Picker } from '@react-native-picker/picker';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { MOCK_ACCOUNTS, addAccount, updateAccount } from '../mock';
 import { RootStackParamList } from '../App';
-import { Account, AccountCategory } from '../types';
+import { AccountCategory, UploadAccount } from '../types';
+import { useAccountsStore } from '../store';
+import { addAccount, updateAccount } from '../service/api';
 
 type EditAccountPageRouteProp = RouteProp<RootStackParamList, 'EditAccount'>;
 type EditAccountPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'EditAccount'>;
@@ -15,16 +16,20 @@ type EditAccountPageNavigationProp = NativeStackNavigationProp<RootStackParamLis
 type FormData = {
 	accountName: string;
 	category: string;
-	website: string;
+	webSite: string;
 	username: string;
 	password: string;
+	email?: string;
+	logoUrl?: string;
 };
 
 export default function EditAccountPage() {
 	const route = useRoute<EditAccountPageRouteProp>();
 	const navigation = useNavigation<EditAccountPageNavigationProp>();
 	const { id, mode } = route.params;
-	const account = MOCK_ACCOUNTS.find((a) => a.id === id) as Account;
+	const { getAccountDetailById } = useAccountsStore();
+
+	const account = getAccountDetailById(id);
 
 	const [showPassword, setShowPassword] = useState(false);
 
@@ -34,45 +39,49 @@ export default function EditAccountPage() {
 		formState: { errors },
 	} = useForm<FormData>({
 		defaultValues: {
-			accountName: account?.name || '',
+			accountName: account?.appName || '',
 			category: account?.category || 'other',
-			website: account?.website || '',
+			webSite: account?.webSite || '',
 			username: account?.username || '',
 			password: account?.password || '',
 		},
 	});
 
-	const onSubmit = (data: FormData) => {
+	const onSubmit = async (data: FormData) => {
 		// 这里可以添加保存逻辑
 		console.log('Form submitted:', data);
 		Alert.alert('成功', '账号信息已更新');
 		if (mode === 'add') {
-			const newAccount: Account = {
-				id: Date.now().toString(),
-				name: data.accountName,
+			const newAccount: UploadAccount = {
+				appName: data.accountName,
+				username: data.username,
+				password: data.password,
+				email: data?.email || '',
+				webSite: data.webSite,
 				category: data.category as AccountCategory,
-				website: data.website,
+				logoUrl: data?.logoUrl || '',
+				lastUpdated: new Date().toLocaleDateString(),
+				twoFactorEnabled: false,
+				storageType: '明文存储',
+			};
+			await addAccount(newAccount);
+		}
+		if (mode === 'edit') {
+			const updatedAccount: UploadAccount = {
+				...account,
+				appName: data.accountName,
+				category: data.category as AccountCategory,
+				webSite: data.webSite,
 				username: data.username,
 				password: data.password,
 				lastUpdated: new Date().toLocaleDateString(),
 				twoFactorEnabled: false,
 				storageType: '明文存储',
 			};
-			addAccount(newAccount);
-		}
-		if (mode === 'edit') {
-			const updatedAccount: Account = {
-				...account,
-				name: data.accountName,
-				category: data.category as AccountCategory,
-				website: data.website,
-				username: data.username,
-				password: data.password,
-			};
-			updateAccount(updatedAccount);
+			await updateAccount(id, updatedAccount);
 		}
 
-		navigation.goBack();
+		navigation.navigate('VaultPage');
 	};
 
 	if (!account && mode === 'edit')
@@ -84,17 +93,13 @@ export default function EditAccountPage() {
 
 	return (
 		<ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-			{/* <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-				<Ionicons name="arrow-back" size={24} color="#6b7280" />
-			</TouchableOpacity> */}
-
 			{/* Icon Edit */}
 			<View style={styles.iconSection}>
 				<View style={styles.logoContainer}>
 					{account?.logoUrl ? (
 						<Image source={{ uri: account.logoUrl }} style={styles.logo} />
 					) : (
-						<Text style={styles.logoText}>{account?.name[0]}</Text>
+						<Text style={styles.logoText}>{account?.appName[0]}</Text>
 					)}
 					<View style={styles.cameraOverlay}>
 						<Ionicons name="camera" size={32} color="white" />
@@ -132,7 +137,7 @@ export default function EditAccountPage() {
 						<Text style={styles.formLabel}>官方网址</Text>
 						<Controller
 							control={control}
-							name="website"
+							name="webSite"
 							rules={{
 								pattern: {
 									value: /^https?:\/\/.*/,
@@ -144,14 +149,14 @@ export default function EditAccountPage() {
 									<TextInput
 										value={value}
 										onChangeText={onChange}
-										style={[styles.formInput, errors.website && styles.inputError]}
+										style={[styles.formInput, errors.webSite && styles.inputError]}
 										placeholder="https://"
 									/>
 									<Ionicons name="globe-outline" size={20} color="#6b7280" style={styles.inputIcon} />
 								</View>
 							)}
 						/>
-						{errors.website && <Text style={styles.errorText}>{errors.website.message}</Text>}
+						{errors.webSite && <Text style={styles.errorText}>{errors.webSite.message}</Text>}
 					</View>
 					{/* Username */}
 					<View style={styles.formGroup}>

@@ -1,37 +1,41 @@
-import React, { useCallback, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { MOCK_ACCOUNTS } from '../mock';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../App';
-import { Account } from '../types';
+import { useAccountsStore } from '../store';
 
-type VaultPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Main'>;
+type VaultPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'VaultPage'>;
 
 export default function VaultPage() {
 	const navigation = useNavigation<VaultPageNavigationProp>();
 	const [searchQuery, setSearchQuery] = useState('');
 	const [activeCategory, setActiveCategory] = useState('全部');
-	const [filteredAccounts, setFilteredAccounts] = useState<Account[]>([]);
 	const categories = ['全部', '社交媒体', '金融财务', '工作办公'];
 
-	useFocusEffect(
-		useCallback(() => {
-			const accounts = MOCK_ACCOUNTS.filter((account) => {
-				const matchesSearch =
-					account.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-					account.username.toLowerCase().includes(searchQuery.toLowerCase());
-				const matchesCategory =
-					activeCategory === '全部' ||
-					(activeCategory === '社交媒体' && account.category === 'social') ||
-					(activeCategory === '金融财务' && account.category === 'finance') ||
-					(activeCategory === '工作办公' && account.category === 'work');
-				return matchesSearch && matchesCategory;
-			});
-			setFilteredAccounts(accounts);
-		}, []),
-	);
+	const { accounts, loading, fetchAccounts } = useAccountsStore();
+
+	// useFocusEffect(
+	// 	useCallback(() => {
+	// 		const accounts = MOCK_ACCOUNTS.filter((account) => {
+	// 			const matchesSearch =
+	// 				account.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+	// 				account.username.toLowerCase().includes(searchQuery.toLowerCase());
+	// 			const matchesCategory =
+	// 				activeCategory === '全部' ||
+	// 				(activeCategory === '社交媒体' && account.category === 'social') ||
+	// 				(activeCategory === '金融财务' && account.category === 'finance') ||
+	// 				(activeCategory === '工作办公' && account.category === 'work');
+	// 			return matchesSearch && matchesCategory;
+	// 		});
+	// 		setFilteredAccounts(accounts);
+	// 	}, []),
+	// );
+
+	useEffect(() => {
+		fetchAccounts();
+	}, []);
 
 	const onAddAccountPress = () => {
 		navigation.navigate('EditAccount', { id: '', mode: 'add' });
@@ -82,12 +86,14 @@ export default function VaultPage() {
 				<View style={styles.sectionHeader}>
 					<Text style={styles.sectionTitle}>最近使用的账户</Text>
 					<TouchableOpacity>
-						<Text style={styles.showAllText}>显示全部</Text>
+						<Text style={styles.showAllText} onPress={() => {}}>
+							显示全部
+						</Text>
 					</TouchableOpacity>
 				</View>
 				<ScrollView showsVerticalScrollIndicator={false}>
 					<View style={styles.accountList}>
-						{filteredAccounts.map((account) => (
+						{accounts.map((account) => (
 							<TouchableOpacity
 								key={account.id}
 								style={styles.accountItem}
@@ -98,11 +104,11 @@ export default function VaultPage() {
 										{account.logoUrl ? (
 											<Image source={{ uri: account.logoUrl }} style={styles.logo} />
 										) : (
-											<Text style={styles.logoText}>{account.name[0]}</Text>
+											<Text style={styles.logoText}>{account.appName[0]}</Text>
 										)}
 									</View>
 									<View style={styles.accountDetails}>
-										<Text style={styles.accountName}>{account.name}</Text>
+										<Text style={styles.accountName}>{account.appName}</Text>
 										<Text style={styles.accountUsername}>{account.username}</Text>
 									</View>
 								</View>

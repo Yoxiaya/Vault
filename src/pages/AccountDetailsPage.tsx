@@ -1,11 +1,13 @@
-import React, { useCallback, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Image, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRoute, useNavigation, RouteProp, useFocusEffect } from '@react-navigation/native';
+import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { MOCK_ACCOUNTS, deleteAccount } from '../mock';
+
 import { RootStackParamList } from '../App';
 import { Account } from '../types';
+import { useAccountsStore } from '../store';
+import { deleteAccount } from '../service/api';
 
 type AccountDetailsPageRouteProp = RouteProp<RootStackParamList, 'AccountDetails'>;
 type AccountDetailsPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'AccountDetails'>;
@@ -16,21 +18,20 @@ export default function AccountDetailsPage() {
 	const { id } = route.params;
 
 	const [account, setAccount] = useState<Account>();
+	const { getAccountDetailById } = useAccountsStore();
 
-	useFocusEffect(
-		useCallback(() => {
-			const refreshData = () => {
-				const accountDetails = MOCK_ACCOUNTS.find((a) => a.id === id);
+	const deleteAccountPress = async () => {
+		await deleteAccount(id);
+		navigation.navigate('VaultPage');
+	};
 
-				setAccount({ ...accountDetails } as Account);
-			};
-			refreshData();
-		}, []),
-	);
-	const deleteAccountPress = useCallback(() => {
-		deleteAccount(id);
-		navigation.goBack();
+	useEffect(() => {
+		const accountDetails = getAccountDetailById(id);
+		if (accountDetails) {
+			setAccount(accountDetails);
+		}
 	}, [id]);
+
 	if (!account)
 		return (
 			<View style={styles.errorContainer}>
@@ -46,7 +47,7 @@ export default function AccountDetailsPage() {
 					{account.logoUrl ? (
 						<Image source={{ uri: account.logoUrl }} style={styles.logo} />
 					) : (
-						<Text style={styles.logoText}>{account.name[0]}</Text>
+						<Text style={styles.logoText}>{account.appName[0]}</Text>
 					)}
 				</View>
 				<View style={styles.accountInfo}>
@@ -54,7 +55,7 @@ export default function AccountDetailsPage() {
 						<Ionicons name="checkmark-circle" size={14} color="#fbbf24" />
 						<Text style={styles.securityBadgeText}>高安全性账号</Text>
 					</View>
-					<Text style={styles.accountName}>{account.name}</Text>
+					<Text style={styles.accountName}>{account.appName}</Text>
 					<Text style={styles.accountDescription}>
 						代码托管与协作平台，包含个人项目及企业级敏感仓库权限。
 					</Text>
@@ -98,7 +99,7 @@ export default function AccountDetailsPage() {
 						<View style={styles.credentialItem}>
 							<Text style={styles.credentialLabel}>官方网站</Text>
 							<View style={styles.credentialValueContainer}>
-								<Text style={styles.credentialValueLink}>{account.website}</Text>
+								<Text style={styles.credentialValueLink}>{account.webSite}</Text>
 								<TouchableOpacity style={styles.actionButton}>
 									<Ionicons name="open-outline" size={20} color="#3b82f6" />
 								</TouchableOpacity>
@@ -160,7 +161,7 @@ export default function AccountDetailsPage() {
 				<View style={styles.securityTip}>
 					<Text style={styles.securityTipTitle}>安全建议</Text>
 					<Text style={styles.securityTipText}>
-						建议定期更换您的 {account.name} 密码并确保 SSH 密钥仅在受信任的设备上使用。
+						建议定期更换您的 {account.appName} 密码并确保 SSH 密钥仅在受信任的设备上使用。
 					</Text>
 				</View>
 			</View>

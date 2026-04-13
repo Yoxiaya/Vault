@@ -9,7 +9,7 @@ import TestPage from './pages/TestPage';
 export type EditAccountMode = 'add' | 'edit';
 
 export type RootStackParamList = {
-	Main: undefined;
+	VaultPage: undefined;
 	AccountDetails: { id: string; mode: EditAccountMode };
 	EditAccount: { id: string; mode: EditAccountMode };
 	TestPage: { id: string; mode: EditAccountMode };
@@ -27,7 +27,7 @@ export default function App() {
 					},
 				}}
 			>
-				<Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />
+				<Stack.Screen name="VaultPage" component={MainTabs} options={{ headerShown: false }} />
 				<Stack.Screen name="AccountDetails" component={AccountDetailsPage} options={{ title: '账户详情' }} />
 				<Stack.Screen name="EditAccount" component={EditAccountPage} options={{ title: '编辑账户' }} />
 				<Stack.Screen name="TestPage" component={TestPage} options={{ title: '测试页面' }} />
