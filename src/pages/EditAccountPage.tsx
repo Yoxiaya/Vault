@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
+import * as ImagePicker from 'expo-image-picker';
 import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, StyleSheet, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { Ionicons } from '@expo/vector-icons';
@@ -84,6 +85,20 @@ export default function EditAccountPage() {
 		navigation.navigate('VaultPage');
 	};
 
+	const pickImage = async () => {
+		// 选择图片
+		const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+		if (status !== 'granted') {
+			Alert.alert('需要权限', '请允许访问相册');
+			return;
+		}
+
+		const result = await ImagePicker.launchImageLibraryAsync({
+			mediaTypes: ['images'],
+			allowsEditing: true,
+		});
+		console.log(result);
+	};
 	if (!account && mode === 'edit')
 		return (
 			<View style={styles.errorContainer}>
@@ -108,7 +123,9 @@ export default function EditAccountPage() {
 						<Ionicons name="create" size={16} color="white" />
 					</TouchableOpacity>
 				</View>
-				<Text style={styles.changeIconText}>更换图标</Text>
+				<Text style={styles.changeIconText} onPress={pickImage}>
+					更换图标
+				</Text>
 			</View>
 
 			{/* Form */}
