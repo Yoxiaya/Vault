@@ -15,3 +15,13 @@ export const updateAccount = (id: string, account: UploadAccount) => {
 export const deleteAccount = (id: string) => {
 	return request(`/vault-accounts/${id}`, { method: 'delete' });
 };
+
+export const uploadImage = (file: FormData) => {
+	return request('/vault-accounts/upload-image', {
+		method: 'post',
+		data: file,
+	});
+};
+export const deleteImage = (data: FormData) => {
+	return request('/vault-accounts/delete-image', { method: 'post', data });
+};

@@ -1,49 +1,73 @@
-import axios, { AxiosResponse, AxiosRequestConfig } from 'axios';
 import Convert from './convert';
 
-// 定义 Convert 的方法类型
 type ConvertMethodName = keyof Convert;
 
-interface RequsestConfig extends AxiosRequestConfig {
+interface RequestConfig {
+	method?: string;
+	data?: any;
+	headers?: Record<string, string>;
 	convert?: ConvertMethodName;
 }
 
-interface ResponseConfig extends AxiosResponse {
-	config: AxiosResponse['config'] & {
-		convert?: ConvertMethodName;
-	};
-}
-interface customAxiosResponse {
+interface CustomResponse {
 	code: number;
 	data: any;
 }
-const convert = new Convert();
-const axiosInstance = axios.create({
-	timeout: 30000,
-	baseURL: 'https://vault.yoxiaya.com',
-	headers: {
-		'Content-Type': 'application/json',
-	},
-});
 
-axiosInstance.interceptors.request.use((config) => {
-	return config;
-});
-axiosInstance.interceptors.response.use(
-	(response: ResponseConfig) => {
-		if (response.config.convert) {
-			const method = response.config.convert;
-			return convert[method](response.data);
+const converts = new Convert();
+const baseURL = 'https://vault.yoxiaya.com';
+
+const request = async (url: string, config: RequestConfig = {}): Promise<CustomResponse> => {
+	const {
+		method = 'GET',
+		data,
+		headers = {
+			'Content-Type': 'application/json',
+		},
+		convert,
+	} = config;
+
+	const fullUrl = `${baseURL}${url}`;
+	const fetchOptions: RequestInit = {
+		method,
+		headers: headers as Record<string, string>,
+	};
+
+	// 处理请求体
+	if (data) {
+		// 检查是否是 FormData
+		if (data instanceof FormData) {
+			// FormData 不需要设置 Content-Type，浏览器会自动设置
+			const headersObj = fetchOptions.headers as Record<string, string>;
+			if (headersObj) {
+				delete headersObj['Content-Type'];
+			}
+			fetchOptions.body = data;
+		} else {
+			// 其他情况转换为 JSON
+			fetchOptions.body = JSON.stringify(data);
+		}
+	}
+
+	try {
+		const response = await fetch(fullUrl, fetchOptions);
+
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
 		}
 
-		return response.data;
-	},
-	(error) => {
+		const responseData = await response.json();
+
+		// 处理转换
+		if (convert) {
+			return (converts as any)[convert](responseData);
+		}
+
+		return responseData;
+	} catch (error) {
 		console.log('请求出错', error);
-		return Promise.reject(error);
-	},
-);
-const request = (url: string, config: RequsestConfig): Promise<customAxiosResponse> => {
-	return axiosInstance(url, config);
+		throw error;
+	}
 };
+
 export default request;

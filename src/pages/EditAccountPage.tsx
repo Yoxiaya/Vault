@@ -1,7 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import * as ImagePicker from 'expo-image-picker';
-import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, StyleSheet, Alert } from 'react-native';
+import {
+	View,
+	Text,
+	TextInput,
+	TouchableOpacity,
+	Image,
+	ScrollView,
+	StyleSheet,
+	Alert,
+	ActivityIndicator,
+} from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
@@ -9,7 +19,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../App';
 import { AccountCategory, UploadAccount } from '../types';
 import { useAccountsStore } from '../store';
-import { addAccount, updateAccount } from '../service/api';
+import { addAccount, updateAccount, uploadImage } from '../service/api';
 
 type EditAccountPageRouteProp = RouteProp<RootStackParamList, 'EditAccount'>;
 type EditAccountPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'EditAccount'>;
@@ -31,13 +41,15 @@ export default function EditAccountPage() {
 	const { getAccountDetailById } = useAccountsStore();
 
 	const account = getAccountDetailById(id);
-
+	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [showPassword, setShowPassword] = useState(false);
+	const [selectedImage, setSelectedImage] = useState<ImagePicker.ImagePickerAsset | null>(null);
 
 	const {
 		control,
 		handleSubmit,
 		formState: { errors },
+		setValue,
 	} = useForm<FormData>({
 		defaultValues: {
 			accountName: account?.appName || '',
@@ -45,87 +57,132 @@ export default function EditAccountPage() {
 			webSite: account?.webSite || '',
 			username: account?.username || '',
 			password: account?.password || '',
+			logoUrl: account?.logoUrl || '',
 		},
 	});
 
-	const onSubmit = async (data: FormData) => {
-		// 这里可以添加保存逻辑
-		console.log('Form submitted:', data);
-		Alert.alert('成功', '账号信息已更新');
-		if (mode === 'add') {
-			const newAccount: UploadAccount = {
-				appName: data.accountName,
-				username: data.username,
-				password: data.password,
-				email: data?.email || '',
-				webSite: data.webSite,
-				category: data.category as AccountCategory,
-				logoUrl: data?.logoUrl || '',
-				lastUpdated: new Date().toLocaleDateString(),
-				twoFactorEnabled: false,
-				storageType: '明文存储',
-			};
-			await addAccount(newAccount);
-		}
-		if (mode === 'edit') {
-			const updatedAccount: UploadAccount = {
-				...account,
-				appName: data.accountName,
-				category: data.category as AccountCategory,
-				webSite: data.webSite,
-				username: data.username,
-				password: data.password,
-				lastUpdated: new Date().toLocaleDateString(),
-				twoFactorEnabled: false,
-				storageType: '明文存储',
-			};
-			await updateAccount(id, updatedAccount);
-		}
+	// 上传图片到服务器
+	const uploadImageToServer = async (imageAsset: ImagePicker.ImagePickerAsset): Promise<string> => {
+		const formData = new FormData();
+		formData.append('file', {
+			uri: imageAsset.uri,
+			name: imageAsset.fileName || `photo_${Date.now()}.jpg`,
+			type: imageAsset.mimeType || 'image/jpeg',
+		} as any);
 
-		navigation.navigate('VaultPage');
+		const result = await uploadImage(formData);
+		return result.data.url;
 	};
 
-	const pickImage = async () => {
-		// 选择图片
+	// 处理图片选择
+	const handlePickImage = async () => {
 		const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 		if (status !== 'granted') {
-			Alert.alert('需要权限', '请允许访问相册');
+			Alert.alert('需要权限', '请允许访问相册以更换图标');
 			return;
 		}
 
 		const result = await ImagePicker.launchImageLibraryAsync({
 			mediaTypes: ['images'],
 			allowsEditing: true,
+			aspect: [1, 1],
+			quality: 0.8,
 		});
-		console.log(result);
+
+		if (!result.canceled && result.assets?.[0]) {
+			const imageAsset = result.assets[0];
+			setSelectedImage(imageAsset);
+			// 立即显示选中的图片（本地预览）
+			setValue('logoUrl', imageAsset.uri);
+		}
 	};
-	if (!account && mode === 'edit')
+
+	// 保存或更新账号
+	const onSubmit = async (data: FormData) => {
+		if (isSubmitting) return;
+
+		setIsSubmitting(true);
+
+		try {
+			let finalLogoUrl = data.logoUrl;
+
+			// 只有在选择了新图片且与原有图片不同时才上传
+			if (selectedImage && selectedImage.uri !== account?.logoUrl) {
+				try {
+					const uploadedUrl = await uploadImageToServer(selectedImage);
+					finalLogoUrl = uploadedUrl;
+				} catch (uploadError) {
+					console.error('图片上传失败:', uploadError);
+					Alert.alert('警告', '图片上传失败，将继续保存其他信息');
+				}
+			}
+
+			const baseAccountData = {
+				appName: data.accountName,
+				username: data.username,
+				password: data.password,
+				email: data?.email || '',
+				webSite: data.webSite,
+				category: data.category as AccountCategory,
+				logoUrl: finalLogoUrl,
+				lastUpdated: new Date().toLocaleDateString(),
+				twoFactorEnabled: false,
+				storageType: '明文存储',
+			};
+
+			if (mode === 'add') {
+				await addAccount(baseAccountData as UploadAccount);
+				Alert.alert('成功', '账号已添加');
+			} else if (mode === 'edit' && account) {
+				const updatedAccount: UploadAccount = {
+					...account,
+					...baseAccountData,
+				};
+				await updateAccount(id, updatedAccount);
+				Alert.alert('成功', '账号信息已更新');
+			}
+
+			navigation.navigate('VaultPage');
+		} catch (error) {
+			console.error('保存失败:', error);
+			Alert.alert('错误', '保存失败，请重试');
+		} finally {
+			setIsSubmitting(false);
+		}
+	};
+
+	if (!account && mode === 'edit') {
 		return (
 			<View style={styles.errorContainer}>
-				<Text>Account not found</Text>
+				<Text>账号不存在</Text>
 			</View>
 		);
+	}
 
 	return (
 		<ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
 			{/* Icon Edit */}
 			<View style={styles.iconSection}>
-				<View style={styles.logoContainer}>
-					{account?.logoUrl ? (
-						<Image source={{ uri: account.logoUrl }} style={styles.logo} />
-					) : (
-						<Text style={styles.logoText}>{account?.appName[0]}</Text>
+				<Controller
+					control={control}
+					name="logoUrl"
+					render={({ field: { value } }) => (
+						<View style={styles.logoContainer}>
+							{value ? (
+								<Image source={{ uri: value }} style={styles.logo} />
+							) : (
+								<Text style={styles.logoText}>{account?.appName?.[0] || '?'}</Text>
+							)}
+							<TouchableOpacity
+								style={styles.editButton}
+								onPress={handlePickImage}
+								disabled={isSubmitting}
+							>
+								<Ionicons name="create" size={16} color="white" />
+							</TouchableOpacity>
+						</View>
 					)}
-					<View style={styles.cameraOverlay}>
-						<Ionicons name="camera" size={32} color="white" />
-					</View>
-					<TouchableOpacity style={styles.editButton}>
-						<Ionicons name="create" size={16} color="white" />
-					</TouchableOpacity>
-				</View>
-				<Text style={styles.changeIconText} onPress={pickImage}>
-					更换图标
-				</Text>
+				/>
 			</View>
 
 			{/* Form */}
@@ -143,6 +200,7 @@ export default function EditAccountPage() {
 									value={value}
 									onChangeText={onChange}
 									style={[styles.formInput, errors.accountName && styles.inputError]}
+									editable={!isSubmitting}
 								/>
 							)}
 						/>
@@ -157,7 +215,7 @@ export default function EditAccountPage() {
 							name="webSite"
 							rules={{
 								pattern: {
-									value: /^https?:\/\/.*/,
+									value: /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/,
 									message: '请输入有效的网址',
 								},
 							}}
@@ -168,6 +226,7 @@ export default function EditAccountPage() {
 										onChangeText={onChange}
 										style={[styles.formInput, errors.webSite && styles.inputError]}
 										placeholder="https://"
+										editable={!isSubmitting}
 									/>
 									<Ionicons name="globe-outline" size={20} color="#6b7280" style={styles.inputIcon} />
 								</View>
@@ -175,6 +234,7 @@ export default function EditAccountPage() {
 						/>
 						{errors.webSite && <Text style={styles.errorText}>{errors.webSite.message}</Text>}
 					</View>
+
 					{/* Username */}
 					<View style={styles.formGroup}>
 						<Text style={styles.formLabel}>用户名 / 邮箱</Text>
@@ -188,6 +248,7 @@ export default function EditAccountPage() {
 										value={value}
 										onChangeText={onChange}
 										style={[styles.formInput, errors.username && styles.inputError]}
+										editable={!isSubmitting}
 									/>
 									<Ionicons name="mail-outline" size={20} color="#6b7280" style={styles.inputIcon} />
 								</View>
@@ -195,6 +256,7 @@ export default function EditAccountPage() {
 						/>
 						{errors.username && <Text style={styles.errorText}>{errors.username.message}</Text>}
 					</View>
+
 					{/* Password */}
 					<View style={[styles.formGroup, styles.fullWidth]}>
 						<Text style={styles.formLabel}>密码</Text>
@@ -215,9 +277,13 @@ export default function EditAccountPage() {
 										onChangeText={onChange}
 										style={[styles.formInput, errors.password && styles.inputError]}
 										secureTextEntry={!showPassword}
+										editable={!isSubmitting}
 									/>
 									<View style={styles.passwordActions}>
-										<TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+										<TouchableOpacity
+											onPress={() => setShowPassword(!showPassword)}
+											disabled={isSubmitting}
+										>
 											<Ionicons
 												name={showPassword ? 'eye-off-outline' : 'eye-outline'}
 												size={20}
@@ -229,14 +295,38 @@ export default function EditAccountPage() {
 							)}
 						/>
 						{errors.password && <Text style={styles.errorText}>{errors.password.message}</Text>}
-						{/* Strength Meter */}
-						<View style={styles.strengthMeter}>
-							<View style={[styles.strengthBar, styles.strengthBarFull]} />
-							<View style={[styles.strengthBar, styles.strengthBarFull]} />
-							<View style={[styles.strengthBar, styles.strengthBarFull]} />
-							<View style={[styles.strengthBar, styles.strengthBarEmpty]} />
-						</View>
+
+						{/* 密码强度提示（仅当有密码时显示） */}
+						{control._formValues.password && control._formValues.password.length > 0 && (
+							<View style={styles.strengthMeter}>
+								<View
+									style={[
+										styles.strengthBar,
+										control._formValues.password.length >= 6 && styles.strengthBarFull,
+									]}
+								/>
+								<View
+									style={[
+										styles.strengthBar,
+										control._formValues.password.length >= 8 && styles.strengthBarFull,
+									]}
+								/>
+								<View
+									style={[
+										styles.strengthBar,
+										control._formValues.password.length >= 10 && styles.strengthBarFull,
+									]}
+								/>
+								<View
+									style={[
+										styles.strengthBar,
+										control._formValues.password.length >= 12 && styles.strengthBarFull,
+									]}
+								/>
+							</View>
+						)}
 					</View>
+
 					{/* Category */}
 					<View style={styles.formGroup}>
 						<Text style={styles.formLabel}>账号类型</Text>
@@ -246,12 +336,17 @@ export default function EditAccountPage() {
 							rules={{ required: '账号类型不能为空' }}
 							render={({ field: { value, onChange } }) => (
 								<View style={[styles.formInput, errors.category && styles.inputError]}>
-									<Picker selectedValue={value} onValueChange={onChange} style={styles.picker}>
-										<Picker.Item label="社交媒体" value="social" style={styles.pickerItem} />
-										<Picker.Item label="工作/开发" value="work" style={styles.pickerItem} />
-										<Picker.Item label="金融服务" value="finance" style={styles.pickerItem} />
-										<Picker.Item label="娱乐" value="entertainment" style={styles.pickerItem} />
-										<Picker.Item label="其他" value="other" style={styles.pickerItem} />
+									<Picker
+										selectedValue={value}
+										onValueChange={onChange}
+										style={styles.picker}
+										enabled={!isSubmitting}
+									>
+										<Picker.Item label="社交媒体" value="social" />
+										<Picker.Item label="工作/开发" value="work" />
+										<Picker.Item label="金融服务" value="finance" />
+										<Picker.Item label="娱乐" value="entertainment" />
+										<Picker.Item label="其他" value="other" />
 									</Picker>
 								</View>
 							)}
@@ -263,11 +358,25 @@ export default function EditAccountPage() {
 
 			{/* Actions */}
 			<View style={styles.actionsContainer}>
-				<TouchableOpacity style={styles.primaryButton} onPress={handleSubmit(onSubmit)}>
-					<Ionicons name="checkmark-circle" size={20} color="white" />
-					<Text style={styles.primaryButtonText}>保存修改</Text>
+				<TouchableOpacity
+					style={[styles.primaryButton, isSubmitting && styles.disabledButton]}
+					onPress={handleSubmit(onSubmit)}
+					disabled={isSubmitting}
+				>
+					{isSubmitting ? (
+						<ActivityIndicator color="white" size="small" />
+					) : (
+						<>
+							<Ionicons name="checkmark-circle" size={20} color="white" />
+							<Text style={styles.primaryButtonText}>保存修改</Text>
+						</>
+					)}
 				</TouchableOpacity>
-				<TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.goBack()}>
+				<TouchableOpacity
+					style={styles.secondaryButton}
+					onPress={() => navigation.goBack()}
+					disabled={isSubmitting}
+				>
 					<Text style={styles.secondaryButtonText}>取消</Text>
 				</TouchableOpacity>
 			</View>
@@ -285,15 +394,6 @@ const styles = StyleSheet.create({
 		flex: 1,
 		justifyContent: 'center',
 		alignItems: 'center',
-	},
-	backButton: {
-		width: 40,
-		height: 40,
-		borderRadius: 20,
-		justifyContent: 'center',
-		alignItems: 'center',
-		margin: 16,
-		backgroundColor: '#f3f4f6',
 	},
 	iconSection: {
 		alignItems: 'center',
@@ -322,18 +422,6 @@ const styles = StyleSheet.create({
 		fontWeight: 'bold',
 		color: '#3b82f6',
 	},
-	cameraOverlay: {
-		position: 'absolute',
-		top: 0,
-		left: 0,
-		right: 0,
-		bottom: 0,
-		backgroundColor: 'rgba(0, 0, 0, 0.2)',
-		justifyContent: 'center',
-		alignItems: 'center',
-		borderRadius: 64,
-		opacity: 0,
-	},
 	editButton: {
 		position: 'absolute',
 		bottom: 0,
@@ -344,12 +432,8 @@ const styles = StyleSheet.create({
 		borderRadius: 16,
 		justifyContent: 'center',
 		alignItems: 'center',
-	},
-	changeIconText: {
-		fontSize: 14,
-		fontWeight: '500',
-		color: '#3b82f6',
-		letterSpacing: 0.5,
+		borderWidth: 2,
+		borderColor: 'white',
 	},
 	formContainer: {
 		backgroundColor: '#f9fafb',
@@ -383,14 +467,6 @@ const styles = StyleSheet.create({
 		fontSize: 16,
 		color: '#1f2937',
 	},
-	selectContainer: {
-		position: 'relative',
-	},
-	selectIcon: {
-		position: 'absolute',
-		right: 16,
-		top: 12,
-	},
 	inputWithIcon: {
 		position: 'relative',
 	},
@@ -415,12 +491,10 @@ const styles = StyleSheet.create({
 	strengthBar: {
 		flex: 1,
 		borderRadius: 2,
+		backgroundColor: '#f3f4f6',
 	},
 	strengthBarFull: {
 		backgroundColor: '#3b82f6',
-	},
-	strengthBarEmpty: {
-		backgroundColor: '#f3f4f6',
 	},
 	actionsContainer: {
 		flexDirection: 'row',
@@ -476,7 +550,7 @@ const styles = StyleSheet.create({
 	picker: {
 		fontSize: 12,
 	},
-	pickerItem: {
-		fontSize: 16,
+	disabledButton: {
+		opacity: 0.6,
 	},
 });
