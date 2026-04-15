@@ -20,8 +20,9 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../App';
 import { AccountCategory, UploadAccount } from '../types';
 import { useAccountsStore } from '../store';
-import { addAccount, updateAccount, uploadImage } from '../service/api';
+import { addAccount, updateAccount, uploadImage, deleteImage } from '../service/api';
 import { calculatePasswordStrength } from '../utils';
+import { LoadingMask } from '../components/Mask';
 
 type EditAccountPageRouteProp = RouteProp<RootStackParamList, 'EditAccount'>;
 type EditAccountPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'EditAccount'>;
@@ -106,6 +107,13 @@ export default function EditAccountPage() {
 		return result.data.url;
 	};
 
+	// 删除图片
+	const deleteImageToServer = async (url: string) => {
+		const formData = new FormData();
+		formData.append('url', url);
+		await deleteImage(formData);
+	};
+
 	// 处理图片选择
 	const handlePickImage = async () => {
 		const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -149,6 +157,9 @@ export default function EditAccountPage() {
 
 		try {
 			let finalLogoUrl = data.logoUrl;
+			if (account && account.logoUrl && data.logoUrl !== account.logoUrl) {
+				await deleteImageToServer(account.logoUrl);
+			}
 
 			if (selectedImage && selectedImage.uri !== account?.logoUrl) {
 				try {
@@ -203,249 +214,257 @@ export default function EditAccountPage() {
 	}
 
 	return (
-		<KeyboardAwareScrollView
-			style={styles.container}
-			showsVerticalScrollIndicator={false}
-			keyboardShouldPersistTaps="handled"
-			enableOnAndroid={true}
-			extraScrollHeight={20} // 额外滚动高度
-			enableResetScrollToCoords={false}
-		>
-			<ScrollView showsVerticalScrollIndicator={false}>
-				{/* Icon Edit */}
-				<View style={styles.iconSection}>
-					<Controller
-						control={control}
-						name="logoUrl"
-						render={({ field: { value } }) => (
-							<View style={styles.logoContainer}>
-								{value ? (
-									<Image source={{ uri: value }} style={styles.logo} />
-								) : (
-									<Text style={styles.logoText}>{account?.appName?.[0] || '?'}</Text>
+		<>
+			<KeyboardAwareScrollView
+				style={styles.container}
+				showsVerticalScrollIndicator={false}
+				keyboardShouldPersistTaps="handled"
+				enableOnAndroid={true}
+				extraScrollHeight={20} // 额外滚动高度
+				enableResetScrollToCoords={false}
+			>
+				<ScrollView showsVerticalScrollIndicator={false}>
+					{/* Icon Edit */}
+					<View style={styles.iconSection}>
+						<Controller
+							control={control}
+							name="logoUrl"
+							render={({ field: { value } }) => (
+								<View style={styles.logoContainer}>
+									{value ? (
+										<Image source={{ uri: value }} style={styles.logo} />
+									) : (
+										<Text style={styles.logoText}>{account?.appName?.[0] || '?'}</Text>
+									)}
+									<TouchableOpacity
+										style={styles.editButton}
+										onPress={handlePickImage}
+										disabled={isSubmitting}
+									>
+										<Ionicons name="create" size={16} color="white" />
+									</TouchableOpacity>
+								</View>
+							)}
+						/>
+					</View>
+
+					{/* Form */}
+					<View style={styles.formContainer}>
+						<View style={styles.formGrid}>
+							{/* Account Name */}
+							<View style={styles.formGroup}>
+								<Text style={styles.formLabel}>账号名称</Text>
+								<Controller
+									control={control}
+									name="accountName"
+									rules={{ required: '账号名称不能为空' }}
+									render={({ field: { onChange, value } }) => (
+										<TextInput
+											value={value}
+											onChangeText={onChange}
+											style={[styles.formInput, errors.accountName && styles.inputError]}
+											editable={!isSubmitting}
+										/>
+									)}
+								/>
+								{errors.accountName && (
+									<Text style={styles.errorText}>{errors.accountName.message}</Text>
 								)}
-								<TouchableOpacity
-									style={styles.editButton}
-									onPress={handlePickImage}
-									disabled={isSubmitting}
-								>
-									<Ionicons name="create" size={16} color="white" />
-								</TouchableOpacity>
 							</View>
-						)}
-					/>
-				</View>
 
-				{/* Form */}
-				<View style={styles.formContainer}>
-					<View style={styles.formGrid}>
-						{/* Account Name */}
-						<View style={styles.formGroup}>
-							<Text style={styles.formLabel}>账号名称</Text>
-							<Controller
-								control={control}
-								name="accountName"
-								rules={{ required: '账号名称不能为空' }}
-								render={({ field: { onChange, value } }) => (
-									<TextInput
-										value={value}
-										onChangeText={onChange}
-										style={[styles.formInput, errors.accountName && styles.inputError]}
-										editable={!isSubmitting}
-									/>
-								)}
-							/>
-							{errors.accountName && <Text style={styles.errorText}>{errors.accountName.message}</Text>}
-						</View>
-
-						{/* Website */}
-						<View style={styles.formGroup}>
-							<Text style={styles.formLabel}>官方网址</Text>
-							<Controller
-								control={control}
-								name="webSite"
-								rules={{
-									pattern: {
-										value: /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/,
-										message: '请输入有效的网址',
-									},
-								}}
-								render={({ field: { onChange, value } }) => (
-									<View style={styles.inputWithIcon}>
-										<TextInput
-											value={value}
-											onChangeText={onChange}
-											style={[styles.formInput, errors.webSite && styles.inputError]}
-											placeholder="https://"
-											editable={!isSubmitting}
-										/>
-										<Ionicons
-											name="globe-outline"
-											size={20}
-											color="#6b7280"
-											style={styles.inputIcon}
-										/>
-									</View>
-								)}
-							/>
-							{errors.webSite && <Text style={styles.errorText}>{errors.webSite.message}</Text>}
-						</View>
-
-						{/* Username */}
-						<View style={styles.formGroup}>
-							<Text style={styles.formLabel}>用户名 / 邮箱</Text>
-							<Controller
-								control={control}
-								name="username"
-								rules={{ required: '用户名不能为空' }}
-								render={({ field: { onChange, value } }) => (
-									<View style={styles.inputWithIcon}>
-										<TextInput
-											value={value}
-											onChangeText={onChange}
-											style={[styles.formInput, errors.username && styles.inputError]}
-											editable={!isSubmitting}
-										/>
-										<Ionicons
-											name="mail-outline"
-											size={20}
-											color="#6b7280"
-											style={styles.inputIcon}
-										/>
-									</View>
-								)}
-							/>
-							{errors.username && <Text style={styles.errorText}>{errors.username.message}</Text>}
-						</View>
-
-						{/* Password */}
-						<View style={[styles.formGroup, styles.fullWidth]}>
-							<Text style={styles.formLabel}>密码</Text>
-							<Controller
-								control={control}
-								name="password"
-								rules={{
-									required: '密码不能为空',
-									minLength: {
-										value: 6,
-										message: '密码至少6位',
-									},
-								}}
-								render={({ field: { onChange, value } }) => (
-									<View>
+							{/* Website */}
+							<View style={styles.formGroup}>
+								<Text style={styles.formLabel}>官方网址</Text>
+								<Controller
+									control={control}
+									name="webSite"
+									rules={{
+										pattern: {
+											value: /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/,
+											message: '请输入有效的网址',
+										},
+									}}
+									render={({ field: { onChange, value } }) => (
 										<View style={styles.inputWithIcon}>
 											<TextInput
 												value={value}
 												onChangeText={onChange}
-												style={[styles.formInput, errors.password && styles.inputError]}
-												secureTextEntry={!showPassword}
+												style={[styles.formInput, errors.webSite && styles.inputError]}
+												placeholder="https://"
 												editable={!isSubmitting}
 											/>
-											<View style={styles.passwordActions}>
-												<TouchableOpacity
-													onPress={() => setShowPassword(!showPassword)}
-													disabled={isSubmitting}
-												>
-													<Ionicons
-														name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-														size={20}
-														color="#6b7280"
-													/>
-												</TouchableOpacity>
-											</View>
+											<Ionicons
+												name="globe-outline"
+												size={20}
+												color="#6b7280"
+												style={styles.inputIcon}
+											/>
 										</View>
+									)}
+								/>
+								{errors.webSite && <Text style={styles.errorText}>{errors.webSite.message}</Text>}
+							</View>
 
-										{/* 密码强度指示器 */}
-										{passwordValue && passwordValue.length > 0 && (
-											<View style={styles.strengthContainer}>
-												<View style={styles.strengthMeter}>
-													{[1, 2, 3, 4, 5].map((index) => (
-														<View
-															key={index}
-															style={[
-																styles.strengthBar,
-																index <= passwordStrength.score && {
-																	backgroundColor: passwordStrength.color,
-																},
-																index > passwordStrength.score &&
-																	styles.strengthBarEmpty,
-															]}
-														/>
-													))}
-												</View>
-												<View style={styles.strengthInfo}>
-													<Text
-														style={[styles.strengthText, { color: passwordStrength.color }]}
+							{/* Username */}
+							<View style={styles.formGroup}>
+								<Text style={styles.formLabel}>用户名 / 邮箱</Text>
+								<Controller
+									control={control}
+									name="username"
+									rules={{ required: '用户名不能为空' }}
+									render={({ field: { onChange, value } }) => (
+										<View style={styles.inputWithIcon}>
+											<TextInput
+												value={value}
+												onChangeText={onChange}
+												style={[styles.formInput, errors.username && styles.inputError]}
+												editable={!isSubmitting}
+											/>
+											<Ionicons
+												name="mail-outline"
+												size={20}
+												color="#6b7280"
+												style={styles.inputIcon}
+											/>
+										</View>
+									)}
+								/>
+								{errors.username && <Text style={styles.errorText}>{errors.username.message}</Text>}
+							</View>
+
+							{/* Password */}
+							<View style={[styles.formGroup, styles.fullWidth]}>
+								<Text style={styles.formLabel}>密码</Text>
+								<Controller
+									control={control}
+									name="password"
+									rules={{
+										required: '密码不能为空',
+										minLength: {
+											value: 6,
+											message: '密码至少6位',
+										},
+									}}
+									render={({ field: { onChange, value } }) => (
+										<View>
+											<View style={styles.inputWithIcon}>
+												<TextInput
+													value={value}
+													onChangeText={onChange}
+													style={[styles.formInput, errors.password && styles.inputError]}
+													secureTextEntry={!showPassword}
+													editable={!isSubmitting}
+												/>
+												<View style={styles.passwordActions}>
+													<TouchableOpacity
+														onPress={() => setShowPassword(!showPassword)}
+														disabled={isSubmitting}
 													>
-														密码强度：{passwordStrength.level}
-													</Text>
-													<Text style={styles.strengthFeedback}>
-														{passwordStrength.feedback}
-													</Text>
+														<Ionicons
+															name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+															size={20}
+															color="#6b7280"
+														/>
+													</TouchableOpacity>
 												</View>
 											</View>
-										)}
-									</View>
-								)}
-							/>
-							{errors.password && <Text style={styles.errorText}>{errors.password.message}</Text>}
-						</View>
 
-						{/* Category */}
-						<View style={styles.formGroup}>
-							<Text style={styles.formLabel}>账号类型</Text>
-							<Controller
-								control={control}
-								name="category"
-								rules={{ required: '账号类型不能为空' }}
-								render={({ field: { value, onChange } }) => (
-									<View style={[styles.formSelect, errors.category && styles.inputError]}>
-										<Picker
-											selectedValue={value}
-											onValueChange={onChange}
-											style={styles.picker}
-											enabled={!isSubmitting}
-										>
-											<Picker.Item label="社交媒体" value="social" />
-											<Picker.Item label="工作/开发" value="work" />
-											<Picker.Item label="金融服务" value="finance" />
-											<Picker.Item label="娱乐" value="entertainment" />
-											<Picker.Item label="其他" value="other" />
-										</Picker>
-									</View>
-								)}
-							/>
-							{errors.category && <Text style={styles.errorText}>{errors.category.message}</Text>}
+											{/* 密码强度指示器 */}
+											{passwordValue && passwordValue.length > 0 && (
+												<View style={styles.strengthContainer}>
+													<View style={styles.strengthMeter}>
+														{[1, 2, 3, 4, 5].map((index) => (
+															<View
+																key={index}
+																style={[
+																	styles.strengthBar,
+																	index <= passwordStrength.score && {
+																		backgroundColor: passwordStrength.color,
+																	},
+																	index > passwordStrength.score &&
+																		styles.strengthBarEmpty,
+																]}
+															/>
+														))}
+													</View>
+													<View style={styles.strengthInfo}>
+														<Text
+															style={[
+																styles.strengthText,
+																{ color: passwordStrength.color },
+															]}
+														>
+															密码强度：{passwordStrength.level}
+														</Text>
+														<Text style={styles.strengthFeedback}>
+															{passwordStrength.feedback}
+														</Text>
+													</View>
+												</View>
+											)}
+										</View>
+									)}
+								/>
+								{errors.password && <Text style={styles.errorText}>{errors.password.message}</Text>}
+							</View>
+
+							{/* Category */}
+							<View style={styles.formGroup}>
+								<Text style={styles.formLabel}>账号类型</Text>
+								<Controller
+									control={control}
+									name="category"
+									rules={{ required: '账号类型不能为空' }}
+									render={({ field: { value, onChange } }) => (
+										<View style={[styles.formSelect, errors.category && styles.inputError]}>
+											<Picker
+												selectedValue={value}
+												onValueChange={onChange}
+												style={styles.picker}
+												enabled={!isSubmitting}
+											>
+												<Picker.Item label="社交媒体" value="social" />
+												<Picker.Item label="工作/开发" value="work" />
+												<Picker.Item label="金融服务" value="finance" />
+												<Picker.Item label="娱乐" value="entertainment" />
+												<Picker.Item label="其他" value="other" />
+											</Picker>
+										</View>
+									)}
+								/>
+								{errors.category && <Text style={styles.errorText}>{errors.category.message}</Text>}
+							</View>
 						</View>
 					</View>
-				</View>
 
-				{/* Actions */}
-				<View style={styles.actionsContainer}>
-					<TouchableOpacity
-						style={[styles.primaryButton, isSubmitting && styles.disabledButton]}
-						onPress={handleSubmit(onSubmit)}
-						disabled={isSubmitting}
-					>
-						{isSubmitting ? (
-							<ActivityIndicator color="white" size="small" />
-						) : (
-							<>
-								<Ionicons name="checkmark-circle" size={20} color="white" />
-								<Text style={styles.primaryButtonText}>保存修改</Text>
-							</>
-						)}
-					</TouchableOpacity>
-					<TouchableOpacity
-						style={styles.secondaryButton}
-						onPress={() => navigation.goBack()}
-						disabled={isSubmitting}
-					>
-						<Text style={styles.secondaryButtonText}>取消</Text>
-					</TouchableOpacity>
-				</View>
-			</ScrollView>
-		</KeyboardAwareScrollView>
+					{/* Actions */}
+					<View style={styles.actionsContainer}>
+						<TouchableOpacity
+							style={[styles.primaryButton, isSubmitting && styles.disabledButton]}
+							onPress={handleSubmit(onSubmit)}
+							disabled={isSubmitting}
+						>
+							{isSubmitting ? (
+								<ActivityIndicator color="white" size="small" />
+							) : (
+								<>
+									<Ionicons name="checkmark-circle" size={20} color="white" />
+									<Text style={styles.primaryButtonText}>保存修改</Text>
+								</>
+							)}
+						</TouchableOpacity>
+						<TouchableOpacity
+							style={styles.secondaryButton}
+							onPress={() => navigation.goBack()}
+							disabled={isSubmitting}
+						>
+							<Text style={styles.secondaryButtonText}>取消</Text>
+						</TouchableOpacity>
+					</View>
+				</ScrollView>
+			</KeyboardAwareScrollView>
+			<LoadingMask visible={isSubmitting} />
+		</>
 	);
 }
 
