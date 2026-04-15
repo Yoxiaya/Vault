@@ -147,8 +147,7 @@ export default function AccountDetailsPage() {
 				{/* Danger Zone */}
 				<View style={styles.dangerZone}>
 					<View style={styles.dangerHeader}>
-						{/*  @ts-ignore */}
-						<Ionicons name="alert-triangle-outline" size={16} color="#ef4444" />
+						<Ionicons name="alert-circle" size={16} color="#ef4444" />
 						<Text style={styles.dangerTitle}>危险区域</Text>
 					</View>
 					<TouchableOpacity style={styles.dangerButton} onPress={deleteAccountPress}>
