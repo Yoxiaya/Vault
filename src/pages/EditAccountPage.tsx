@@ -22,7 +22,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../App';
-import { AccountCategory, UploadAccount } from '../types';
+import { ACCOUNT_CATEGORIES, AccountCategory, UploadAccount } from '../types';
 import { useAccountsStore } from '../store';
 import { addAccount, updateAccount, uploadImage, deleteImage } from '../service/api';
 import { calculatePasswordStrength } from '../utils';
@@ -326,11 +326,9 @@ export default function EditAccountPage() {
 													style={styles.picker}
 													enabled={!isSubmitting}
 												>
-													<Picker.Item label="社交媒体" value="social" />
-													<Picker.Item label="工作/开发" value="work" />
-													<Picker.Item label="金融服务" value="finance" />
-													<Picker.Item label="娱乐" value="entertainment" />
-													<Picker.Item label="其他" value="other" />
+													{Object.entries(ACCOUNT_CATEGORIES).map(([category, label]) => (
+														<Picker.Item label={label} value={category} />
+													))}
 												</Picker>
 											</View>
 										)}

@@ -1,60 +1,237 @@
-# Vault
+# Vault - 密码管理应用
 
-## 一、客户端基础框架搭建
+一个安全、高效的密码管理应用，帮助用户存储和管理各种账户的密码信息。
 
-- [x] 初始化 React Native 项目
-- [ ] 集成 React Navigation 配置底部 Tab 导航（首页、分类、密码生成、我的）
-- [x] 配置 Zustand管理状态
+## 功能特性
 
-## 二、安全与加密模块
+- 📱 **跨平台支持**：同时支持 iOS、Android 和 Web 平台
+- 🔒 **安全存储**：安全管理账户密码信息
+- 🔍 **快速搜索**：支持按应用名称和用户名搜索
+- 📁 **分类管理**：支持按分类查看账户（社交、财务、娱乐、其他）
+- ✏️ **账户编辑**：方便地添加、编辑和管理账户信息
+- 🔐 **密码生成**：内置密码生成器，创建强密码
+- 📊 **健康检查**：检查密码强度和安全性
+- ⚙️ **个性化设置**：自定义应用设置
 
-- [ ] 实现 AES-256 加密工具类（加解密账号密码）
-- [ ] 实现 SHA-256 哈希工具类（主密码摘要）
-- [ ] 集成 react-native-keychain，安全存储加密密钥、主密码摘要
-- [ ] 集成 Realm JS 或 Watermelon DB（加密版），实现本地数据库加密存储
-- [ ] 集成 react-native-local-auth，实现指纹解锁 / 面容识别登录
+## 技术栈
 
-## 三、网络与云端同步模块
+- **前端框架**：React Native + Expo
+- **状态管理**：Zustand
+- **表单管理**：React Hook Form
+- **导航**：React Navigation
+- **UI 组件**：React Native 内置组件 + Expo Vector Icons
+- **类型系统**：TypeScript
+- **密码生成**：内置密码生成算法
+- **数据持久化**：本地存储
 
-- [x] 集成 Axios，封装统一网络请求（含请求拦截、异常处理）
-- [ ] 配置 HTTPS（TLS 1.3）传输加密
-- [ ] 对接阿里云 ECS、RDS MySQL、OSS 存储（用户基础信息、备份数据）
-- [ ] 实现 WebSocket 实时同步机制
-- [ ] 实现增量同步逻辑（仅同步变更数据）
-- [ ] 实现离线操作暂存 + 网络恢复后自动同步功能
+## 安装与运行
 
-## 四、核心功能插件集成
+### 前置要求
 
-- [ ] 集成 react-native-autofill，实现 iOS / Android 密码自动填充
-- [ ] 集成 react-native-mmkv，存储轻量配置（如用户偏好、APP 设置）
-- [ ] 集成 Sentry 或 react-native-firebase/crashlytics，实现异常监控与上报
+- Node.js 16.x 或更高版本
+- npm 或 yarn
+- Expo CLI
+- iOS/Android 模拟器或真机（可选）
 
-## 五、构建与打包配置
+### 安装步骤
 
-- [ ] 配置 Android 端打包（Android Studio + 签名）
-- [ ] 配置 iOS 端打包（Xcode + 证书）
-- [ ] 配置 npm 或 yarn 包管理脚本
-- [ ] 配置多环境打包命令（dev / prod）
+1. **克隆项目**
 
-## 六、适配与兼容性测试
+```bash
+git clone <项目地址>
+cd Vault
+```
 
-- [ ] Android 8.0+ 真机与模拟器测试
-- [ ] 不同屏幕尺寸 UI 适配（不拉伸、不错位）
-- [ ] 性能测试：启动速度、操作响应、卡顿与闪退监控
+2. **安装依赖**
 
-## 七、可选 / 后续优化项
+```bash
+npm install
+# 或
+yarn install
+```
 
-- [ ] 增加本地数据导入 / 导出功能（加密备份）
-- [ ] 支持多主密码或紧急联系人恢复机制
-- [ ] 支持密码强度检测与弱密码提醒
-- [ ] 支持自定义分类与标签管理
-- [ ] 编辑账户保存时，同时调用了删除图片，上传图片和保存图片，保存时间过长，需要优化
+3. **启动开发服务器**
 
-### 踩坑记录
+```bash
+npm start
+# 或
+yarn start
+```
 
-> 图片上传问题
+4. **运行应用**
 
-- 问题描述:
-  上传图片时，手机端无法获取到图片的File对象，axios无法解析图片数据，导致上传失败。
-- 解决办法:
-  手动将拼凑File对象，将axios全部替换成fetch，即可上传成功。
+- **iOS 模拟器**：在终端按 `i`
+- **Android 模拟器**：在终端按 `a`
+- **Web 浏览器**：在终端按 `w`
+- **Expo Go 应用**：扫描终端中的二维码
+
+## 项目结构
+
+```
+Vault/
+├── assets/                # 静态资源文件
+│   ├── adaptive-icon.png
+│   ├── favicon.png
+│   ├── icon.png
+│   └── splash-icon.png
+├── src/                   # 源代码
+│   ├── components/        # 可复用组件
+│   │   ├── Footer.tsx     # 底部导航栏
+│   │   ├── Mask.tsx       # 遮罩组件
+│   │   └── SkeletonItem.tsx # 骨架屏组件
+│   ├── pages/             # 页面组件
+│   │   ├── AccountDetailsPage.tsx # 账户详情页
+│   │   ├── EditAccountPage.tsx    # 编辑账户页
+│   │   ├── GeneratorPage.tsx      # 密码生成器
+│   │   ├── HealthPage.tsx         # 健康检查页
+│   │   ├── SettingsPage.tsx       # 设置页
+│   │   ├── TestPage.tsx           # 测试页
+│   │   └── VaultPage.tsx          # 主页
+│   ├── service/           # 服务层
+│   │   ├── api/           # API 相关
+│   │   └── convert/       # 转换工具
+│   ├── store/             # 状态管理
+│   │   ├── index.ts
+│   │   └── useAccountsStore.ts # 账户状态管理
+│   ├── utils/             # 工具函数
+│   ├── App.tsx            # 应用入口
+│   └── types.ts           # 类型定义
+├── .gitignore             # Git 忽略文件
+├── App.tsx                # 根入口文件
+├── README.md              # 项目说明
+├── app.json               # Expo 配置
+├── index.ts               # 入口文件
+├── package-lock.json      # npm 依赖锁定
+├── package.json           # 项目配置和依赖
+└── tsconfig.json          # TypeScript 配置
+```
+
+## 核心功能模块
+
+### 1. 账户管理
+
+- **添加账户**：支持添加新的账户信息，包括应用名称、用户名、密码、网站等
+- **编辑账户**：修改现有账户信息
+- **查看详情**：查看账户详细信息
+- **分类管理**：按分类组织账户
+
+### 2. 密码生成
+
+- **自定义密码**：根据用户需求生成强密码
+- **密码强度**：实时显示密码强度
+- **一键复制**：方便地复制生成的密码
+
+### 3. 健康检查
+
+- **密码强度分析**：检查账户密码的强度
+- **安全建议**：提供安全改进建议
+- **重复密码检测**：检测重复使用的密码
+
+### 4. 设置
+
+- **主题设置**：切换应用主题
+- **安全设置**：配置安全选项
+- **数据管理**：导出/导入数据
+
+## 数据结构
+
+### 账户信息
+
+```typescript
+interface Account {
+  id: string;              // 账户唯一标识
+  appName: string;         // 应用名称
+  username: string;        // 用户名
+  email?: string;          // 邮箱（可选）
+  password?: string;       // 密码（可选）
+  webSite: string;         // 网站地址
+  category: string;        // 分类
+  logoUrl?: string;        // 图标 URL（可选）
+  lastUpdated: string;     // 最后更新时间
+  twoFactorEnabled: boolean; // 是否启用双因素认证
+  storageType: string;     // 存储类型
+  description?: string;    // 描述（可选）
+}
+```
+
+### 账户分类
+
+```typescript
+export const ACCOUNT_CATEGORIES = {
+  social: '社交',
+  work: '工作',
+  finance: '财务',
+  entertainment: '娱乐',
+  other: '其他',
+};
+```
+
+## 使用指南
+
+### 添加新账户
+
+1. 在主页点击右下角的 "+", 按钮
+2. 填写账户信息，包括应用名称、用户名、密码等
+3. 选择账户分类
+4. 点击 "保存修改" 按钮
+
+### 搜索账户
+
+1. 在主页顶部的搜索框中输入应用名称或用户名
+2. 搜索结果会实时显示
+
+### 按分类查看账户
+
+1. 在主页的分类标签中选择相应的分类
+2. 页面会显示该分类下的所有账户
+
+### 生成密码
+
+1. 导航到 "生成器" 页面
+2. 根据需要调整密码长度和包含的字符类型
+3. 点击 "生成" 按钮
+4. 点击 "复制" 按钮复制生成的密码
+
+## 开发指南
+
+### 代码风格
+
+- 使用 TypeScript 进行类型检查
+- 遵循 ESLint 规则
+- 组件命名使用 PascalCase
+- 函数和变量命名使用 camelCase
+- 使用箭头函数
+
+### 提交规范
+
+- **feat**：添加新功能
+- **fix**：修复 bug
+- **docs**：文档更新
+- **style**：代码风格调整
+- **refactor**：代码重构
+- **test**：测试相关
+- **chore**：构建或依赖更新
+
+## 贡献
+
+欢迎贡献代码、报告 bug 或提出建议！
+
+1. Fork 项目
+2. 创建分支
+3. 提交更改
+4. 发起 Pull Request
+
+## 许可证
+
+本项目使用 0BSD 许可证。详见 [LICENSE](LICENSE) 文件。
+
+## 联系方式
+
+如有问题或建议，请通过以下方式联系：
+
+- 邮箱：your-email@example.com
+- GitHub：[your-username](https://github.com/your-username)
+
+---
+
+**Vault** - 让密码管理更简单、更安全！ 🔒
