@@ -139,18 +139,18 @@ Vault/
 
 ```typescript
 interface Account {
-  id: string;              // 账户唯一标识
-  appName: string;         // 应用名称
-  username: string;        // 用户名
-  email?: string;          // 邮箱（可选）
-  password?: string;       // 密码（可选）
-  webSite: string;         // 网站地址
-  category: string;        // 分类
-  logoUrl?: string;        // 图标 URL（可选）
-  lastUpdated: string;     // 最后更新时间
-  twoFactorEnabled: boolean; // 是否启用双因素认证
-  storageType: string;     // 存储类型
-  description?: string;    // 描述（可选）
+	id: string; // 账户唯一标识
+	appName: string; // 应用名称
+	username: string; // 用户名
+	email?: string; // 邮箱（可选）
+	password?: string; // 密码（可选）
+	webSite: string; // 网站地址
+	category: string; // 分类
+	logoUrl?: string; // 图标 URL（可选）
+	lastUpdated: string; // 最后更新时间
+	twoFactorEnabled: boolean; // 是否启用双因素认证
+	storageType: string; // 存储类型
+	description?: string; // 描述（可选）
 }
 ```
 
@@ -158,11 +158,11 @@ interface Account {
 
 ```typescript
 export const ACCOUNT_CATEGORIES = {
-  social: '社交',
-  work: '工作',
-  finance: '财务',
-  entertainment: '娱乐',
-  other: '其他',
+	social: '社交',
+	work: '工作',
+	finance: '财务',
+	entertainment: '娱乐',
+	other: '其他',
 };
 ```
 
@@ -229,8 +229,8 @@ export const ACCOUNT_CATEGORIES = {
 
 如有问题或建议，请通过以下方式联系：
 
-- 邮箱：your-email@example.com
-- GitHub：[your-username](https://github.com/your-username)
+- 邮箱：171149510@qq.com
+- GitHub：[Yoxiaya](https://github.com/Yoxiaya)
 
 ---
 
