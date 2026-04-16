@@ -10,6 +10,7 @@ export interface Account {
 	lastUpdated: string;
 	twoFactorEnabled: boolean;
 	storageType: string;
+	description?: string;
 }
 export type UploadAccount = Omit<Account, 'id'>;
 export type AccountCategory = Account['category'];

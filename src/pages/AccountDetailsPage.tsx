@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Image, ScrollView, StyleSheet } from 'react-native';
+// AccountDetailsPage.tsx
+import React, { useState, useEffect, useMemo } from 'react';
+import { View, Text, TouchableOpacity, Image, ScrollView, StyleSheet, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import * as Clipboard from 'expo-clipboard';
 
 import { RootStackParamList } from '../App';
 import { Account } from '../types';
 import { useAccountsStore } from '../store';
 import { deleteAccount } from '../service/api';
+import { calculatePasswordStrength } from '../utils';
 
 type AccountDetailsPageRouteProp = RouteProp<RootStackParamList, 'AccountDetails'>;
 type AccountDetailsPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'AccountDetails'>;
@@ -20,10 +23,39 @@ export default function AccountDetailsPage() {
 	const [account, setAccount] = useState<Account>();
 	const { getAccountDetailById } = useAccountsStore();
 
-	const deleteAccountPress = async () => {
-		await deleteAccount(id);
-		navigation.navigate('VaultPage');
+	// 复制到剪贴板的通用函数
+	const copyToClipboard = async (text: string, type: string) => {
+		if (!text) return;
+		await Clipboard.setStringAsync(text);
+		Alert.alert('复制成功', `${type}已复制到剪贴板`);
 	};
+
+	const deleteAccountPress = () => {
+		Alert.alert(
+			'永久删除账号',
+			`确定要永久删除账号“${account?.appName}”吗？此操作不可恢复。`,
+			[
+				{
+					text: '取消',
+					style: 'cancel',
+				},
+				{
+					text: '确认删除',
+					style: 'destructive',
+					onPress: async () => {
+						await deleteAccount(id);
+						navigation.navigate('VaultPage');
+					},
+				},
+			],
+			{ cancelable: true },
+		);
+	};
+	// 密码强度计算
+	const passwordStrength = useMemo(() => {
+		const strength = calculatePasswordStrength(account?.password || '');
+		return strength;
+	}, [account?.password]);
 
 	useEffect(() => {
 		const accountDetails = getAccountDetailById(id);
@@ -56,9 +88,10 @@ export default function AccountDetailsPage() {
 						<Text style={styles.securityBadgeText}>高安全性账号</Text>
 					</View>
 					<Text style={styles.accountName}>{account.appName}</Text>
-					<Text style={styles.accountDescription}>
-						代码托管与协作平台，包含个人项目及企业级敏感仓库权限。
-					</Text>
+					{/* 动态描述：如果有 description 字段且不为空则显示 */}
+					{account.description && account.description.trim() !== '' && (
+						<Text style={styles.accountDescription}>{account.description}</Text>
+					)}
 				</View>
 			</View>
 
@@ -73,7 +106,10 @@ export default function AccountDetailsPage() {
 							<Text style={styles.credentialLabel}>用户名</Text>
 							<View style={styles.credentialValueContainer}>
 								<Text style={styles.credentialValue}>{account.username}</Text>
-								<TouchableOpacity style={styles.actionButton}>
+								<TouchableOpacity
+									style={styles.actionButton}
+									onPress={() => copyToClipboard(account.username, '用户名')}
+								>
 									<Ionicons name="copy-outline" size={20} color="#3b82f6" />
 								</TouchableOpacity>
 							</View>
@@ -83,28 +119,47 @@ export default function AccountDetailsPage() {
 							<Text style={styles.credentialLabel}>密码</Text>
 							<View style={styles.credentialValueContainer}>
 								<Text style={styles.credentialValue}>••••••••••••••••</Text>
-								<TouchableOpacity style={styles.actionButton}>
+								<TouchableOpacity
+									style={styles.actionButton}
+									onPress={() => copyToClipboard(account.password as string, '密码')}
+								>
 									<Ionicons name="copy-outline" size={20} color="#3b82f6" />
 								</TouchableOpacity>
 							</View>
-							<View style={styles.passwordStrengthContainer}>
-								<View style={[styles.strengthBar, styles.strengthBarDim]} />
-								<View style={[styles.strengthBar, styles.strengthBarDim]} />
-								<View style={[styles.strengthBar, styles.strengthBarDim]} />
-								<View style={[styles.strengthBar, styles.strengthBarFull]} />
+							<View style={styles.strengthMeter}>
+								{[1, 2, 3, 4, 5].map((index) => (
+									<View
+										key={index}
+										style={[
+											styles.strengthBar,
+											index <= passwordStrength.score && {
+												backgroundColor: passwordStrength.color,
+											},
+											index > passwordStrength.score && styles.strengthBarEmpty,
+										]}
+									/>
+								))}
 							</View>
-							<Text style={styles.strengthText}>密码强度：极高</Text>
+							<Text style={styles.strengthText}>密码强度：{passwordStrength.level}</Text>
 						</View>
-						{/* Website */}
-						<View style={styles.credentialItem}>
-							<Text style={styles.credentialLabel}>官方网站</Text>
-							<View style={styles.credentialValueContainer}>
-								<Text style={styles.credentialValueLink}>{account.webSite}</Text>
-								<TouchableOpacity style={styles.actionButton}>
-									<Ionicons name="open-outline" size={20} color="#3b82f6" />
-								</TouchableOpacity>
+						{/* Website - 条件渲染：只有当 webSite 字段存在且不为空时显示 */}
+						{account.webSite && account.webSite.trim() !== '' && (
+							<View style={styles.credentialItem}>
+								<Text style={styles.credentialLabel}>官方网站</Text>
+								<View style={styles.credentialValueContainer}>
+									<Text style={styles.credentialValueLink}>{account.webSite}</Text>
+									<TouchableOpacity
+										style={styles.actionButton}
+										onPress={() => {
+											// 可以添加打开链接的逻辑，目前仅复制
+											copyToClipboard(account.webSite!, '网址');
+										}}
+									>
+										<Ionicons name="open-outline" size={20} color="#3b82f6" />
+									</TouchableOpacity>
+								</View>
 							</View>
-						</View>
+						)}
 					</View>
 				</View>
 
@@ -293,21 +348,11 @@ const styles = StyleSheet.create({
 		padding: 8,
 		borderRadius: 20,
 	},
-	passwordStrengthContainer: {
-		flexDirection: 'row',
-		gap: 4,
-		height: 4,
-	},
 	strengthBar: {
 		flex: 1,
 		borderRadius: 2,
 	},
-	strengthBarDim: {
-		backgroundColor: 'rgba(59, 130, 246, 0.3)',
-	},
-	strengthBarFull: {
-		backgroundColor: '#3b82f6',
-	},
+
 	strengthText: {
 		fontSize: 10,
 		fontWeight: '500',
@@ -437,5 +482,13 @@ const styles = StyleSheet.create({
 		fontSize: 12,
 		color: '#1d4ed8',
 		lineHeight: 18,
+	},
+	strengthMeter: {
+		flexDirection: 'row',
+		gap: 6,
+		height: 6,
+	},
+	strengthBarEmpty: {
+		backgroundColor: '#f3f4f6',
 	},
 });
