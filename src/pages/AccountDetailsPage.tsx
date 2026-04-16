@@ -1,4 +1,3 @@
-// AccountDetailsPage.tsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, TouchableOpacity, Image, ScrollView, StyleSheet, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, StyleSheet, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { SkeletonItem } from '../components/SkeletonItem';
 import { RootStackParamList } from '../App';
 import { useAccountsStore } from '../store';
 
@@ -16,29 +17,56 @@ export default function VaultPage() {
 
 	const { accounts, loading, fetchAccounts } = useAccountsStore();
 
-	// useFocusEffect(
-	// 	useCallback(() => {
-	// 		const accounts = MOCK_ACCOUNTS.filter((account) => {
-	// 			const matchesSearch =
-	// 				account.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-	// 				account.username.toLowerCase().includes(searchQuery.toLowerCase());
-	// 			const matchesCategory =
-	// 				activeCategory === '全部' ||
-	// 				(activeCategory === '社交媒体' && account.category === 'social') ||
-	// 				(activeCategory === '金融财务' && account.category === 'finance') ||
-	// 				(activeCategory === '工作办公' && account.category === 'work');
-	// 			return matchesSearch && matchesCategory;
-	// 		});
-	// 		setFilteredAccounts(accounts);
-	// 	}, []),
-	// );
-
 	useEffect(() => {
 		fetchAccounts();
 	}, []);
 
 	const onAddAccountPress = () => {
 		navigation.navigate('EditAccount', { id: '', mode: 'add' });
+	};
+
+	// 渲染内容：骨架屏或账户列表
+	const renderContent = () => {
+		if (loading) {
+			return (
+				<View style={styles.accountList}>
+					{[1, 2, 3, 4, 5].map((item) => (
+						<SkeletonItem key={item} />
+					))}
+				</View>
+			);
+		}
+
+		return (
+			<View style={styles.accountList}>
+				{accounts.map((account) => (
+					<TouchableOpacity
+						key={account.id}
+						style={styles.accountItem}
+						onPress={() => navigation.navigate('AccountDetails', { id: account.id, mode: 'edit' })}
+					>
+						<View style={styles.accountInfo}>
+							<View style={[styles.logoContainer, !account.logoUrl && styles.logoPlaceholder]}>
+								{account.logoUrl ? (
+									<Image source={{ uri: account.logoUrl }} style={styles.logo} />
+								) : (
+									<Text style={styles.logoText}>{account.appName[0]}</Text>
+								)}
+							</View>
+							<View style={styles.accountDetails}>
+								<Text style={styles.accountName}>{account.appName}</Text>
+								<Text style={styles.accountUsername}>{account.username}</Text>
+							</View>
+						</View>
+						<View style={styles.accountActions}>
+							<TouchableOpacity style={styles.actionButton}>
+								<Ionicons name="copy-outline" size={20} color="#3b82f6" />
+							</TouchableOpacity>
+						</View>
+					</TouchableOpacity>
+				))}
+			</View>
+		);
 	};
 
 	return (
@@ -81,7 +109,6 @@ export default function VaultPage() {
 				</ScrollView>
 			</View>
 
-			{/* Account List */}
 			<View style={styles.accountSection}>
 				<View style={styles.sectionHeader}>
 					<Text style={styles.sectionTitle}>最近使用的账户</Text>
@@ -91,39 +118,7 @@ export default function VaultPage() {
 						</Text>
 					</TouchableOpacity>
 				</View>
-				<ScrollView showsVerticalScrollIndicator={false}>
-					<View style={styles.accountList}>
-						{accounts.map((account) => (
-							<TouchableOpacity
-								key={account.id}
-								style={styles.accountItem}
-								onPress={() => navigation.navigate('AccountDetails', { id: account.id, mode: 'edit' })}
-							>
-								<View style={styles.accountInfo}>
-									<View style={[styles.logoContainer, !account.logoUrl && styles.logoPlaceholder]}>
-										{account.logoUrl ? (
-											<Image source={{ uri: account.logoUrl }} style={styles.logo} />
-										) : (
-											<Text style={styles.logoText}>{account.appName[0]}</Text>
-										)}
-									</View>
-									<View style={styles.accountDetails}>
-										<Text style={styles.accountName}>{account.appName}</Text>
-										<Text style={styles.accountUsername}>{account.username}</Text>
-									</View>
-								</View>
-								<View style={styles.accountActions}>
-									<TouchableOpacity style={styles.actionButton}>
-										<Ionicons name="copy-outline" size={20} color="#3b82f6" />
-									</TouchableOpacity>
-									<TouchableOpacity style={styles.actionButton}>
-										<Ionicons name="ellipsis-vertical" size={20} color="#6b7280" />
-									</TouchableOpacity>
-								</View>
-							</TouchableOpacity>
-						))}
-					</View>
-				</ScrollView>
+				<ScrollView showsVerticalScrollIndicator={false}>{renderContent()}</ScrollView>
 			</View>
 
 			{/* FAB */}
