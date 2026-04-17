@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useForm, Controller } from 'react-hook-form';
+import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import {
 	View,
 	Text,
 	TextInput,
 	TouchableOpacity,
-	Image,
-	ScrollView,
 	StyleSheet,
 	Alert,
 	ActivityIndicator,
