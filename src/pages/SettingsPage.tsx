@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Image, ScrollView, StyleSheet, Switch } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Switch } from 'react-native';
+import { Image } from 'expo-image';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../App';
 
-type VaultPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Main'>;
+type SettingsPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'SettingsPage'>;
 export default function SettingsPage() {
-	const navigation = useNavigation<VaultPageNavigationProp>();
+	const navigation = useNavigation<SettingsPageNavigationProp>();
 	const [biometricEnabled, setBiometricEnabled] = useState(true);
 	const [darkModeEnabled, setDarkModeEnabled] = useState(false);
 
@@ -15,12 +16,12 @@ export default function SettingsPage() {
 		{
 			title: '账户设置',
 			items: [
-				{ label: '修改主密码', icon: 'lock-closed-outline', type: 'link' },
+				{ label: '修改主密码', icon: 'lock-closed-outline', type: 'link', to: 'LoginPage' },
 				{
 					label: '自动填充设置',
 					icon: 'document-text-outline',
 					type: 'link',
-					to: 'TestPage',
+					to: 'RegisterPage',
 				},
 				{
 					label: '生物识别登录',
@@ -92,8 +93,8 @@ export default function SettingsPage() {
 										idx !== section.items.length - 1 && styles.settingItemBorder,
 									]}
 									onPress={() => {
-										if (item.type === 'link' && item.to) {
-											navigation.navigate(item.to);
+										if (item.type === 'link' && 'to' in item && item.to) {
+											navigation.navigate(item.to as any);
 										} else {
 										}
 									}}
