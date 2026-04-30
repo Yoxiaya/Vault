@@ -25,3 +25,6 @@ export const uploadImage = (file: FormData) => {
 export const deleteImage = (data: FormData) => {
 	return request('/vault-accounts/delete-image', { method: 'post', data });
 };
+export const login = (data: { account: string; password: string }): Promise<any> => {
+	return request('/auth/login', { method: 'post', data });
+};

@@ -16,18 +16,27 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../App';
+import { login } from '../service/api';
+import { useAuth } from '../context/authContext';
 
 type LoginPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'LoginPage'>;
 
 const LoginScreen = () => {
 	const navigation = useNavigation<LoginPageNavigationProp>();
 	const insets = useSafeAreaInsets();
+	const { singIn } = useAuth();
 	const [accountId, setAccountId] = useState('');
 	const [password, setPassword] = useState('');
+
 	const [showPassword, setShowPassword] = useState(false);
 
-	const handleLogin = () => {
-		console.log('Login attempt with:', accountId, password);
+	const handleLogin = async () => {
+		const result = await login({ account: accountId, password });
+		if (result.success) {
+			await singIn(result.data);
+		} else {
+			alert(result.message);
+		}
 	};
 
 	const handleBiometricLogin = () => {
