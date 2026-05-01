@@ -1,13 +1,14 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import * as SplashScreen from 'expo-splash-screen';
 import AccountDetailsPage from './pages/AccountDetailsPage';
 import EditAccountPage from './pages/EditAccountPage';
 import MainTabs from './components/Footer';
 import TestPage from './pages/TestPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-import { AuthProvider, useAuth } from './context/authContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { ActivityIndicator, View } from 'react-native';
 
 export type EditAccountMode = 'add' | 'edit';
@@ -21,13 +22,18 @@ export type RootStackParamList = {
 	SettingsPage: undefined;
 	RegisterPage: undefined;
 };
-
+SplashScreen.preventAutoHideAsync();
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 function AppNavigator() {
-	const { user, isLoading } = useAuth();
+	const { user, isLoading, isReady } = useAuth();
 
-	if (isLoading) {
+	useEffect(() => {
+		if (!isLoading && isReady) {
+			SplashScreen.hideAsync();
+		}
+	}, [isLoading, isReady]);
+	if (isLoading || !isReady) {
 		return (
 			<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
 				<ActivityIndicator size="large" />

@@ -28,3 +28,6 @@ export const deleteImage = (data: FormData) => {
 export const login = (data: { account: string; password: string }): Promise<any> => {
 	return request('/auth/login', { method: 'post', data });
 };
+export const register = (data: { username: string; email: string; password: string }) => {
+	return request('/auth/register', { method: 'post', data });
+};

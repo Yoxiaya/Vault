@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../App';
+import { useAuth } from '../context/AuthContext';
 
 type SettingsPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'SettingsPage'>;
 export default function SettingsPage() {
@@ -55,6 +56,8 @@ export default function SettingsPage() {
 			],
 		},
 	];
+
+	const { signOut } = useAuth();
 
 	return (
 		<ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -143,7 +146,7 @@ export default function SettingsPage() {
 
 			{/* Logout */}
 			<View style={styles.logoutSection}>
-				<TouchableOpacity style={styles.logoutButton}>
+				<TouchableOpacity style={styles.logoutButton} onPress={() => signOut()}>
 					<Text style={styles.logoutButtonText}>退出登录</Text>
 				</TouchableOpacity>
 				<Text style={styles.encryptionText}>Secured by Quantum Encryption</Text>

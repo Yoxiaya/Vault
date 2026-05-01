@@ -9,26 +9,79 @@ import {
 	Platform,
 	ScrollView,
 	StyleSheet,
+	Modal,
+	ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../App';
+import { useForm, Controller } from 'react-hook-form';
+import { register } from '../service/api';
 
 type RegisterPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'RegisterPage'>;
+
+interface RegisterFormData {
+	username: string;
+	email: string;
+	password: string;
+	confirmPassword: string;
+}
 
 const RegisterScreen = () => {
 	const navigation = useNavigation<RegisterPageNavigationProp>();
 	const insets = useSafeAreaInsets();
-	const [email, setEmail] = useState('');
-	const [password, setPassword] = useState('');
-	const [confirmPassword, setConfirmPassword] = useState('');
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+	const [isLoading, setIsLoading] = useState(false);
 
-	const handleRegister = () => {
-		console.log('Register attempt with:', email, password, confirmPassword);
+	const {
+		control,
+		handleSubmit,
+		watch,
+		formState: { errors },
+	} = useForm<RegisterFormData>({
+		defaultValues: {
+			username: '',
+			email: '',
+			password: '',
+			confirmPassword: '',
+		},
+	});
+
+	const passwordValue = watch('password');
+
+	// 简单的密码强度计算
+	const getPasswordStrength = (password: string): { level: number; text: string; bars: number[] } => {
+		let strength = 0;
+		if (password.length >= 6) strength++;
+		if (password.length >= 10) strength++;
+		if (/[A-Z]/.test(password)) strength++;
+		if (/[0-9]/.test(password)) strength++;
+		if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+		const level = Math.min(strength, 4);
+		const levels = ['极弱', '弱', '中', '强', '极强'];
+		const bars = [0, 1, 2, 3, 4].map((i) => (i < level ? 1 : 0));
+
+		return { level, text: levels[level], bars };
+	};
+
+	const passwordStrength = getPasswordStrength(passwordValue || '');
+
+	const onSubmit = async (data: RegisterFormData) => {
+		setIsLoading(true);
+		try {
+			console.log('Register attempt with:', data.username, data.email, data.password);
+			await register(data);
+			alert('注册成功！');
+		} catch (error) {
+			alert('注册失败，请重试');
+		} finally {
+			navigation.navigate('LoginPage');
+			setIsLoading(false);
+		}
 	};
 
 	return (
@@ -58,18 +111,76 @@ const RegisterScreen = () => {
 
 							{/* 注册表单卡片 */}
 							<View style={styles.formContainer}>
+								{/* 用户名输入框 */}
+								<View style={styles.formGroup}>
+									<Text style={styles.formLabel}>用户名</Text>
+									<View style={styles.inputWithIcon}>
+										<Controller
+											control={control}
+											rules={{
+												required: '用户名不能为空',
+												minLength: {
+													value: 3,
+													message: '用户名至少3个字符',
+												},
+												maxLength: {
+													value: 20,
+													message: '用户名最多20个字符',
+												},
+												pattern: {
+													value: /^[a-zA-Z0-9_\u4e00-\u9fa5]+$/,
+													message: '用户名只能包含字母、数字、下划线或中文',
+												},
+											}}
+											render={({ field: { onChange, onBlur, value } }) => (
+												<TextInput
+													style={styles.formInput}
+													placeholder="请输入用户名"
+													value={value}
+													onChangeText={onChange}
+													onBlur={onBlur}
+													autoCapitalize="none"
+													autoCorrect={false}
+												/>
+											)}
+											name="username"
+										/>
+										<Ionicons
+											name="person-outline"
+											size={20}
+											color="#6b7280"
+											style={styles.inputIcon}
+										/>
+									</View>
+									{errors.username && <Text style={styles.errorText}>{errors.username.message}</Text>}
+								</View>
+
 								{/* 邮箱输入框 */}
 								<View style={styles.formGroup}>
 									<Text style={styles.formLabel}>电子邮箱</Text>
 									<View style={styles.inputWithIcon}>
-										<TextInput
-											style={styles.formInput}
-											placeholder="your@email.com"
-											value={email}
-											onChangeText={setEmail}
-											autoCapitalize="none"
-											autoCorrect={false}
-											keyboardType="email-address"
+										<Controller
+											control={control}
+											rules={{
+												required: '邮箱不能为空',
+												pattern: {
+													value: /^[^\s@]+@([^\s@.,]+\.)+[^\s@.,]{2,}$/,
+													message: '请输入有效的邮箱地址',
+												},
+											}}
+											render={({ field: { onChange, onBlur, value } }) => (
+												<TextInput
+													style={styles.formInput}
+													placeholder="your@email.com"
+													value={value}
+													onChangeText={onChange}
+													onBlur={onBlur}
+													autoCapitalize="none"
+													autoCorrect={false}
+													keyboardType="email-address"
+												/>
+											)}
+											name="email"
 										/>
 										<Ionicons
 											name="mail-outline"
@@ -78,20 +189,35 @@ const RegisterScreen = () => {
 											style={styles.inputIcon}
 										/>
 									</View>
+									{errors.email && <Text style={styles.errorText}>{errors.email.message}</Text>}
 								</View>
 
 								{/* 主密码输入框 */}
 								<View style={styles.formGroup}>
 									<Text style={styles.formLabel}>主密码</Text>
 									<View style={styles.inputWithIcon}>
-										<TextInput
-											style={styles.formInput}
-											placeholder="设置您的主密码"
-											value={password}
-											onChangeText={setPassword}
-											secureTextEntry={!showPassword}
-											autoCapitalize="none"
-											autoCorrect={false}
+										<Controller
+											control={control}
+											rules={{
+												required: '密码不能为空',
+												minLength: {
+													value: 6,
+													message: '密码长度至少为6位',
+												},
+											}}
+											render={({ field: { onChange, onBlur, value } }) => (
+												<TextInput
+													style={styles.formInput}
+													placeholder="设置您的主密码"
+													value={value}
+													onChangeText={onChange}
+													onBlur={onBlur}
+													secureTextEntry={!showPassword}
+													autoCapitalize="none"
+													autoCorrect={false}
+												/>
+											)}
+											name="password"
 										/>
 										<View style={styles.passwordActions}>
 											<TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
@@ -103,30 +229,50 @@ const RegisterScreen = () => {
 											</TouchableOpacity>
 										</View>
 									</View>
+									{errors.password && <Text style={styles.errorText}>{errors.password.message}</Text>}
+
 									{/* 密码强度指示器 */}
-									<View style={styles.strengthContainer}>
-										<View style={styles.strengthMeter}>
-											<View style={[styles.strengthBar, styles.strengthBarFull]} />
-											<View style={[styles.strengthBar, styles.strengthBarEmpty]} />
-											<View style={[styles.strengthBar, styles.strengthBarEmpty]} />
-											<View style={[styles.strengthBar, styles.strengthBarEmpty]} />
+									{passwordValue && passwordValue.length > 0 && (
+										<View style={styles.strengthContainer}>
+											<View style={styles.strengthMeter}>
+												{passwordStrength.bars.map((filled, index) => (
+													<View
+														key={index}
+														style={[
+															styles.strengthBar,
+															filled ? styles.strengthBarFull : styles.strengthBarEmpty,
+														]}
+													/>
+												))}
+											</View>
+											<Text style={styles.strengthText}>强度: {passwordStrength.text}</Text>
 										</View>
-										<Text style={styles.strengthText}>强度: 弱</Text>
-									</View>
+									)}
 								</View>
 
 								{/* 确认密码输入框 */}
 								<View style={styles.formGroup}>
 									<Text style={styles.formLabel}>确认主密码</Text>
 									<View style={styles.inputWithIcon}>
-										<TextInput
-											style={styles.formInput}
-											placeholder="再次输入主密码"
-											value={confirmPassword}
-											onChangeText={setConfirmPassword}
-											secureTextEntry={!showConfirmPassword}
-											autoCapitalize="none"
-											autoCorrect={false}
+										<Controller
+											control={control}
+											rules={{
+												required: '请确认密码',
+												validate: (value) => value === passwordValue || '两次输入的密码不一致',
+											}}
+											render={({ field: { onChange, onBlur, value } }) => (
+												<TextInput
+													style={styles.formInput}
+													placeholder="再次输入主密码"
+													value={value}
+													onChangeText={onChange}
+													onBlur={onBlur}
+													secureTextEntry={!showConfirmPassword}
+													autoCapitalize="none"
+													autoCorrect={false}
+												/>
+											)}
+											name="confirmPassword"
 										/>
 										<View style={styles.passwordActions}>
 											<TouchableOpacity
@@ -140,6 +286,9 @@ const RegisterScreen = () => {
 											</TouchableOpacity>
 										</View>
 									</View>
+									{errors.confirmPassword && (
+										<Text style={styles.errorText}>{errors.confirmPassword.message}</Text>
+									)}
 								</View>
 
 								{/* 安全提示 */}
@@ -156,7 +305,7 @@ const RegisterScreen = () => {
 								</View>
 
 								{/* 注册按钮 */}
-								<TouchableOpacity onPress={handleRegister} style={styles.primaryButton}>
+								<TouchableOpacity onPress={handleSubmit(onSubmit)} style={styles.primaryButton}>
 									<Ionicons name="checkmark-circle" size={20} color="white" />
 									<Text style={styles.primaryButtonText}>创建并开始使用</Text>
 								</TouchableOpacity>
@@ -165,6 +314,16 @@ const RegisterScreen = () => {
 					</View>
 				</ScrollView>
 			</KeyboardAvoidingView>
+
+			{/* Loading Mask */}
+			<Modal transparent={true} visible={isLoading} animationType="fade" onRequestClose={() => {}}>
+				<View style={styles.loadingOverlay}>
+					<View style={styles.loadingContainer}>
+						<ActivityIndicator size="large" color="#3b82f6" />
+						<Text style={styles.loadingText}>正在创建账号...</Text>
+					</View>
+				</View>
+			</Modal>
 		</View>
 	);
 };
@@ -314,7 +473,7 @@ const styles = StyleSheet.create({
 		backgroundColor: '#3b82f6',
 	},
 	strengthBarEmpty: {
-		backgroundColor: '#f3f4f6',
+		backgroundColor: '#e5e7eb',
 	},
 	strengthText: {
 		fontSize: 12,
@@ -363,6 +522,32 @@ const styles = StyleSheet.create({
 		fontSize: 16,
 		fontWeight: '600',
 		color: 'white',
+	},
+	errorText: {
+		color: '#ef4444',
+		fontSize: 12,
+		marginTop: 4,
+		marginLeft: 12,
+	},
+	loadingOverlay: {
+		flex: 1,
+		backgroundColor: 'rgba(0, 0, 0, 0.5)',
+		justifyContent: 'center',
+		alignItems: 'center',
+	},
+	loadingContainer: {
+		backgroundColor: 'white',
+		padding: 20,
+		borderRadius: 12,
+		alignItems: 'center',
+		justifyContent: 'center',
+		minWidth: 120,
+	},
+	loadingText: {
+		marginTop: 12,
+		fontSize: 16,
+		color: '#1f2937',
+		fontWeight: '500',
 	},
 });
 

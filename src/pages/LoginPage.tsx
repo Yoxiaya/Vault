@@ -9,6 +9,8 @@ import {
 	Platform,
 	ScrollView,
 	StyleSheet,
+	ActivityIndicator,
+	Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AntDesign from '@expo/vector-icons/AntDesign';
@@ -17,25 +19,46 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../App';
 import { login } from '../service/api';
-import { useAuth } from '../context/authContext';
+import { useAuth } from '../context/AuthContext';
+import { useForm, Controller } from 'react-hook-form';
 
 type LoginPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'LoginPage'>;
+
+interface LoginFormData {
+	accountId: string;
+	password: string;
+}
 
 const LoginScreen = () => {
 	const navigation = useNavigation<LoginPageNavigationProp>();
 	const insets = useSafeAreaInsets();
 	const { singIn } = useAuth();
-	const [accountId, setAccountId] = useState('');
-	const [password, setPassword] = useState('');
-
 	const [showPassword, setShowPassword] = useState(false);
+	const [isLoading, setIsLoading] = useState(false);
+	const {
+		control,
+		handleSubmit,
+		formState: { errors },
+	} = useForm<LoginFormData>({
+		defaultValues: {
+			accountId: '',
+			password: '',
+		},
+	});
 
-	const handleLogin = async () => {
-		const result = await login({ account: accountId, password });
-		if (result.success) {
-			await singIn(result.data);
-		} else {
-			alert(result.message);
+	const onSubmit = async (data: LoginFormData) => {
+		setIsLoading(true);
+		try {
+			const result = await login({ account: data.accountId, password: data.password });
+			if (result.success) {
+				await singIn(result.data);
+			} else {
+				alert(result.message);
+			}
+		} catch (error) {
+			console.log(error);
+		} finally {
+			setIsLoading(false);
 		}
 	};
 
@@ -44,7 +67,7 @@ const LoginScreen = () => {
 	};
 
 	const handleSignup = () => {
-		console.log('Navigate to signup');
+		navigation.navigate('RegisterPage');
 	};
 
 	return (
@@ -77,13 +100,27 @@ const LoginScreen = () => {
 								<View style={styles.formGroup}>
 									<Text style={styles.formLabel}>账号/邮箱</Text>
 									<View style={styles.inputWithIcon}>
-										<TextInput
-											style={styles.formInput}
-											placeholder="请输入账号或邮箱"
-											value={accountId}
-											onChangeText={setAccountId}
-											autoCapitalize="none"
-											autoCorrect={false}
+										<Controller
+											control={control}
+											rules={{
+												required: '账号/邮箱不能为空',
+												pattern: {
+													value: /^[^\s@]+@([^\s@.,]+\.)+[^\s@.,]{2,}$|^[a-zA-Z0-9_]{3,20}$/,
+													message: '请输入有效的邮箱或账号(字母数字下划线3-20位)',
+												},
+											}}
+											render={({ field: { onChange, onBlur, value } }) => (
+												<TextInput
+													style={styles.formInput}
+													placeholder="请输入账号或邮箱"
+													value={value}
+													onChangeText={onChange}
+													onBlur={onBlur}
+													autoCapitalize="none"
+													autoCorrect={false}
+												/>
+											)}
+											name="accountId"
 										/>
 										<Ionicons
 											name="person-outline"
@@ -92,20 +129,37 @@ const LoginScreen = () => {
 											style={styles.inputIcon}
 										/>
 									</View>
+									{errors.accountId && (
+										<Text style={styles.errorText}>{errors.accountId.message}</Text>
+									)}
 								</View>
 
 								{/* 主密码输入框 */}
 								<View style={styles.formGroup}>
 									<Text style={styles.formLabel}>主密码</Text>
 									<View style={styles.inputWithIcon}>
-										<TextInput
-											style={styles.formInput}
-											placeholder="输入主密码"
-											value={password}
-											onChangeText={setPassword}
-											secureTextEntry={!showPassword}
-											autoCapitalize="none"
-											autoCorrect={false}
+										<Controller
+											control={control}
+											rules={{
+												required: '密码不能为空',
+												minLength: {
+													value: 6,
+													message: '密码长度至少为6位',
+												},
+											}}
+											render={({ field: { onChange, onBlur, value } }) => (
+												<TextInput
+													style={styles.formInput}
+													placeholder="输入主密码"
+													value={value}
+													onChangeText={onChange}
+													onBlur={onBlur}
+													secureTextEntry={!showPassword}
+													autoCapitalize="none"
+													autoCorrect={false}
+												/>
+											)}
+											name="password"
 										/>
 										<View style={styles.passwordActions}>
 											<TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
@@ -117,10 +171,11 @@ const LoginScreen = () => {
 											</TouchableOpacity>
 										</View>
 									</View>
+									{errors.password && <Text style={styles.errorText}>{errors.password.message}</Text>}
 								</View>
 
 								{/* 主登录按钮 */}
-								<TouchableOpacity onPress={handleLogin} style={styles.primaryButton}>
+								<TouchableOpacity onPress={handleSubmit(onSubmit)} style={styles.primaryButton}>
 									<Text style={styles.primaryButtonText}>解锁保险库</Text>
 									<AntDesign name="arrow-right" size={20} color="white" />
 								</TouchableOpacity>
@@ -150,6 +205,16 @@ const LoginScreen = () => {
 					</View>
 				</ScrollView>
 			</KeyboardAvoidingView>
+
+			{/* Loading Mask */}
+			<Modal transparent={true} visible={isLoading} animationType="fade" onRequestClose={() => {}}>
+				<View style={styles.loadingOverlay}>
+					<View style={styles.loadingContainer}>
+						<ActivityIndicator size="large" color="#3b82f6" />
+						<Text style={styles.loadingText}>正在登录...</Text>
+					</View>
+				</View>
+			</Modal>
 		</View>
 	);
 };
@@ -329,6 +394,32 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 		fontWeight: '600',
 		color: '#3b82f6',
+	},
+	errorText: {
+		color: '#ef4444',
+		fontSize: 12,
+		marginTop: 4,
+		marginLeft: 12,
+	},
+	loadingOverlay: {
+		flex: 1,
+		backgroundColor: 'rgba(0, 0, 0, 0.5)',
+		justifyContent: 'center',
+		alignItems: 'center',
+	},
+	loadingContainer: {
+		backgroundColor: 'white',
+		padding: 20,
+		borderRadius: 12,
+		alignItems: 'center',
+		justifyContent: 'center',
+		minWidth: 120,
+	},
+	loadingText: {
+		marginTop: 12,
+		fontSize: 16,
+		color: '#1f2937',
+		fontWeight: '500',
 	},
 });
 

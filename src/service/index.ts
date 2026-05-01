@@ -1,4 +1,5 @@
 import Convert from './convert';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type ConvertMethodName = keyof Convert;
 
@@ -18,11 +19,14 @@ const converts = new Convert();
 const baseURL = 'https://vault.yoxiaya.com';
 
 const request = async (url: string, config: RequestConfig = {}): Promise<CustomResponse> => {
+	const token = (await AsyncStorage.getItem('token')) || '';
+
 	const {
 		method = 'GET',
 		data,
 		headers = {
 			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`,
 		},
 		convert,
 	} = config;
