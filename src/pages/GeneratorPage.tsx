@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Switch, Alert } f
 import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
+import PasswordStrengthIndicator from '../components/PasswordStrengthIndicator';
 
 export default function GeneratorPage() {
 	const [password, setPassword] = useState('');
@@ -151,12 +152,7 @@ export default function GeneratorPage() {
 						{password || '点击刷新生成密码'}
 					</Text>
 
-					{/* 密码强度指示器 */}
-					<View style={styles.strengthBarContainer}>
-						<View
-							style={[styles.strengthBar, { width: getStrengthWidth(), backgroundColor: strength.color }]}
-						/>
-					</View>
+					<PasswordStrengthIndicator password={password} mode="progress" />
 
 					<View style={styles.passwordActions}>
 						<TouchableOpacity style={styles.copyButton} onPress={copyToClipboard}>
@@ -341,16 +337,6 @@ const styles = StyleSheet.create({
 		fontFamily: 'monospace',
 		lineHeight: 32,
 		letterSpacing: 0.5,
-	},
-	strengthBarContainer: {
-		height: 4,
-		backgroundColor: '#f3f4f6',
-		borderRadius: 2,
-		overflow: 'hidden',
-	},
-	strengthBar: {
-		height: '100%',
-		borderRadius: 2,
 	},
 	passwordActions: {
 		flexDirection: 'row',

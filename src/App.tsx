@@ -33,6 +33,7 @@ function AppNavigator() {
 			SplashScreen.hideAsync();
 		}
 	}, [isLoading, isReady]);
+
 	if (isLoading || !isReady) {
 		return (
 			<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>

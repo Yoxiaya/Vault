@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Image } from 'expo-image';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,7 +10,7 @@ import { RootStackParamList } from '../App';
 import { Account } from '../types';
 import { useAccountsStore } from '../store';
 import { deleteAccount } from '../service/api';
-import { calculatePasswordStrength } from '../utils';
+import PasswordStrengthIndicator from '../components/PasswordStrengthIndicator';
 
 type AccountDetailsPageRouteProp = RouteProp<RootStackParamList, 'AccountDetails'>;
 type AccountDetailsPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'AccountDetails'>;
@@ -52,10 +52,6 @@ export default function AccountDetailsPage() {
 		);
 	};
 	// 密码强度计算
-	const passwordStrength = useMemo(() => {
-		const strength = calculatePasswordStrength(account?.password || '');
-		return strength;
-	}, [account?.password]);
 
 	useEffect(() => {
 		const accountDetails = getAccountDetailById(id);
@@ -126,21 +122,7 @@ export default function AccountDetailsPage() {
 									<Ionicons name="copy-outline" size={20} color="#3b82f6" />
 								</TouchableOpacity>
 							</View>
-							<View style={styles.strengthMeter}>
-								{[1, 2, 3, 4, 5].map((index) => (
-									<View
-										key={index}
-										style={[
-											styles.strengthBar,
-											index <= passwordStrength.score && {
-												backgroundColor: passwordStrength.color,
-											},
-											index > passwordStrength.score && styles.strengthBarEmpty,
-										]}
-									/>
-								))}
-							</View>
-							<Text style={styles.strengthText}>密码强度：{passwordStrength.level}</Text>
+							<PasswordStrengthIndicator password={account?.password || ''} showFeedback={false} />
 						</View>
 						{/* Website - 条件渲染：只有当 webSite 字段存在且不为空时显示 */}
 						{account.webSite && account.webSite.trim() !== '' && (
@@ -348,17 +330,6 @@ const styles = StyleSheet.create({
 		padding: 8,
 		borderRadius: 20,
 	},
-	strengthBar: {
-		flex: 1,
-		borderRadius: 2,
-	},
-
-	strengthText: {
-		fontSize: 10,
-		fontWeight: '500',
-		color: '#3b82f6',
-		textTransform: 'uppercase',
-	},
 	metadataCard: {
 		backgroundColor: '#f9fafb',
 		borderRadius: 12,
@@ -482,13 +453,5 @@ const styles = StyleSheet.create({
 		fontSize: 12,
 		color: '#1d4ed8',
 		lineHeight: 18,
-	},
-	strengthMeter: {
-		flexDirection: 'row',
-		gap: 6,
-		height: 6,
-	},
-	strengthBarEmpty: {
-		backgroundColor: '#f3f4f6',
 	},
 });

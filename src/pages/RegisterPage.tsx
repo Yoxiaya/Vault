@@ -19,6 +19,7 @@ import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../App';
 import { useForm, Controller } from 'react-hook-form';
 import { register } from '../service/api';
+import PasswordStrengthIndicator from '../components/PasswordStrengthIndicator';
 
 type RegisterPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'RegisterPage'>;
 
@@ -51,24 +52,6 @@ const RegisterScreen = () => {
 	});
 
 	const passwordValue = watch('password');
-
-	// 简单的密码强度计算
-	const getPasswordStrength = (password: string): { level: number; text: string; bars: number[] } => {
-		let strength = 0;
-		if (password.length >= 6) strength++;
-		if (password.length >= 10) strength++;
-		if (/[A-Z]/.test(password)) strength++;
-		if (/[0-9]/.test(password)) strength++;
-		if (/[^A-Za-z0-9]/.test(password)) strength++;
-
-		const level = Math.min(strength, 4);
-		const levels = ['极弱', '弱', '中', '强', '极强'];
-		const bars = [0, 1, 2, 3, 4].map((i) => (i < level ? 1 : 0));
-
-		return { level, text: levels[level], bars };
-	};
-
-	const passwordStrength = getPasswordStrength(passwordValue || '');
 
 	const onSubmit = async (data: RegisterFormData) => {
 		setIsLoading(true);
@@ -233,20 +216,7 @@ const RegisterScreen = () => {
 
 									{/* 密码强度指示器 */}
 									{passwordValue && passwordValue.length > 0 && (
-										<View style={styles.strengthContainer}>
-											<View style={styles.strengthMeter}>
-												{passwordStrength.bars.map((filled, index) => (
-													<View
-														key={index}
-														style={[
-															styles.strengthBar,
-															filled ? styles.strengthBarFull : styles.strengthBarEmpty,
-														]}
-													/>
-												))}
-											</View>
-											<Text style={styles.strengthText}>强度: {passwordStrength.text}</Text>
-										</View>
+										<PasswordStrengthIndicator password={passwordValue} />
 									)}
 								</View>
 
@@ -454,31 +424,6 @@ const styles = StyleSheet.create({
 		top: 10,
 		flexDirection: 'row',
 		gap: 12,
-	},
-	// 密码强度
-	strengthContainer: {
-		marginTop: 12,
-	},
-	strengthMeter: {
-		flexDirection: 'row',
-		gap: 4,
-		height: 4,
-		marginBottom: 4,
-	},
-	strengthBar: {
-		flex: 1,
-		borderRadius: 2,
-	},
-	strengthBarFull: {
-		backgroundColor: '#3b82f6',
-	},
-	strengthBarEmpty: {
-		backgroundColor: '#e5e7eb',
-	},
-	strengthText: {
-		fontSize: 12,
-		color: '#6b7280',
-		textAlign: 'right',
 	},
 	// 安全提示
 	securityWarning: {

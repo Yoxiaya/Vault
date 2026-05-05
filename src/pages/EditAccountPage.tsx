@@ -26,6 +26,7 @@ import { useAccountsStore } from '../store';
 import { addAccount, updateAccount, uploadImage, deleteImage } from '../service/api';
 import { calculatePasswordStrength } from '../utils';
 import { LoadingMask } from '../components/Mask';
+import PasswordStrengthIndicator from '../components/PasswordStrengthIndicator';
 
 type EditAccountPageRouteProp = RouteProp<RootStackParamList, 'EditAccount'>;
 type EditAccountPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'EditAccount'>;
@@ -445,36 +446,7 @@ export default function EditAccountPage() {
 
 												{/* 密码强度指示器 */}
 												{passwordValue && passwordValue.length > 0 && (
-													<View style={styles.strengthContainer}>
-														<View style={styles.strengthMeter}>
-															{[1, 2, 3, 4, 5].map((index) => (
-																<View
-																	key={index}
-																	style={[
-																		styles.strengthBar,
-																		index <= passwordStrength.score && {
-																			backgroundColor: passwordStrength.color,
-																		},
-																		index > passwordStrength.score &&
-																			styles.strengthBarEmpty,
-																	]}
-																/>
-															))}
-														</View>
-														<View style={styles.strengthInfo}>
-															<Text
-																style={[
-																	styles.strengthText,
-																	{ color: passwordStrength.color },
-																]}
-															>
-																密码强度：{passwordStrength.level}
-															</Text>
-															<Text style={styles.strengthFeedback}>
-																{passwordStrength.feedback}
-															</Text>
-														</View>
-													</View>
+													<PasswordStrengthIndicator password={passwordValue} />
 												)}
 											</View>
 										)}
@@ -664,36 +636,6 @@ const styles = StyleSheet.create({
 		top: 10,
 		flexDirection: 'row',
 		gap: 12,
-	},
-	strengthContainer: {
-		marginTop: 12,
-		gap: 8,
-	},
-	strengthMeter: {
-		flexDirection: 'row',
-		gap: 6,
-		height: 6,
-	},
-	strengthBar: {
-		flex: 1,
-		borderRadius: 3,
-		height: 6,
-	},
-	strengthBarEmpty: {
-		backgroundColor: '#f3f4f6',
-	},
-	strengthInfo: {
-		flexDirection: 'row',
-		justifyContent: 'space-between',
-		alignItems: 'center',
-	},
-	strengthText: {
-		fontSize: 12,
-		fontWeight: '600',
-	},
-	strengthFeedback: {
-		fontSize: 11,
-		color: '#6b7280',
 	},
 	actionsContainer: {
 		flexDirection: 'row',
