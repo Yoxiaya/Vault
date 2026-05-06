@@ -22,7 +22,7 @@ export const uploadImage = (file: FormData) => {
 		data: file,
 	});
 };
-export const deleteImage = (data: FormData) => {
+export const deleteImage = (data: { url: string }) => {
 	return request('/vault-accounts/delete-image', { method: 'post', data });
 };
 export const login = (data: { account: string; password: string }): Promise<any> => {

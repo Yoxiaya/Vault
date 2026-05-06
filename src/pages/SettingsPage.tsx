@@ -62,26 +62,28 @@ export default function SettingsPage() {
 	return (
 		<ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
 			{/* User Profile */}
-			<View style={styles.profileSection}>
-				<View style={styles.profileImageContainer}>
-					<Image
-						source={{
-							uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDTwtj3sCDJir1dwWvqOJD2js3Fylp57dtHzbSr_afG8e5919ApouEeRKcNtfsXvodvNyxMyxpWyHbu7ENzrS-udrCaqkLBGrObOvP-XcYFQdPhIHxPfIHeBBEHKumgODPeXKMNTPp-BetxmEk3GVOEfxDFsED5LMDjMKpEqFCm0vZ9vyeFOIv57RTXI1HuZsPSDoMWp1mgOGLKVFbf1AqWE8TGBi130fF3mAApReyzlT1ghy-5_U2lumFoK1ZmQyMFniLP_1nwbZY',
-						}}
-						style={styles.profileImage}
-					/>
-					<View style={styles.verifiedBadge}>
-						<Ionicons name="checkmark" size={14} color="white" />
+			<TouchableOpacity onPress={() => navigation.navigate('ProfilePage')}>
+				<View style={styles.profileSection}>
+					<View style={styles.profileImageContainer}>
+						<Image
+							source={{
+								uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDTwtj3sCDJir1dwWvqOJD2js3Fylp57dtHzbSr_afG8e5919ApouEeRKcNtfsXvodvNyxMyxpWyHbu7ENzrS-udrCaqkLBGrObOvP-XcYFQdPhIHxPfIHeBBEHKumgODPeXKMNTPp-BetxmEk3GVOEfxDFsED5LMDjMKpEqFCm0vZ9vyeFOIv57RTXI1HuZsPSDoMWp1mgOGLKVFbf1AqWE8TGBi130fF3mAApReyzlT1ghy-5_U2lumFoK1ZmQyMFniLP_1nwbZY',
+							}}
+							style={styles.profileImage}
+						/>
+						<View style={styles.verifiedBadge}>
+							<Ionicons name="checkmark" size={14} color="white" />
+						</View>
+					</View>
+					<View style={styles.profileInfo}>
+						<Text style={styles.profileName}>Alex Designer</Text>
+						<View style={styles.securityBadge}>
+							<Ionicons name="shield-checkmark" size={14} color="#3b82f6" />
+							<Text style={styles.securityBadgeText}>安全等级：极高</Text>
+						</View>
 					</View>
 				</View>
-				<View style={styles.profileInfo}>
-					<Text style={styles.profileName}>Alex Designer</Text>
-					<View style={styles.securityBadge}>
-						<Ionicons name="shield-checkmark" size={14} color="#3b82f6" />
-						<Text style={styles.securityBadgeText}>安全等级：极高</Text>
-					</View>
-				</View>
-			</View>
+			</TouchableOpacity>
 
 			<View style={styles.settingsSections}>
 				{sections.map((section) => (

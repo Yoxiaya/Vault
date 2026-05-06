@@ -9,9 +9,8 @@ import {
 	Platform,
 	ScrollView,
 	StyleSheet,
-	ActivityIndicator,
-	Modal,
 } from 'react-native';
+import LoadingOverlay from '../components/LoadingOverlay';
 import { Ionicons } from '@expo/vector-icons';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -206,15 +205,8 @@ const LoginScreen = () => {
 				</ScrollView>
 			</KeyboardAvoidingView>
 
-			{/* Loading Mask */}
-			<Modal transparent={true} visible={isLoading} animationType="fade" onRequestClose={() => {}}>
-				<View style={styles.loadingOverlay}>
-					<View style={styles.loadingContainer}>
-						<ActivityIndicator size="large" color="#3b82f6" />
-						<Text style={styles.loadingText}>正在登录...</Text>
-					</View>
-				</View>
-			</Modal>
+			{/* Loading Overlay */}
+			<LoadingOverlay visible={isLoading} loadingText="正在登录..." />
 		</View>
 	);
 };
@@ -400,26 +392,6 @@ const styles = StyleSheet.create({
 		fontSize: 12,
 		marginTop: 4,
 		marginLeft: 12,
-	},
-	loadingOverlay: {
-		flex: 1,
-		backgroundColor: 'rgba(0, 0, 0, 0.5)',
-		justifyContent: 'center',
-		alignItems: 'center',
-	},
-	loadingContainer: {
-		backgroundColor: 'white',
-		padding: 20,
-		borderRadius: 12,
-		alignItems: 'center',
-		justifyContent: 'center',
-		minWidth: 120,
-	},
-	loadingText: {
-		marginTop: 12,
-		fontSize: 16,
-		color: '#1f2937',
-		fontWeight: '500',
 	},
 });
 

@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as SplashScreen from 'expo-splash-screen';
@@ -8,8 +9,8 @@ import MainTabs from './components/Footer';
 import TestPage from './pages/TestPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import ProfilePage from './pages/ProfilePage';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { ActivityIndicator, View } from 'react-native';
 
 export type EditAccountMode = 'add' | 'edit';
 
@@ -21,6 +22,7 @@ export type RootStackParamList = {
 	LoginPage: undefined;
 	SettingsPage: undefined;
 	RegisterPage: undefined;
+	ProfilePage: undefined;
 };
 SplashScreen.preventAutoHideAsync();
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -64,6 +66,7 @@ function AppNavigator() {
 					/>
 					<Stack.Screen name="EditAccount" component={EditAccountPage} options={{ title: '编辑账户' }} />
 					<Stack.Screen name="TestPage" component={TestPage} options={{ title: '测试页面' }} />
+					<Stack.Screen name="ProfilePage" component={ProfilePage} options={{ title: '个人中心' }} />
 				</>
 			)}
 		</Stack.Navigator>

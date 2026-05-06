@@ -117,13 +117,6 @@ export default function EditAccountPage() {
 		return result.data.url;
 	};
 
-	// 删除图片
-	const deleteImageToServer = async (url: string) => {
-		const formData = new FormData();
-		formData.append('url', url);
-		await deleteImage(formData);
-	};
-
 	// 处理图片选择
 	const handlePickImage = async () => {
 		const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -168,7 +161,8 @@ export default function EditAccountPage() {
 		try {
 			let finalLogoUrl = data.logoUrl;
 			if (account && account.logoUrl && data.logoUrl !== account.logoUrl) {
-				await deleteImageToServer(account.logoUrl);
+				console.log('删除旧图标:', account.logoUrl);
+				await deleteImage({ url: account.logoUrl });
 			}
 
 			if (selectedImage && selectedImage.uri !== account?.logoUrl) {
