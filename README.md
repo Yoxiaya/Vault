@@ -65,6 +65,12 @@ yarn start
 - **Web 浏览器**：在终端按 `w`
 - **Expo Go 应用**：扫描终端中的二维码
 
+5. **项目构建**
+
+```bash
+eas build --platform android --profile preview
+```
+
 ## 项目结构
 
 ```

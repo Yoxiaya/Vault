@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Switch } from 'react-native';
 import { Image } from 'expo-image';
 import { useNavigation } from '@react-navigation/native';
@@ -6,10 +6,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../App';
 import { useAuth } from '../context/AuthContext';
+import { useUserInfoStore } from '../store';
 
 type SettingsPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'SettingsPage'>;
 export default function SettingsPage() {
 	const navigation = useNavigation<SettingsPageNavigationProp>();
+	const { userInfo, fetchUserInfo } = useUserInfoStore();
+	const { signOut } = useAuth();
+
 	const [biometricEnabled, setBiometricEnabled] = useState(true);
 	const [darkModeEnabled, setDarkModeEnabled] = useState(false);
 
@@ -56,8 +60,9 @@ export default function SettingsPage() {
 			],
 		},
 	];
-
-	const { signOut } = useAuth();
+	useEffect(() => {
+		fetchUserInfo();
+	}, []);
 
 	return (
 		<ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -67,7 +72,9 @@ export default function SettingsPage() {
 					<View style={styles.profileImageContainer}>
 						<Image
 							source={{
-								uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDTwtj3sCDJir1dwWvqOJD2js3Fylp57dtHzbSr_afG8e5919ApouEeRKcNtfsXvodvNyxMyxpWyHbu7ENzrS-udrCaqkLBGrObOvP-XcYFQdPhIHxPfIHeBBEHKumgODPeXKMNTPp-BetxmEk3GVOEfxDFsED5LMDjMKpEqFCm0vZ9vyeFOIv57RTXI1HuZsPSDoMWp1mgOGLKVFbf1AqWE8TGBi130fF3mAApReyzlT1ghy-5_U2lumFoK1ZmQyMFniLP_1nwbZY',
+								uri:
+									userInfo?.profileAvatar ??
+									'https://pic1.imgdb.cn/item/69fc39d94b8701858e714b98.jpg',
 							}}
 							style={styles.profileImage}
 						/>
@@ -76,7 +83,7 @@ export default function SettingsPage() {
 						</View>
 					</View>
 					<View style={styles.profileInfo}>
-						<Text style={styles.profileName}>Alex Designer</Text>
+						<Text style={styles.profileName}>{userInfo.profileName}</Text>
 						<View style={styles.securityBadge}>
 							<Ionicons name="shield-checkmark" size={14} color="#3b82f6" />
 							<Text style={styles.securityBadgeText}>安全等级：极高</Text>

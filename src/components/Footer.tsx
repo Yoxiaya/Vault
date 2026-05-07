@@ -34,6 +34,10 @@ function MainTabs() {
 				},
 				tabBarActiveTintColor: '#3b82f6',
 				tabBarInactiveTintColor: 'gray',
+				tabBarStyle: {
+					height: 64,
+				},
+				tabBarItemStyle: { alignItems: 'center', paddingTop: 6 },
 				headerTitle: () => {
 					return (
 						<View style={styles.headerTitle}>
@@ -48,7 +52,6 @@ function MainTabs() {
 			<Tab.Screen name="Generator" component={GeneratorPage} options={{ title: '生成器' }} />
 			<Tab.Screen name="Health" component={HealthPage} options={{ title: '健康状况' }} />
 			<Tab.Screen name="Settings" component={SettingsPage} options={{ title: '设置' }} />
-			{/* <Tab.Screen name="TestPage" component={TestPage} options={{ title: '测试页面' }} /> */}
 		</Tab.Navigator>
 	);
 }

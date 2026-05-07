@@ -1,42 +1,37 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
-import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
-import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../App';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { deleteImage, uploadImage } from '../service/api';
+import { RootStackParamList } from '../App';
+import { uploadProfileAvatar } from '../service/api';
 import LoadingOverlay from '../components/LoadingOverlay';
+import { useUserInfoStore } from '../store';
 
 type ProfilePageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'ProfilePage'>;
 
 export default function ProfilePage() {
 	const navigation = useNavigation<ProfilePageNavigationProp>();
+	const { userInfo, loading, fetchUserInfo } = useUserInfoStore();
 	const [isLoading, setIsLoading] = useState(false);
-	const [user, setUser] = useState({
-		name: 'Alex Designer',
-		email: 'alex.design@vault.com',
-		phone: '+86 138 **** 8888',
-		avatar: 'https://pic1.imgdb.cn/item/69e19be31e8dab8252386987.jpg',
-	});
 
 	const [securityInfo, setSecurityInfo] = useState({
 		loginHistory: '10分钟前',
 		trustedDevices: '3 台',
 		twoFactorEnabled: true,
 	});
+
 	// 上传图片到服务器
-	const uploadImageToServer = async (imageAsset: ImagePicker.ImagePickerAsset): Promise<string> => {
+	const uploadImageToServer = async (imageAsset: ImagePicker.ImagePickerAsset): Promise<void> => {
 		const formData = new FormData();
 		formData.append('file', {
 			uri: imageAsset.uri,
 			name: imageAsset.fileName || `photo_${Date.now()}.jpg`,
 			type: imageAsset.mimeType || 'image/jpeg',
 		} as any);
-
-		const result = await uploadImage(formData);
-		return result.data.url;
+		await uploadProfileAvatar(formData);
 	};
 
 	const updateAvatar = async () => {
@@ -53,15 +48,9 @@ export default function ProfilePage() {
 		});
 		if (result.canceled) return;
 		setIsLoading(true);
-		try {
-			const imageUrl = await uploadImageToServer(result.assets[0]);
-			setUser({ ...user, avatar: imageUrl });
-			await deleteImage({ url: user.avatar });
-		} catch (error) {
-			console.log(error);
-		} finally {
-			setIsLoading(false);
-		}
+		await uploadImageToServer(result.assets[0]);
+		fetchUserInfo();
+		setIsLoading(loading);
 	};
 
 	const renderMenuRow = (title: string, value?: string, onPress?: () => void) => (
@@ -69,8 +58,12 @@ export default function ProfilePage() {
 			<Text style={styles.menuTitle}>{title}</Text>
 			<View style={styles.menuRowRight}>
 				{value && title !== '头像' ? <Text style={styles.menuValue}>{value}</Text> : null}
-				{title === '头像' ? <Image source={{ uri: value }} style={styles.avatar} /> : null}
-
+				{title === '头像' ? (
+					<Image
+						source={{ uri: value ?? 'https://pic1.imgdb.cn/item/69fc39d94b8701858e714b98.jpg' }}
+						style={styles.avatar}
+					/>
+				) : null}
 				<Ionicons name="chevron-forward" size={20} color="#9ca3af" />
 			</View>
 		</TouchableOpacity>
@@ -84,10 +77,10 @@ export default function ProfilePage() {
 					<View style={styles.section}>
 						<Text style={styles.sectionTitle}>基本信息</Text>
 						<View style={styles.card}>
-							{renderMenuRow('头像', user.avatar, updateAvatar)}
-							{renderMenuRow('昵称', user.name)}
-							{renderMenuRow('电子邮箱', user.email)}
-							{renderMenuRow('手机号码', user.phone)}
+							{renderMenuRow('头像', userInfo.profileAvatar, updateAvatar)}
+							{renderMenuRow('昵称', userInfo.profileName, () => navigation.navigate('ProfileEditPage'))}
+							{/* {renderMenuRow('电子邮箱', userInfo.email)} */}
+							{renderMenuRow('手机号码', userInfo.phoneNumber)}
 						</View>
 					</View>
 

@@ -13,6 +13,7 @@ interface RequestConfig {
 interface CustomResponse {
 	code: number;
 	data: any;
+	success: boolean;
 }
 
 const converts = new Convert();

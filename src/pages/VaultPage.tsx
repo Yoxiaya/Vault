@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useLayoutEffect } from 'react';
 import { Image } from 'expo-image';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,6 +26,16 @@ export default function VaultPage() {
 	const categories = ['全部', '社交', '财务', '娱乐', '其他'];
 
 	const { accounts, loading, fetchAccounts } = useAccountsStore();
+
+	useLayoutEffect(() => {
+		navigation.setOptions({
+			headerRight: () => (
+				<TouchableOpacity style={styles.addAccountButton} onPress={onAddAccountPress}>
+					<Ionicons name="add-circle-outline" size={24} color="#3b82f6" />
+				</TouchableOpacity>
+			),
+		});
+	}, [navigation]);
 
 	useEffect(() => {
 		fetchAccounts();
@@ -82,7 +92,7 @@ export default function VaultPage() {
 					<Text style={styles.emptyDescription}>
 						{searchQuery || activeCategory !== '全部'
 							? '没有找到匹配的账户，试试其他关键词吧'
-							: '点击右下角按钮添加第一个账户'}
+							: '点击右上角按钮添加第一个账户'}
 					</Text>
 				</View>
 			);
@@ -111,7 +121,7 @@ export default function VaultPage() {
 						</View>
 						<View style={styles.accountActions}>
 							<TouchableOpacity style={styles.actionButton}>
-								<Ionicons name="copy-outline" size={20} color="#3b82f6" />
+								<Ionicons name="chevron-forward" size={20} color="#3b82f6" />
 							</TouchableOpacity>
 						</View>
 					</TouchableOpacity>
@@ -192,11 +202,6 @@ export default function VaultPage() {
 				</View>
 				<ScrollView showsVerticalScrollIndicator={false}>{renderContent()}</ScrollView>
 			</View>
-
-			{/* FAB */}
-			<TouchableOpacity style={styles.fab} onPress={onAddAccountPress}>
-				<Ionicons name="add" size={24} color="white" />
-			</TouchableOpacity>
 		</View>
 	);
 }
@@ -334,24 +339,10 @@ const styles = StyleSheet.create({
 		padding: 8,
 		borderRadius: 20,
 	},
-	fab: {
-		position: 'absolute',
-		bottom: 28,
-		right: 24,
-		width: 56,
-		height: 56,
-		backgroundColor: '#3b82f6',
-		borderRadius: 16,
-		justifyContent: 'center',
-		alignItems: 'center',
-		shadowColor: '#000',
-		shadowOffset: {
-			width: 0,
-			height: 4,
-		},
-		shadowOpacity: 0.25,
-		shadowRadius: 4,
-		elevation: 5,
+	addAccountButton: {
+		padding: 12,
+		borderRadius: 24,
+		marginRight: 12,
 	},
 	// 空状态样式
 	emptyContainer: {

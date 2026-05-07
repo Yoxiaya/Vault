@@ -11,6 +11,8 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import ProfileEditPage from './pages/ProfileEditPage';
+import { useUserInfoStore } from './store';
 
 export type EditAccountMode = 'add' | 'edit';
 
@@ -23,14 +25,18 @@ export type RootStackParamList = {
 	SettingsPage: undefined;
 	RegisterPage: undefined;
 	ProfilePage: undefined;
+	ProfileEditPage: undefined;
 };
 SplashScreen.preventAutoHideAsync();
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 function AppNavigator() {
 	const { user, isLoading, isReady } = useAuth();
+	const { fetchUserInfo } = useUserInfoStore();
 
 	useEffect(() => {
+		fetchUserInfo();
+
 		if (!isLoading && isReady) {
 			SplashScreen.hideAsync();
 		}
@@ -67,6 +73,7 @@ function AppNavigator() {
 					<Stack.Screen name="EditAccount" component={EditAccountPage} options={{ title: '编辑账户' }} />
 					<Stack.Screen name="TestPage" component={TestPage} options={{ title: '测试页面' }} />
 					<Stack.Screen name="ProfilePage" component={ProfilePage} options={{ title: '个人中心' }} />
+					<Stack.Screen name="ProfileEditPage" component={ProfileEditPage} />
 				</>
 			)}
 		</Stack.Navigator>
