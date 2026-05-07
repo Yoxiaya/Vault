@@ -21,6 +21,7 @@
 - **导航**：React Navigation
 - **UI 组件**：React Native 内置组件 + Expo Vector Icons
 - **类型系统**：TypeScript
+- **HTTP 请求**：Fetch API（原生）
 - **密码生成**：内置密码生成算法
 - **数据持久化**：本地存储
 
@@ -82,24 +83,37 @@ Vault/
 │   └── splash-icon.png
 ├── src/                   # 源代码
 │   ├── components/        # 可复用组件
-│   │   ├── Footer.tsx     # 底部导航栏
-│   │   ├── Mask.tsx       # 遮罩组件
-│   │   └── SkeletonItem.tsx # 骨架屏组件
+│   │   ├── Footer.tsx              # 底部导航栏
+│   │   ├── LoadingOverlay.tsx      # 加载遮罩组件
+│   │   ├── Mask.tsx                # 遮罩组件
+│   │   ├── PasswordStrengthIndicator.tsx # 密码强度指示器
+│   │   └── SkeletonItem.tsx        # 骨架屏组件
+│   ├── context/           # 上下文
+│   │   └── AuthContext.tsx         # 认证上下文
 │   ├── pages/             # 页面组件
-│   │   ├── AccountDetailsPage.tsx # 账户详情页
-│   │   ├── EditAccountPage.tsx    # 编辑账户页
-│   │   ├── GeneratorPage.tsx      # 密码生成器
-│   │   ├── HealthPage.tsx         # 健康检查页
-│   │   ├── SettingsPage.tsx       # 设置页
-│   │   ├── TestPage.tsx           # 测试页
-│   │   └── VaultPage.tsx          # 主页
+│   │   ├── AccountDetailsPage.tsx  # 账户详情页
+│   │   ├── EditAccountPage.tsx     # 编辑账户页
+│   │   ├── GeneratorPage.tsx       # 密码生成器
+│   │   ├── HealthPage.tsx          # 健康检查页
+│   │   ├── LoginPage.tsx           # 登录页
+│   │   ├── ProfileEditPage.tsx     # 个人资料编辑页
+│   │   ├── ProfilePage.tsx         # 个人资料页
+│   │   ├── RegisterPage.tsx        # 注册页
+│   │   ├── SettingsPage.tsx        # 设置页
+│   │   ├── TestPage.tsx            # 测试页
+│   │   └── VaultPage.tsx           # 主页
 │   ├── service/           # 服务层
-│   │   ├── api/           # API 相关
-│   │   └── convert/       # 转换工具
+│   │   ├── api/           # API 接口
+│   │   │   └── index.ts
+│   │   ├── convert/       # 转换工具
+│   │   │   └── index.ts
+│   │   └── index.ts       # 请求封装（基于 Fetch API）
 │   ├── store/             # 状态管理
 │   │   ├── index.ts
-│   │   └── useAccountsStore.ts # 账户状态管理
+│   │   ├── useAccountsStore.ts     # 账户状态管理
+│   │   └── useUserInfoStore.ts     # 用户信息状态管理
 │   ├── utils/             # 工具函数
+│   │   └── index.ts
 │   ├── App.tsx            # 应用入口
 │   └── types.ts           # 类型定义
 ├── .gitignore             # Git 忽略文件
