@@ -91,3 +91,10 @@ export const uploadProfileAvatar = (file: FormData) => {
 export const updateUserInfo = (data: { profileName: string }) => {
 	return request('/user/updateProfile', { method: 'post', data });
 };
+/**
+ * 发送验证码
+ * @param data - 包含邮箱的对象
+ */
+export const sendVerifyCode = (data: { email: string }) => {
+	return request('/auth/send-code', { method: 'post', data });
+};

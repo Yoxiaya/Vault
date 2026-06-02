@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
 	View,
 	Text,
@@ -18,7 +18,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../App';
 import { useForm, Controller } from 'react-hook-form';
-import { register } from '../service/api';
+import { register, sendVerifyCode } from '../service/api';
 import PasswordStrengthIndicator from '../components/PasswordStrengthIndicator';
 
 type RegisterPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'RegisterPage'>;
@@ -28,6 +28,7 @@ interface RegisterFormData {
 	email: string;
 	password: string;
 	confirmPassword: string;
+	code: string;
 }
 
 const RegisterScreen = () => {
@@ -36,6 +37,8 @@ const RegisterScreen = () => {
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
+	const [codeCountdown, setCodeCountdown] = useState(0);
+	const [canSendCode, setCanSendCode] = useState(true);
 
 	const {
 		control,
@@ -52,6 +55,32 @@ const RegisterScreen = () => {
 	});
 
 	const passwordValue = watch('password');
+	const emailValue = watch('email');
+
+	const handleSendCode = async () => {
+		if (!emailValue || !/^[^\s@]+@([^\s@.,]+\.)+[^\s@.,]{2,}$/.test(emailValue)) {
+			alert('请先输入有效的邮箱地址');
+			return;
+		}
+		setCanSendCode(false);
+		setCodeCountdown(60);
+		try {
+			await sendVerifyCode({ email: emailValue });
+		} catch (error) {
+			alert('发送验证码失败，请重试');
+		}
+	};
+
+	useEffect(() => {
+		if (codeCountdown > 0) {
+			const timer = setTimeout(() => {
+				setCodeCountdown(codeCountdown - 1);
+			}, 1000);
+			return () => clearTimeout(timer);
+		} else {
+			setCanSendCode(true);
+		}
+	}, [codeCountdown]);
 
 	const onSubmit = async (data: RegisterFormData) => {
 		setIsLoading(true);
@@ -173,6 +202,55 @@ const RegisterScreen = () => {
 										/>
 									</View>
 									{errors.email && <Text style={styles.errorText}>{errors.email.message}</Text>}
+								</View>
+
+								{/* 验证码输入框 */}
+								<View style={styles.formGroup}>
+									<Text style={styles.formLabel}>验证码</Text>
+									<View style={styles.codeInputContainer}>
+										<Controller
+											control={control}
+											rules={{
+												required: '请输入验证码',
+												minLength: {
+													value: 6,
+													message: '验证码长度为6位',
+												},
+												maxLength: {
+													value: 6,
+													message: '验证码长度为6位',
+												},
+											}}
+											render={({ field: { onChange, onBlur, value } }) => (
+												<TextInput
+													style={styles.codeInput}
+													placeholder="请输入验证码"
+													value={value}
+													onChangeText={onChange}
+													onBlur={onBlur}
+													autoCapitalize="none"
+													autoCorrect={false}
+													keyboardType="numeric"
+												/>
+											)}
+											name="code"
+										/>
+										<TouchableOpacity
+											onPress={handleSendCode}
+											disabled={!canSendCode}
+											style={[styles.codeButton, !canSendCode && styles.codeButtonDisabled]}
+										>
+											<Text
+												style={[
+													styles.codeButtonText,
+													!canSendCode && styles.codeButtonTextDisabled,
+												]}
+											>
+												{codeCountdown > 0 ? `${codeCountdown}s` : '获取验证码'}
+											</Text>
+										</TouchableOpacity>
+									</View>
+									{errors.code && <Text style={styles.errorText}>{errors.code.message}</Text>}
 								</View>
 
 								{/* 主密码输入框 */}
@@ -424,6 +502,39 @@ const styles = StyleSheet.create({
 		top: 10,
 		flexDirection: 'row',
 		gap: 12,
+	},
+	// 验证码容器
+	codeInputContainer: {
+		flexDirection: 'row',
+		gap: 12,
+	},
+	codeInput: {
+		flex: 1,
+		backgroundColor: '#f3f4f6',
+		borderRadius: 8,
+		paddingHorizontal: 16,
+		paddingVertical: 12,
+		fontSize: 16,
+		color: '#1f2937',
+	},
+	codeButton: {
+		paddingHorizontal: 20,
+		paddingVertical: 12,
+		backgroundColor: '#3b82f6',
+		borderRadius: 8,
+		justifyContent: 'center',
+		alignItems: 'center',
+	},
+	codeButtonDisabled: {
+		backgroundColor: '#9ca3af',
+	},
+	codeButtonText: {
+		fontSize: 14,
+		fontWeight: '500',
+		color: 'white',
+	},
+	codeButtonTextDisabled: {
+		color: '#d1d5db',
 	},
 	// 安全提示
 	securityWarning: {
