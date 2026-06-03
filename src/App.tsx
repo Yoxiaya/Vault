@@ -12,7 +12,6 @@ import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ProfileEditPage from './pages/ProfileEditPage';
-import { useUserInfoStore } from './store';
 
 export type EditAccountMode = 'add' | 'edit';
 
@@ -32,11 +31,8 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 function AppNavigator() {
 	const { user, isLoading, isReady } = useAuth();
-	const { fetchUserInfo } = useUserInfoStore();
 
 	useEffect(() => {
-		fetchUserInfo();
-
 		if (!isLoading && isReady) {
 			SplashScreen.hideAsync();
 		}

@@ -1,5 +1,7 @@
 import { useState, useEffect, createContext, ReactNode, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useUserInfoStore } from '../store';
+import { eventBus } from '../utils';
 
 type User = {
 	token: string;
@@ -21,12 +23,10 @@ const AuthContext = createContext<AuthContextValue>({
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+	const { fetchUserInfo } = useUserInfoStore();
 	const [user, setUser] = useState<User | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [isReady, setIsReady] = useState(false);
-	useEffect(() => {
-		checkAuthStatus();
-	}, []);
 	const checkAuthStatus = async () => {
 		try {
 			// 模拟网络延迟或实际检查
@@ -45,11 +45,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	const singIn = async (userData: User) => {
 		setUser(userData);
 		await AsyncStorage.setItem('token', userData.token);
+		await fetchUserInfo();
 	};
 	const signOut = async () => {
 		setUser(null);
 		await AsyncStorage.removeItem('token');
 	};
+	useEffect(() => {
+		checkAuthStatus();
+		const handleTokenExpired = async () => {
+			await signOut();
+		};
+		eventBus.on('TOKEN_EXPIRED', handleTokenExpired);
+		return () => {
+			eventBus.off('TOKEN_EXPIRED', handleTokenExpired);
+		};
+	}, []);
+
 	return (
 		<AuthContext.Provider value={{ user, singIn, signOut, isLoading, isReady }}>{children}</AuthContext.Provider>
 	);

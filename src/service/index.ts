@@ -1,3 +1,4 @@
+import { eventBus } from '../utils';
 import Convert from './convert';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -18,6 +19,7 @@ interface CustomResponse {
 
 const converts = new Convert();
 const baseURL = 'https://vault.yoxiaya.com';
+let isRedirecting = false;
 
 const request = async (url: string, config: RequestConfig = {}): Promise<CustomResponse> => {
 	const token = (await AsyncStorage.getItem('token')) || '';
@@ -56,6 +58,18 @@ const request = async (url: string, config: RequestConfig = {}): Promise<CustomR
 
 	try {
 		const response = await fetch(fullUrl, fetchOptions);
+
+		// 处理401
+		if (response.status === 401 && !isRedirecting) {
+			isRedirecting = true;
+
+			eventBus.emit('TOKEN_EXPIRED');
+			setTimeout(() => {
+				isRedirecting = false;
+			}, 1000);
+			alert('登录已过期，请重新登录');
+			throw new Error('登录已过期，请重新登录');
+		}
 
 		if (!response.ok) {
 			throw new Error(`HTTP error! status: ${response.status}`);
