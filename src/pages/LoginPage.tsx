@@ -7,12 +7,10 @@ import {
 	StatusBar,
 	KeyboardAvoidingView,
 	Platform,
-	ScrollView,
 	StyleSheet,
+	ActivityIndicator,
 } from 'react-native';
-import LoadingOverlay from '../components/LoadingOverlay';
 import { Ionicons } from '@expo/vector-icons';
-import AntDesign from '@expo/vector-icons/AntDesign';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
@@ -34,6 +32,7 @@ const LoginScreen = () => {
 	const { singIn } = useAuth();
 	const [showPassword, setShowPassword] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
+
 	const {
 		control,
 		handleSubmit,
@@ -56,13 +55,10 @@ const LoginScreen = () => {
 			}
 		} catch (error) {
 			console.log(error);
+			alert('登录失败，请检查网络或稍后重试');
 		} finally {
 			setIsLoading(false);
 		}
-	};
-
-	const handleBiometricLogin = () => {
-		console.log('Biometric login attempted');
 	};
 
 	const handleSignup = () => {
@@ -71,142 +67,129 @@ const LoginScreen = () => {
 
 	return (
 		<View style={[styles.container, { paddingTop: insets.top }]}>
-			<StatusBar barStyle="dark-content" backgroundColor="#f9fafb" />
+			<StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
 			<KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardView}>
-				<ScrollView
-					contentContainerStyle={styles.scrollContent}
-					showsVerticalScrollIndicator={false}
-					keyboardShouldPersistTaps="handled"
-				>
-					<View style={styles.mainContent}>
-						<View style={styles.innerWrapper}>
-							{/* 应用图标区域 */}
-							<View style={styles.iconContainer}>
-								<View style={styles.logoContainer}>
-									<Ionicons name="lock-closed" size={48} color="#3b82f6" />
-								</View>
-							</View>
+				<View style={styles.contentContainer}>
+					{/* 头部区域：登录标题 + 欢迎小字 */}
+					<View style={styles.headerSection}>
+						<Text style={styles.loginTitle}>登录</Text>
+						<Text style={styles.welcomeText}>您好，欢迎使用Vault</Text>
+					</View>
 
-							{/* 标题与副标题 */}
-							<View style={styles.headerTextContainer}>
-								<Text style={styles.title}>欢迎回来</Text>
-								<Text style={styles.subtitle}>请输入您的主密码以访问数字保险库</Text>
-							</View>
+					{/* 表单区域 */}
+					<View style={styles.formWrapper}>
+						{/* 账号/邮箱输入框 */}
+						<View style={styles.inputGroup}>
+							<Controller
+								control={control}
+								rules={{
+									required: '账号/邮箱不能为空',
+									pattern: {
+										value: /^[^\s@]+@([^\s@.,]+\.)+[^\s@.,]{2,}$|^[a-zA-Z0-9_]{3,20}$/,
+										message: '请输入有效的邮箱或账号',
+									},
+								}}
+								render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
+									<>
+										<View style={[styles.inputContainer, error && styles.inputContainerError]}>
+											<Ionicons
+												name="person-outline"
+												size={20}
+												color="#9ca3af"
+												style={styles.inputLeftIcon}
+											/>
+											<TextInput
+												style={styles.input}
+												placeholder="账号/邮箱"
+												placeholderTextColor="#9ca3af"
+												value={value}
+												onChangeText={onChange}
+												onBlur={onBlur}
+												autoCapitalize="none"
+												autoCorrect={false}
+												importantForAutofill="yes"
+											/>
+										</View>
+										{error && <Text style={styles.errorText}>{error.message}</Text>}
+									</>
+								)}
+								name="accountId"
+							/>
+						</View>
 
-							{/* 登录表单卡片 */}
-							<View style={styles.formContainer}>
-								{/* 账号/邮箱输入框 */}
-								<View style={styles.formGroup}>
-									<Text style={styles.formLabel}>账号/邮箱</Text>
-									<View style={styles.inputWithIcon}>
-										<Controller
-											control={control}
-											rules={{
-												required: '账号/邮箱不能为空',
-												pattern: {
-													value: /^[^\s@]+@([^\s@.,]+\.)+[^\s@.,]{2,}$|^[a-zA-Z0-9_]{3,20}$/,
-													message: '请输入有效的邮箱或账号(字母数字下划线3-20位)',
-												},
-											}}
-											render={({ field: { onChange, onBlur, value } }) => (
-												<TextInput
-													style={styles.formInput}
-													placeholder="请输入账号或邮箱"
-													value={value}
-													onChangeText={onChange}
-													onBlur={onBlur}
-													autoCapitalize="none"
-													autoCorrect={false}
-												/>
-											)}
-											name="accountId"
-										/>
-										<Ionicons
-											name="person-outline"
-											size={20}
-											color="#6b7280"
-											style={styles.inputIcon}
-										/>
-									</View>
-									{errors.accountId && (
-										<Text style={styles.errorText}>{errors.accountId.message}</Text>
-									)}
-								</View>
-
-								{/* 主密码输入框 */}
-								<View style={styles.formGroup}>
-									<Text style={styles.formLabel}>主密码</Text>
-									<View style={styles.inputWithIcon}>
-										<Controller
-											control={control}
-											rules={{
-												required: '密码不能为空',
-												minLength: {
-													value: 6,
-													message: '密码长度至少为6位',
-												},
-											}}
-											render={({ field: { onChange, onBlur, value } }) => (
-												<TextInput
-													style={styles.formInput}
-													placeholder="输入主密码"
-													value={value}
-													onChangeText={onChange}
-													onBlur={onBlur}
-													secureTextEntry={!showPassword}
-													autoCapitalize="none"
-													autoCorrect={false}
-												/>
-											)}
-											name="password"
-										/>
-										<View style={styles.passwordActions}>
-											<TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+						{/* 密码输入框 */}
+						<View style={styles.inputGroup}>
+							<Controller
+								control={control}
+								rules={{
+									required: '密码不能为空',
+									minLength: {
+										value: 6,
+										message: '密码至少6位',
+									},
+								}}
+								render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
+									<>
+										<View style={[styles.inputContainer, error && styles.inputContainerError]}>
+											<Ionicons
+												name="lock-closed-outline"
+												size={20}
+												color="#9ca3af"
+												style={styles.inputLeftIcon}
+											/>
+											<TextInput
+												style={[styles.input, styles.passwordInput]}
+												placeholder="密码"
+												placeholderTextColor="#9ca3af"
+												value={value}
+												onChangeText={onChange}
+												onBlur={onBlur}
+												secureTextEntry={!showPassword}
+												autoCapitalize="none"
+												autoCorrect={false}
+												importantForAutofill="yes"
+											/>
+											<TouchableOpacity
+												onPress={() => setShowPassword(!showPassword)}
+												style={styles.eyeButton}
+											>
 												<Ionicons
 													name={showPassword ? 'eye-off-outline' : 'eye-outline'}
 													size={20}
-													color="#6b7280"
+													color="#9ca3af"
 												/>
 											</TouchableOpacity>
 										</View>
-									</View>
-									{errors.password && <Text style={styles.errorText}>{errors.password.message}</Text>}
-								</View>
-
-								{/* 主登录按钮 */}
-								<TouchableOpacity onPress={handleSubmit(onSubmit)} style={styles.primaryButton}>
-									<Text style={styles.primaryButtonText}>解锁保险库</Text>
-									<AntDesign name="arrow-right" size={20} color="white" />
-								</TouchableOpacity>
-
-								{/* 分隔线 */}
-								<View style={styles.dividerContainer}>
-									<View style={styles.dividerLine} />
-									<Text style={styles.dividerText}>或</Text>
-									<View style={styles.dividerLine} />
-								</View>
-
-								{/* 生物识别登录按钮 */}
-								<TouchableOpacity onPress={handleBiometricLogin} style={styles.secondaryButton}>
-									<Ionicons name="finger-print" size={24} color="#3b82f6" />
-									<Text style={styles.secondaryButtonText}>使用指纹登录</Text>
-								</TouchableOpacity>
-							</View>
-
-							{/* 注册提示 */}
-							<View style={styles.signupContainer}>
-								<Text style={styles.signupText}>没有账号？ </Text>
-								<TouchableOpacity onPress={handleSignup}>
-									<Text style={styles.signupLink}>立即注册</Text>
-								</TouchableOpacity>
-							</View>
+										{error && <Text style={styles.errorText}>{error.message}</Text>}
+									</>
+								)}
+								name="password"
+							/>
 						</View>
-					</View>
-				</ScrollView>
-			</KeyboardAvoidingView>
 
-			{/* Loading Overlay */}
-			<LoadingOverlay visible={isLoading} loadingText="正在登录..." />
+						{/* 登录按钮 */}
+						<TouchableOpacity
+							onPress={handleSubmit(onSubmit)}
+							style={styles.loginButton}
+							activeOpacity={0.8}
+							disabled={isLoading}
+						>
+							{isLoading ? (
+								<ActivityIndicator color="#ffffff" size="small" />
+							) : (
+								<Text style={styles.loginButtonText}>登录</Text>
+							)}
+						</TouchableOpacity>
+
+						{/* 注册链接 */}
+						<TouchableOpacity onPress={handleSignup} style={styles.signupButton}>
+							<Text style={styles.signupText}>
+								没有账号？ <Text style={styles.signupLink}>立即注册</Text>
+							</Text>
+						</TouchableOpacity>
+					</View>
+				</View>
+			</KeyboardAvoidingView>
 		</View>
 	);
 };
@@ -214,184 +197,105 @@ const LoginScreen = () => {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: '#f9fafb',
+		backgroundColor: '#ffffff',
 	},
 	keyboardView: {
 		flex: 1,
 	},
-	scrollContent: {
-		flexGrow: 1,
-	},
-	mainContent: {
+	contentContainer: {
 		flex: 1,
-		justifyContent: 'center',
-		alignItems: 'center',
-		paddingHorizontal: 16,
-		paddingBottom: 32,
+		paddingHorizontal: 24,
 	},
-	innerWrapper: {
-		width: '100%',
-		maxWidth: 400,
-		alignItems: 'center',
+	// 头部区域
+	headerSection: {
+		marginTop: 60,
+		marginBottom: 48,
 	},
-	// 图标区域
-	iconContainer: {
-		marginBottom: 40,
-		alignItems: 'center',
-		justifyContent: 'center',
-	},
-	logoContainer: {
-		width: 128,
-		height: 128,
-		borderRadius: 64,
-		backgroundColor: '#f3f4f6',
-		justifyContent: 'center',
-		alignItems: 'center',
-		borderWidth: 4,
-		borderColor: '#f9fafb',
-	},
-	// 标题区域
-	headerTextContainer: {
-		marginBottom: 24,
-		alignItems: 'center',
-		width: '100%',
-	},
-	title: {
-		fontSize: 24,
-		fontWeight: '600',
+	loginTitle: {
+		fontSize: 34,
+		fontWeight: '700',
 		color: '#1f2937',
 		marginBottom: 8,
 	},
-	subtitle: {
+	welcomeText: {
 		fontSize: 14,
-		color: '#6b7280',
-		textAlign: 'center',
-		paddingHorizontal: 32,
+		color: '#9ca3af', // 灰色，不突出
 	},
-	// 表单容器
-	formContainer: {
-		backgroundColor: '#f9fafb',
-		borderRadius: 12,
-		padding: 24,
-		margin: 16,
+	// 表单区域
+	formWrapper: {
+		width: '100%',
+	},
+	inputGroup: {
+		marginBottom: 20,
+	},
+	inputContainer: {
+		flexDirection: 'row',
+		alignItems: 'center',
 		borderWidth: 1,
 		borderColor: '#e5e7eb',
-		width: '100%',
+		borderRadius: 12,
+		backgroundColor: '#f9fafb',
+		height: 52,
 	},
-	// 表单组
-	formGroup: {
-		marginBottom: 24,
+	inputContainerError: {
+		borderColor: '#ef4444',
+		backgroundColor: '#fef2f2',
 	},
-	formLabel: {
-		fontSize: 10,
-		fontWeight: 'bold',
-		color: '#6b7280',
-		textTransform: 'uppercase',
-		letterSpacing: 1,
-		marginBottom: 8,
+	inputLeftIcon: {
+		marginLeft: 16,
+		marginRight: 8,
 	},
-	inputWithIcon: {
-		position: 'relative',
-	},
-	formInput: {
-		backgroundColor: '#f3f4f6',
-		borderRadius: 8,
-		paddingHorizontal: 16,
-		paddingVertical: 12,
+	input: {
+		flex: 1,
 		fontSize: 16,
 		color: '#1f2937',
+		paddingVertical: 12,
+		paddingRight: 16,
 	},
-	inputIcon: {
+	passwordInput: {
+		paddingRight: 48,
+	},
+	eyeButton: {
 		position: 'absolute',
 		right: 16,
-		top: 12,
+		padding: 4,
 	},
-	passwordActions: {
-		position: 'absolute',
-		right: 16,
-		top: 10,
-		flexDirection: 'row',
-		gap: 12,
+	errorText: {
+		color: '#ef4444',
+		fontSize: 12,
+		marginTop: 6,
+		marginLeft: 12,
 	},
-	// 主按钮
-	primaryButton: {
-		flex: 1,
-		flexDirection: 'row',
-		alignItems: 'center',
-		justifyContent: 'center',
-		gap: 8,
+	loginButton: {
 		backgroundColor: '#3b82f6',
-		borderRadius: 24,
-		padding: 16,
-		marginTop: 16,
-		shadowColor: '#000',
-		shadowOffset: {
-			width: 0,
-			height: 4,
-		},
+		borderRadius: 12,
+		height: 52,
+		justifyContent: 'center',
+		alignItems: 'center',
+		marginTop: 8,
+		shadowColor: '#3b82f6',
+		shadowOffset: { width: 0, height: 4 },
 		shadowOpacity: 0.2,
-		shadowRadius: 4,
-		elevation: 5,
+		shadowRadius: 8,
+		elevation: 4,
 	},
-	primaryButtonText: {
+	loginButtonText: {
+		color: '#ffffff',
 		fontSize: 16,
 		fontWeight: '600',
-		color: 'white',
 	},
-	// 分隔线
-	dividerContainer: {
-		flexDirection: 'row',
+	signupButton: {
 		alignItems: 'center',
-		marginVertical: 24,
-	},
-	dividerLine: {
-		flex: 1,
-		height: 1,
-		backgroundColor: '#e5e7eb',
-	},
-	dividerText: {
-		marginHorizontal: 16,
-		fontSize: 12,
-		fontWeight: '500',
-		color: '#6b7280',
-	},
-	// 次要按钮
-	secondaryButton: {
-		flex: 1,
-		flexDirection: 'row',
-		alignItems: 'center',
-		justifyContent: 'center',
-		gap: 12,
-		backgroundColor: '#f3f4f6',
-		borderRadius: 24,
-		padding: 16,
-	},
-	secondaryButtonText: {
-		fontSize: 16,
-		fontWeight: '500',
-		color: '#4b5563',
-	},
-	// 注册提示
-	signupContainer: {
 		marginTop: 24,
-		marginBottom: 32,
-		flexDirection: 'row',
-		alignItems: 'center',
+		paddingVertical: 12,
 	},
 	signupText: {
 		fontSize: 14,
 		color: '#6b7280',
 	},
 	signupLink: {
-		fontSize: 14,
-		fontWeight: '600',
 		color: '#3b82f6',
-	},
-	errorText: {
-		color: '#ef4444',
-		fontSize: 12,
-		marginTop: 4,
-		marginLeft: 12,
+		fontWeight: '500',
 	},
 });
 

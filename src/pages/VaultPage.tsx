@@ -10,7 +10,7 @@ import { useAccountsStore } from '../store';
 
 type VaultPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'VaultPage'>;
 
-// 分类映射：中文分类名 -> 英文分类值（根据你的数据结构调整）
+// 分类映射
 const categoryMap: Record<string, string> = {
 	全部: '',
 	社交: 'social',
@@ -31,9 +31,17 @@ export default function VaultPage() {
 		navigation.setOptions({
 			headerRight: () => (
 				<TouchableOpacity style={styles.addAccountButton} onPress={onAddAccountPress}>
-					<Ionicons name="add-circle-outline" size={24} color="#3b82f6" />
+					<Ionicons name="add" size={24} color="#3b82f6" />
 				</TouchableOpacity>
 			),
+			headerStyle: {
+				backgroundColor: '#ffffff',
+			},
+			headerTitleStyle: {
+				color: '#1f2937',
+				fontSize: 20,
+				fontWeight: '600',
+			},
 		});
 	}, [navigation]);
 
@@ -41,22 +49,19 @@ export default function VaultPage() {
 		fetchAccounts();
 	}, []);
 
-	// 筛选账户：根据搜索关键词和分类
 	const filteredAccounts = useMemo(() => {
 		let filtered = [...accounts];
 
-		// 按分类筛选
 		if (activeCategory !== '全部') {
 			const categoryValue = categoryMap[activeCategory];
 			filtered = filtered.filter((account) => account.category === categoryValue);
 		}
 
-		// 按搜索关键词筛选（搜索应用名称或用户名）
 		if (searchQuery.trim()) {
 			const query = searchQuery.toLowerCase().trim();
 			filtered = filtered.filter(
 				(account) =>
-					account.appName.toLowerCase().includes(query) || account.username.toLowerCase().includes(query),
+					account.appName.toLowerCase().includes(query) || account.username.toLowerCase().includes(query)
 			);
 		}
 
@@ -67,12 +72,10 @@ export default function VaultPage() {
 		navigation.navigate('EditAccount', { id: '', mode: 'add' });
 	};
 
-	// 清空搜索
 	const onClearSearch = () => {
 		setSearchQuery('');
 	};
 
-	// 渲染内容：骨架屏或账户列表
 	const renderContent = () => {
 		if (loading) {
 			return (
@@ -87,12 +90,14 @@ export default function VaultPage() {
 		if (filteredAccounts.length === 0) {
 			return (
 				<View style={styles.emptyContainer}>
-					<Ionicons name="search-outline" size={64} color="#d1d5db" />
+					<View style={styles.emptyIconWrapper}>
+						<Ionicons name="key-outline" size={48} color="#d1d5db" />
+					</View>
 					<Text style={styles.emptyTitle}>暂无账户</Text>
 					<Text style={styles.emptyDescription}>
 						{searchQuery || activeCategory !== '全部'
-							? '没有找到匹配的账户，试试其他关键词吧'
-							: '点击右上角按钮添加第一个账户'}
+							? '没有找到匹配的账户'
+							: '点击右上角 + 添加第一个账户'}
 					</Text>
 				</View>
 			);
@@ -104,6 +109,7 @@ export default function VaultPage() {
 					<TouchableOpacity
 						key={account.id}
 						style={styles.accountItem}
+						activeOpacity={0.7}
 						onPress={() => navigation.navigate('AccountDetails', { id: account.id, mode: 'edit' })}
 					>
 						<View style={styles.accountInfo}>
@@ -111,7 +117,7 @@ export default function VaultPage() {
 								{account.logoUrl ? (
 									<Image source={{ uri: account.logoUrl }} style={styles.logo} />
 								) : (
-									<Text style={styles.logoText}>{account.appName[0]}</Text>
+									<Text style={styles.logoText}>{account.appName[0].toUpperCase()}</Text>
 								)}
 							</View>
 							<View style={styles.accountDetails}>
@@ -119,11 +125,7 @@ export default function VaultPage() {
 								<Text style={styles.accountUsername}>{account.username}</Text>
 							</View>
 						</View>
-						<View style={styles.accountActions}>
-							<TouchableOpacity style={styles.actionButton}>
-								<Ionicons name="chevron-forward" size={20} color="#3b82f6" />
-							</TouchableOpacity>
-						</View>
+						<Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
 					</TouchableOpacity>
 				))}
 			</View>
@@ -134,14 +136,14 @@ export default function VaultPage() {
 		<View style={styles.container}>
 			<View style={styles.searchSection}>
 				<View style={styles.searchContainer}>
-					<Ionicons name="search" size={20} color="#6b7280" style={styles.searchIcon} />
+					<Ionicons name="search" size={20} color="#9ca3af" style={styles.searchIcon} />
 					<TextInput
-						placeholder="搜索应用名称或用户名..."
+						placeholder="搜索应用或用户名"
+						placeholderTextColor="#9ca3af"
 						style={styles.searchInput}
 						value={searchQuery}
 						onChangeText={setSearchQuery}
 						returnKeyType="search"
-						clearButtonMode="while-editing"
 					/>
 					{searchQuery.length > 0 && (
 						<TouchableOpacity onPress={onClearSearch} style={styles.clearButton}>
@@ -149,6 +151,7 @@ export default function VaultPage() {
 						</TouchableOpacity>
 					)}
 				</View>
+
 				<ScrollView
 					horizontal
 					showsHorizontalScrollIndicator={false}
@@ -159,17 +162,9 @@ export default function VaultPage() {
 						<TouchableOpacity
 							key={cat}
 							onPress={() => setActiveCategory(cat)}
-							style={[
-								styles.categoryButton,
-								activeCategory === cat ? styles.activeCategoryButton : styles.inactiveCategoryButton,
-							]}
+							style={[styles.categoryButton, activeCategory === cat && styles.activeCategoryButton]}
 						>
-							<Text
-								style={[
-									styles.categoryText,
-									activeCategory === cat ? styles.activeCategoryText : styles.inactiveCategoryText,
-								]}
-							>
+							<Text style={[styles.categoryText, activeCategory === cat && styles.activeCategoryText]}>
 								{cat}
 							</Text>
 						</TouchableOpacity>
@@ -177,30 +172,24 @@ export default function VaultPage() {
 				</ScrollView>
 			</View>
 
-			{/* 搜索结果提示 */}
-			{!loading && (searchQuery || activeCategory !== '全部') && filteredAccounts.length > 0 && (
+			{(searchQuery || activeCategory !== '全部') && filteredAccounts.length > 0 && (
 				<View style={styles.resultInfo}>
-					<Text style={styles.resultInfoText}>找到 {filteredAccounts.length} 个账户</Text>
-					{(searchQuery || activeCategory !== '全部') && (
-						<TouchableOpacity
-							onPress={() => {
-								setSearchQuery('');
-								setActiveCategory('全部');
-							}}
-						>
-							<Text style={styles.clearFilterText}>清除筛选</Text>
-						</TouchableOpacity>
-					)}
+					<Text style={styles.resultInfoText}>共 {filteredAccounts.length} 个账户</Text>
+					<TouchableOpacity
+						onPress={() => {
+							setSearchQuery('');
+							setActiveCategory('全部');
+						}}
+					>
+						<Text style={styles.clearFilterText}>清除筛选</Text>
+					</TouchableOpacity>
 				</View>
 			)}
 
 			<View style={styles.accountSection}>
-				<View style={styles.sectionHeader}>
-					<Text style={styles.sectionTitle}>
-						{searchQuery || activeCategory !== '全部' ? '搜索结果' : '最近使用的账户'}
-					</Text>
-				</View>
-				<ScrollView showsVerticalScrollIndicator={false}>{renderContent()}</ScrollView>
+				<ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+					{renderContent()}
+				</ScrollView>
 			</View>
 		</View>
 	);
@@ -209,17 +198,21 @@ export default function VaultPage() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: '#f9fafb',
+		backgroundColor: '#ffffff',
 	},
 	searchSection: {
-		padding: 16,
-		gap: 24,
+		paddingHorizontal: 20,
+		paddingTop: 12,
+		paddingBottom: 8,
+		gap: 16,
 	},
 	searchContainer: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		backgroundColor: '#f3f4f6',
+		backgroundColor: '#f9fafb',
 		borderRadius: 12,
+		borderWidth: 1,
+		borderColor: '#e5e7eb',
 		paddingHorizontal: 16,
 		height: 48,
 	},
@@ -238,48 +231,51 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 	},
 	categoryContent: {
-		paddingRight: 16,
-		gap: 12,
+		paddingRight: 20,
+		gap: 10,
 	},
 	categoryButton: {
-		paddingHorizontal: 24,
-		paddingVertical: 10,
-		borderRadius: 12,
+		paddingHorizontal: 18,
+		paddingVertical: 8,
+		borderRadius: 20,
+		backgroundColor: '#f9fafb',
+		borderWidth: 1,
+		borderColor: '#e5e7eb',
 	},
 	activeCategoryButton: {
 		backgroundColor: '#3b82f6',
-	},
-	inactiveCategoryButton: {
-		backgroundColor: '#f3f4f6',
+		borderColor: '#3b82f6',
 	},
 	categoryText: {
 		fontSize: 14,
 		fontWeight: '500',
+		color: '#6b7280',
 	},
 	activeCategoryText: {
-		color: 'white',
-	},
-	inactiveCategoryText: {
-		color: '#4b5563',
+		color: '#ffffff',
 	},
 	accountSection: {
-		paddingHorizontal: 16,
 		flex: 1,
+		paddingHorizontal: 20,
 	},
-	sectionHeader: {
+	scrollContent: {
+		paddingBottom: 20,
+	},
+	resultInfo: {
 		flexDirection: 'row',
 		justifyContent: 'space-between',
 		alignItems: 'center',
-		marginBottom: 24,
+		paddingHorizontal: 20,
+		paddingVertical: 8,
 	},
-	sectionTitle: {
-		fontSize: 20,
+	resultInfoText: {
+		fontSize: 13,
+		color: '#9ca3af',
+	},
+	clearFilterText: {
+		fontSize: 13,
+		color: '#3b82f6',
 		fontWeight: '500',
-		color: '#1f2937',
-	},
-	showAllText: {
-		fontSize: 14,
-		color: '#6b7280',
 	},
 	accountList: {
 		gap: 12,
@@ -288,26 +284,31 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		alignItems: 'center',
 		justifyContent: 'space-between',
-		backgroundColor: '#f3f4f6',
-		borderRadius: 12,
-		padding: 20,
+		backgroundColor: '#f9fafb',
+		borderRadius: 14,
+		padding: 16,
+		borderWidth: 1,
+		borderColor: '#f0f0f0',
 	},
 	accountInfo: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		gap: 20,
+		gap: 14,
+		flex: 1,
 	},
 	logoContainer: {
 		width: 48,
 		height: 48,
-		borderRadius: 8,
+		borderRadius: 12,
 		justifyContent: 'center',
 		alignItems: 'center',
+		backgroundColor: '#ffffff',
 		borderWidth: 1,
 		borderColor: '#e5e7eb',
 	},
 	logoPlaceholder: {
-		backgroundColor: 'rgba(59, 130, 246, 0.1)',
+		backgroundColor: '#eff6ff',
+		borderColor: '#dbeafe',
 	},
 	logo: {
 		width: 32,
@@ -315,70 +316,51 @@ const styles = StyleSheet.create({
 		resizeMode: 'contain',
 	},
 	logoText: {
-		fontSize: 20,
-		fontWeight: 'bold',
+		fontSize: 18,
+		fontWeight: '600',
 		color: '#3b82f6',
 	},
 	accountDetails: {
-		justifyContent: 'center',
+		flex: 1,
+		gap: 4,
 	},
 	accountName: {
-		fontSize: 18,
-		fontWeight: '500',
+		fontSize: 16,
+		fontWeight: '600',
 		color: '#1f2937',
 	},
 	accountUsername: {
-		fontSize: 14,
-		color: '#6b7280',
-	},
-	accountActions: {
-		flexDirection: 'row',
-		gap: 8,
-	},
-	actionButton: {
-		padding: 8,
-		borderRadius: 20,
+		fontSize: 13,
+		color: '#9ca3af',
 	},
 	addAccountButton: {
-		padding: 12,
-		borderRadius: 24,
+		padding: 8,
 		marginRight: 12,
 	},
-	// 空状态样式
+	// 空状态
 	emptyContainer: {
 		alignItems: 'center',
 		justifyContent: 'center',
-		paddingVertical: 48,
+		paddingVertical: 80,
 		gap: 12,
+	},
+	emptyIconWrapper: {
+		width: 80,
+		height: 80,
+		borderRadius: 40,
+		backgroundColor: '#f9fafb',
+		justifyContent: 'center',
+		alignItems: 'center',
+		marginBottom: 8,
 	},
 	emptyTitle: {
 		fontSize: 18,
 		fontWeight: '600',
-		color: '#4b5563',
-		marginTop: 8,
+		color: '#6b7280',
 	},
 	emptyDescription: {
 		fontSize: 14,
 		color: '#9ca3af',
 		textAlign: 'center',
-		paddingHorizontal: 32,
-	},
-	// 搜索结果信息
-	resultInfo: {
-		flexDirection: 'row',
-		justifyContent: 'space-between',
-		alignItems: 'center',
-		paddingHorizontal: 16,
-		paddingBottom: 12,
-		marginTop: -8,
-	},
-	resultInfoText: {
-		fontSize: 13,
-		color: '#6b7280',
-	},
-	clearFilterText: {
-		fontSize: 13,
-		color: '#3b82f6',
-		fontWeight: '500',
 	},
 });

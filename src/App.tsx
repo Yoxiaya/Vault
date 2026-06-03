@@ -55,7 +55,7 @@ function AppNavigator() {
 		>
 			{!user ? (
 				<>
-					<Stack.Screen name="LoginPage" component={LoginPage} options={{ title: '登录' }} />
+					<Stack.Screen name="LoginPage" component={LoginPage} options={{ headerShown: false }} />
 					<Stack.Screen name="RegisterPage" component={RegisterPage} options={{ title: '注册' }} />
 				</>
 			) : (
