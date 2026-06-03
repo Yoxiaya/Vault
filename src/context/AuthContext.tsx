@@ -1,7 +1,7 @@
 import { useState, useEffect, createContext, ReactNode, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useUserInfoStore } from '../store';
-import { eventBus } from '../utils';
+import { useUserInfoStore } from '@/store';
+import { eventBus } from '@/utils';
 
 type User = {
 	token: string;

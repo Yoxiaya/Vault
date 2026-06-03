@@ -5,7 +5,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as Clipboard from 'expo-clipboard';
-
 import { RootStackParamList } from '../App';
 import { Account } from '../types';
 import { useAccountsStore } from '../store';
@@ -48,7 +47,7 @@ export default function AccountDetailsPage() {
 					},
 				},
 			],
-			{ cancelable: true },
+			{ cancelable: true }
 		);
 	};
 	// 密码强度计算

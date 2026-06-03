@@ -1,6 +1,6 @@
-import { eventBus } from '../utils';
-import Convert from './convert';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { eventBus } from '@/utils';
+import Convert from './convert';
 
 type ConvertMethodName = keyof Convert;
 
