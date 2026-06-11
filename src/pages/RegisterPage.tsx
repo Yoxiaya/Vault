@@ -98,7 +98,7 @@ const RegisterScreen = () => {
 
 	return (
 		<View style={[styles.container, { paddingTop: insets.top }]}>
-			<StatusBar barStyle="dark-content" backgroundColor="#f9fafb" />
+			<StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
 
 			<KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardView}>
 				<ScrollView
@@ -379,7 +379,7 @@ const RegisterScreen = () => {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: '#f9fafb',
+		backgroundColor: '#ffffff',
 	},
 	header: {
 		flexDirection: 'row',
@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
 		borderRadius: 20,
 		justifyContent: 'center',
 		alignItems: 'center',
-		backgroundColor: '#f3f4f6',
+		backgroundColor: '#f9fafb',
 	},
 	headerTitle: {
 		fontSize: 18,
@@ -435,7 +435,7 @@ const styles = StyleSheet.create({
 		width: 128,
 		height: 128,
 		borderRadius: 64,
-		backgroundColor: '#f3f4f6',
+		backgroundColor: '#f9fafb',
 		justifyContent: 'center',
 		alignItems: 'center',
 		borderWidth: 4,
@@ -484,8 +484,10 @@ const styles = StyleSheet.create({
 		position: 'relative',
 	},
 	formInput: {
-		backgroundColor: '#f3f4f6',
-		borderRadius: 8,
+		backgroundColor: '#f9fafb',
+		borderRadius: 12,
+		borderWidth: 1,
+		borderColor: '#e5e7eb',
 		paddingHorizontal: 16,
 		paddingVertical: 12,
 		fontSize: 16,
@@ -510,8 +512,10 @@ const styles = StyleSheet.create({
 	},
 	codeInput: {
 		flex: 1,
-		backgroundColor: '#f3f4f6',
-		borderRadius: 8,
+		backgroundColor: '#f9fafb',
+		borderRadius: 12,
+		borderWidth: 1,
+		borderColor: '#e5e7eb',
 		paddingHorizontal: 16,
 		paddingVertical: 12,
 		fontSize: 16,
@@ -521,7 +525,7 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 20,
 		paddingVertical: 12,
 		backgroundColor: '#3b82f6',
-		borderRadius: 8,
+		borderRadius: 12,
 		justifyContent: 'center',
 		alignItems: 'center',
 	},

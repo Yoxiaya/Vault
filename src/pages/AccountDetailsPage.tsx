@@ -207,7 +207,7 @@ export default function AccountDetailsPage() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: '#f9fafb',
+		backgroundColor: '#ffffff',
 	},
 	errorContainer: {
 		flex: 1,
@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
 		justifyContent: 'center',
 		alignItems: 'center',
 		margin: 16,
-		backgroundColor: '#f3f4f6',
+		backgroundColor: '#f9fafb',
 	},
 	heroSection: {
 		padding: 16,
@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
 		width: 128,
 		height: 128,
 		borderRadius: 12,
-		backgroundColor: '#f3f4f6',
+		backgroundColor: '#f9fafb',
 		justifyContent: 'center',
 		alignItems: 'center',
 		borderWidth: 1,
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
 		gap: 16,
 	},
 	credentialsCard: {
-		backgroundColor: '#f3f4f6',
+		backgroundColor: '#f9fafb',
 		borderRadius: 12,
 		padding: 24,
 		gap: 24,
@@ -392,7 +392,7 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 		justifyContent: 'center',
 		gap: 8,
-		backgroundColor: '#f3f4f6',
+		backgroundColor: '#f9fafb',
 		borderRadius: 24,
 		padding: 16,
 		borderWidth: 1,
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
 		color: '#1f2937',
 	},
 	dangerZone: {
-		backgroundColor: '#f3f4f6',
+		backgroundColor: '#f9fafb',
 		borderRadius: 12,
 		padding: 24,
 		borderWidth: 1,

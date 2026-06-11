@@ -31,7 +31,7 @@ export default function ProfileEditPage() {
 			title: '修改昵称',
 			headerRight: () => (
 				<TouchableOpacity onPress={saveNickname}>
-					<Text style={{ marginRight: 15, color: '#007AFF', fontSize: 16 }}>保存</Text>
+					<Text style={{ marginRight: 15, color: '#3b82f6', fontSize: 16 }}>保存</Text>
 				</TouchableOpacity>
 			),
 		});
@@ -43,13 +43,16 @@ export default function ProfileEditPage() {
 			<View style={styles.inputContainer}>
 				<TextInput
 					placeholder="请输入新昵称"
+					placeholderTextColor="#9ca3af"
 					style={styles.input}
 					value={profileName}
 					onChangeText={setProfileName}
 				/>
-				<TouchableOpacity onPress={allClear}>
-					<Ionicons name="close" size={20} color="#6693ecff" style={styles.icons} />
-				</TouchableOpacity>
+				{profileName.length > 0 && (
+					<TouchableOpacity onPress={allClear}>
+						<Ionicons name="close-circle" size={18} color="#9ca3af" />
+					</TouchableOpacity>
+				)}
 			</View>
 		</View>
 	);
@@ -57,27 +60,23 @@ export default function ProfileEditPage() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: '#f9fafb',
+		backgroundColor: '#ffffff',
 	},
 	inputContainer: {
 		flexDirection: 'row',
 		alignItems: 'center',
-	},
-	icons: {
-		width: 20,
-		height: 20,
-		alignItems: 'center',
-		justifyContent: 'center',
+		paddingHorizontal: 20,
+		marginTop: 16,
 	},
 	input: {
-		width: '85%',
-		marginLeft: 16,
-		marginRight: 12,
-		marginVertical: 12,
-		paddingVertical: 12,
-		paddingHorizontal: 0,
-		borderBottomWidth: 2,
-		borderColor: '#6693ecff',
-		borderRadius: 0,
+		flex: 1,
+		height: 48,
+		borderRadius: 12,
+		borderWidth: 1,
+		borderColor: '#e5e7eb',
+		backgroundColor: '#f9fafb',
+		paddingHorizontal: 16,
+		fontSize: 16,
+		color: '#1f2937',
 	},
 });

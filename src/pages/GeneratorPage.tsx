@@ -306,15 +306,15 @@ export default function GeneratorPage() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: '#f9fafb',
+		backgroundColor: '#ffffff',
 	},
 	passwordSection: {
 		padding: 16,
 		gap: 16,
 	},
 	passwordCard: {
-		backgroundColor: '#f3f4f6',
-		borderRadius: 20,
+		backgroundColor: '#f9fafb',
+		borderRadius: 14,
 		padding: 24,
 		gap: 16,
 		shadowColor: '#000',
@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
 		justifyContent: 'center',
 		gap: 8,
 		backgroundColor: '#3b82f6',
-		borderRadius: 12,
+		borderRadius: 24,
 		padding: 14,
 	},
 	copyButtonText: {
@@ -388,8 +388,8 @@ const styles = StyleSheet.create({
 		gap: 16,
 	},
 	controlCard: {
-		backgroundColor: '#f3f4f6',
-		borderRadius: 20,
+		backgroundColor: '#f9fafb',
+		borderRadius: 14,
 		padding: 20,
 		shadowColor: '#000',
 		shadowOffset: { width: 0, height: 2 },
@@ -438,7 +438,7 @@ const styles = StyleSheet.create({
 		marginTop: 8,
 		paddingTop: 12,
 		borderTopWidth: 1,
-		borderTopColor: '#f3f4f6',
+		borderTopColor: '#e5e7eb',
 	},
 	lengthTipText: {
 		fontSize: 12,
@@ -450,7 +450,7 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 		paddingVertical: 12,
 		borderBottomWidth: 1,
-		borderBottomColor: '#f3f4f6',
+		borderBottomColor: '#e5e7eb',
 	},
 	switchLabel: {
 		flexDirection: 'row',
@@ -459,7 +459,7 @@ const styles = StyleSheet.create({
 	},
 	switchIcon: {
 		padding: 8,
-		backgroundColor: '#f3f4f6',
+		backgroundColor: '#f9fafb',
 		borderRadius: 10,
 		borderWidth: 1,
 		borderColor: '#e5e7eb',
@@ -489,7 +489,7 @@ const styles = StyleSheet.create({
 		marginTop: 12,
 		paddingTop: 12,
 		borderTopWidth: 1,
-		borderTopColor: '#f3f4f6',
+		borderTopColor: '#e5e7eb',
 	},
 	charNoteText: {
 		fontSize: 12,
@@ -506,8 +506,8 @@ const styles = StyleSheet.create({
 		justifyContent: 'center',
 		gap: 8,
 		padding: 14,
-		backgroundColor: '#f3f4f6',
-		borderRadius: 12,
+		backgroundColor: '#f9fafb',
+		borderRadius: 24,
 		borderWidth: 1,
 		borderColor: '#e5e7eb',
 	},
@@ -529,7 +529,7 @@ const styles = StyleSheet.create({
 		margin: 16,
 		padding: 20,
 		backgroundColor: '#ffffff',
-		borderRadius: 20,
+		borderRadius: 14,
 		gap: 20,
 		shadowColor: '#000',
 		shadowOffset: { width: 0, height: 2 },

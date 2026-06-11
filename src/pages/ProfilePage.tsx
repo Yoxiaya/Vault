@@ -114,7 +114,7 @@ export default function ProfilePage() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: '#f9fafb',
+		backgroundColor: '#ffffff',
 	},
 
 	scrollView: {
@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
 		paddingLeft: 8,
 	},
 	card: {
-		backgroundColor: 'white',
+		backgroundColor: '#f9fafb',
 		borderRadius: 12,
 		overflow: 'hidden',
 		borderWidth: 1,
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 		padding: 16,
 		borderBottomWidth: 1,
-		borderBottomColor: '#f3f4f6',
+		borderBottomColor: '#e5e7eb',
 	},
 	menuRowWithIcon: {
 		flexDirection: 'row',

@@ -102,7 +102,7 @@ export default function HealthPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#ffffff',
   },
   heroSection: {
     flexDirection: 'row',
@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   defaultBadge: {
-    backgroundColor: '#f3f4f6',
+    backgroundColor: '#f9fafb',
   },
   errorBadge: {
     backgroundColor: 'rgba(239, 68, 68, 0.1)',
@@ -265,8 +265,8 @@ const styles = StyleSheet.create({
   logsSection: {
     margin: 16,
     padding: 24,
-    backgroundColor: '#f3f4f6',
-    borderRadius: 24,
+    backgroundColor: '#f9fafb',
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: '#e5e7eb',
     gap: 24,
@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 16,
     padding: 16,
-    borderRadius: 16,
+    borderRadius: 12,
   },
   logIcon: {
     width: 48,

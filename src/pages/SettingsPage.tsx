@@ -129,7 +129,7 @@ export default function SettingsPage() {
 												const switchItem = item as { onValueChange: (value: boolean) => void };
 												switchItem.onValueChange(value);
 											}}
-											trackColor={{ false: '#f3f4f6', true: '#3b82f6' }}
+											trackColor={{ false: '#f9fafb', true: '#3b82f6' }}
 											thumbColor="white"
 										/>
 									)}
@@ -167,12 +167,12 @@ export default function SettingsPage() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: '#f9fafb',
+		backgroundColor: '#ffffff',
 	},
 	profileSection: {
 		margin: 16,
 		padding: 20,
-		backgroundColor: '#f3f4f6',
+		backgroundColor: '#f9fafb',
 		borderRadius: 12,
 		flexDirection: 'row',
 		alignItems: 'center',
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
 		justifyContent: 'center',
 		alignItems: 'center',
 		borderWidth: 2,
-		borderColor: '#f3f4f6',
+		borderColor: '#f9fafb',
 	},
 	profileInfo: {
 		flex: 1,
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 8,
 	},
 	sectionContent: {
-		backgroundColor: '#f3f4f6',
+		backgroundColor: '#f9fafb',
 		borderRadius: 12,
 		borderWidth: 1,
 		borderColor: '#e5e7eb',

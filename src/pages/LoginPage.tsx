@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
 		borderColor: '#e5e7eb',
 		borderRadius: 12,
 		backgroundColor: '#f9fafb',
-		height: 52,
+		height: 48,
 	},
 	inputContainerError: {
 		borderColor: '#ef4444',
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
 	},
 	loginButton: {
 		backgroundColor: '#3b82f6',
-		borderRadius: 12,
+		borderRadius: 24,
 		height: 52,
 		justifyContent: 'center',
 		alignItems: 'center',
