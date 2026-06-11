@@ -29,7 +29,7 @@ interface LoginFormData {
 const LoginScreen = () => {
 	const navigation = useNavigation<LoginPageNavigationProp>();
 	const insets = useSafeAreaInsets();
-	const { singIn } = useAuth();
+	const { signIn } = useAuth();
 	const [showPassword, setShowPassword] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
 
@@ -49,7 +49,7 @@ const LoginScreen = () => {
 		try {
 			const result = await login({ account: data.accountId, password: data.password });
 			if (result.success) {
-				await singIn(result.data);
+				await signIn(result.data);
 			} else {
 				alert(result.message);
 			}

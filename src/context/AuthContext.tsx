@@ -9,14 +9,14 @@ type User = {
 
 interface AuthContextValue {
 	user: User | null;
-	singIn: (userData: User) => Promise<void>;
+	signIn: (userData: User) => Promise<void>;
 	signOut: () => Promise<void>;
 	isLoading: boolean;
 	isReady: boolean;
 }
 const AuthContext = createContext<AuthContextValue>({
 	user: null,
-	singIn: () => Promise.resolve(),
+	signIn: () => Promise.resolve(),
 	signOut: () => Promise.resolve(),
 	isLoading: true,
 	isReady: false,
@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 			setTimeout(() => setIsReady(true), 500);
 		}
 	};
-	const singIn = async (userData: User) => {
+	const signIn = async (userData: User) => {
 		setUser(userData);
 		await AsyncStorage.setItem('token', userData.token);
 		await fetchUserInfo();
@@ -63,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	}, []);
 
 	return (
-		<AuthContext.Provider value={{ user, singIn, signOut, isLoading, isReady }}>{children}</AuthContext.Provider>
+		<AuthContext.Provider value={{ user, signIn, signOut, isLoading, isReady }}>{children}</AuthContext.Provider>
 	);
 }
 export const useAuth: () => AuthContextValue = () => useContext(AuthContext);

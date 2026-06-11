@@ -79,8 +79,7 @@ export default function ProfilePage() {
 						<View style={styles.card}>
 							{renderMenuRow('头像', userInfo.profileAvatar, updateAvatar)}
 							{renderMenuRow('昵称', userInfo.profileName, () => navigation.navigate('ProfileEditPage'))}
-							{/* {renderMenuRow('电子邮箱', userInfo.email)} */}
-							{renderMenuRow('手机号码', userInfo.phoneNumber)}
+										{renderMenuRow('手机号码', userInfo.phoneNumber)}
 						</View>
 					</View>
 

@@ -1,14 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { eventBus } from '@/utils';
-import Convert from './convert';
-
-type ConvertMethodName = keyof Convert;
 
 interface RequestConfig {
 	method?: string;
 	data?: any;
 	headers?: Record<string, string>;
-	convert?: ConvertMethodName;
 }
 
 interface CustomResponse {
@@ -17,8 +13,8 @@ interface CustomResponse {
 	success: boolean;
 }
 
-const converts = new Convert();
 const baseURL = 'https://vault.yoxiaya.com';
+
 let isRedirecting = false;
 
 const request = async (url: string, config: RequestConfig = {}): Promise<CustomResponse> => {
@@ -31,7 +27,6 @@ const request = async (url: string, config: RequestConfig = {}): Promise<CustomR
 			'Content-Type': 'application/json',
 			Authorization: `Bearer ${token}`,
 		},
-		convert,
 	} = config;
 
 	const fullUrl = `${baseURL}${url}`;
@@ -76,11 +71,6 @@ const request = async (url: string, config: RequestConfig = {}): Promise<CustomR
 		}
 
 		const responseData = await response.json();
-
-		// 处理转换
-		if (convert) {
-			return (converts as any)[convert](responseData);
-		}
 
 		return responseData;
 	} catch (error) {

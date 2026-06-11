@@ -21,9 +21,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../App';
-import { ACCOUNT_CATEGORIES, AccountCategory, UploadAccount } from '../types';
+import { ACCOUNT_CATEGORIES, AccountCategory } from '../types';
 import { useAccountsStore } from '../store';
-import { addAccount, updateAccount, uploadImage, deleteImage } from '../service/api';
+import { addAccount, updateAccount } from '../service/api';
 import { calculatePasswordStrength } from '../utils';
 import { LoadingMask } from '../components/Mask';
 import PasswordStrengthIndicator from '../components/PasswordStrengthIndicator';
@@ -104,19 +104,6 @@ export default function EditAccountPage() {
 		}
 	}, [passwordValue]);
 
-	// 上传图片到服务器
-	const uploadImageToServer = async (imageAsset: ImagePicker.ImagePickerAsset): Promise<string> => {
-		const formData = new FormData();
-		formData.append('file', {
-			uri: imageAsset.uri,
-			name: imageAsset.fileName || `photo_${Date.now()}.jpg`,
-			type: imageAsset.mimeType || 'image/jpeg',
-		} as any);
-
-		const result = await uploadImage(formData);
-		return result.data.url;
-	};
-
 	// 处理图片选择
 	const handlePickImage = async () => {
 		const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -157,24 +144,7 @@ export default function EditAccountPage() {
 
 	const saveAccount = async (data: FormData) => {
 		setIsSubmitting(true);
-
 		try {
-			let finalLogoUrl = data.logoUrl;
-			if (account && account.logoUrl && data.logoUrl !== account.logoUrl) {
-				console.log('删除旧图标:', account.logoUrl);
-				await deleteImage({ url: account.logoUrl });
-			}
-
-			if (selectedImage && selectedImage.uri !== account?.logoUrl) {
-				try {
-					const uploadedUrl = await uploadImageToServer(selectedImage);
-					finalLogoUrl = uploadedUrl;
-				} catch (uploadError) {
-					console.error('图片上传失败:', uploadError);
-					Alert.alert('警告', '图片上传失败，将继续保存其他信息');
-				}
-			}
-
 			const baseAccountData = {
 				appName: data.accountName,
 				username: data.username,
@@ -182,23 +152,36 @@ export default function EditAccountPage() {
 				email: data?.email || '',
 				webSite: data.webSite,
 				category: data.category as AccountCategory,
-				logoUrl: finalLogoUrl,
 				description: data.description || '',
 				lastUpdated: new Date().toLocaleDateString(),
 				twoFactorEnabled: false,
 				storageType: '明文存储',
 			};
 
+			const formData = new FormData();
+
+			formData.append('data', JSON.stringify(baseAccountData));
+			if (selectedImage) {
+				const image = {
+					uri: selectedImage.uri,
+					name: selectedImage.fileName || `photo_${Date.now()}.jpg`,
+					type: selectedImage.mimeType || 'image/jpeg',
+				} as any;
+				formData.append('image', image);
+				formData.append('action', 'update');
+			} else {
+				formData.append('action', 'keep');
+			}
 			if (mode === 'add') {
-				await addAccount(baseAccountData as UploadAccount);
-				Alert.alert('成功', '账号已添加');
+				const { success } = await addAccount(formData);
+				if (success) {
+					Alert.alert('成功', '账号已添加');
+				}
 			} else if (mode === 'edit' && account) {
-				const updatedAccount: UploadAccount = {
-					...account,
-					...baseAccountData,
-				};
-				await updateAccount(id, updatedAccount);
-				Alert.alert('成功', '账号信息已更新');
+				const { success } = await updateAccount(id, formData);
+				if (success) {
+					Alert.alert('成功', '账号信息已更新');
+				}
 			}
 
 			navigation.navigate('VaultPage');
@@ -220,7 +203,7 @@ export default function EditAccountPage() {
 					(x: number, y: number, width: number, height: number, pageX: number, pageY: number) => {
 						// 滚动到输入框位置，减去一些偏移量使其更靠上
 						scrollViewRef.current?.scrollToPosition(0, pageY - 120, true);
-					},
+					}
 				);
 			}
 		}, 300);

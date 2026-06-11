@@ -1,4 +1,3 @@
-import { UploadAccount } from '../../types';
 import request from '../index';
 
 /**
@@ -12,7 +11,7 @@ export const getAccounts = () => {
  * 添加新账户
  * @param account - 账户信息
  */
-export const addAccount = (account: UploadAccount) => {
+export const addAccount = (account: FormData) => {
 	return request('/vault-accounts', { method: 'post', data: account });
 };
 
@@ -21,7 +20,7 @@ export const addAccount = (account: UploadAccount) => {
  * @param id - 账户ID
  * @param account - 更新后的账户信息
  */
-export const updateAccount = (id: string, account: UploadAccount) => {
+export const updateAccount = (id: string, account: FormData) => {
 	return request(`/vault-accounts/${id}`, { method: 'put', data: account });
 };
 
@@ -31,25 +30,6 @@ export const updateAccount = (id: string, account: UploadAccount) => {
  */
 export const deleteAccount = (id: string) => {
 	return request(`/vault-accounts/${id}`, { method: 'delete' });
-};
-
-/**
- * 上传图片
- * @param file - 图片文件
- */
-export const uploadImage = (file: FormData) => {
-	return request('/vault-accounts/upload-image', {
-		method: 'post',
-		data: file,
-	});
-};
-
-/**
- * 删除图片
- * @param data - 包含图片URL的对象
- */
-export const deleteImage = (data: { url: string }) => {
-	return request('/vault-accounts/delete-image', { method: 'post', data });
 };
 
 /**

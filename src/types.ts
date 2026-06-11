@@ -20,5 +20,4 @@ export interface Account {
 	storageType: string;
 	description?: string;
 }
-export type UploadAccount = Omit<Account, 'id'>;
 export type AccountCategory = Account['category'];
