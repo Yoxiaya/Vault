@@ -6,7 +6,7 @@ import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as Clipboard from 'expo-clipboard';
 import { RootStackParamList } from '../App';
-import { Account } from '../types';
+import { Account } from '../type';
 import { useAccountsStore } from '../store';
 import { deleteAccount } from '../service/api';
 import PasswordStrengthIndicator from '../components/PasswordStrengthIndicator';

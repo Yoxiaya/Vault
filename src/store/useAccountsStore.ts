@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { getAccounts } from '../service/api';
-import { Account } from '../types';
+import { Account } from '../type';
 
 interface AccountsStore {
 	accounts: Account[];
