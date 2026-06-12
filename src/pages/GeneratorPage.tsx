@@ -2,7 +2,6 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Switch } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
-import Slider from '@react-native-community/slider';
 import PasswordStrengthIndicator from '../components/PasswordStrengthIndicator';
 import { useToast } from '../components/Toast';
 
@@ -196,31 +195,32 @@ export default function GeneratorPage() {
 
 			{/* 控制区域 */}
 			<View style={styles.controlsSection}>
-				{/* 长度滑块 */}
-				<View style={styles.controlCard}>
-					<View style={styles.lengthHeader}>
-						<Text style={styles.controlTitle}>密码长度</Text>
-						<Text style={styles.lengthValue}>{length}</Text>
+
+				{/* 长度选择 */}
+					<View style={styles.controlCard}>
+						<View style={styles.lengthHeader}>
+							<Text style={styles.controlTitle}>密码长度</Text>
+							<Text style={styles.lengthValue}>{length}</Text>
+						</View>
+						<View style={styles.lengthPresets}>
+							{[8, 12, 16, 20, 24, 32, 48, 64].map((n) => (
+								<TouchableOpacity
+									key={n}
+									style={[styles.presetBtn, length === n && styles.presetBtnActive]}
+									onPress={() => setLength(n)}
+								>
+									<Text style={[styles.presetBtnText, length === n && styles.presetBtnTextActive]}>
+										{n}
+									</Text>
+								</TouchableOpacity>
+							))}
+						</View>
+						<View style={styles.lengthTips}>
+							<Text style={styles.lengthTipText}>💡 推荐使用 16 位以上密码</Text>
+						</View>
 					</View>
-					<Slider
-						style={styles.slider}
-						minimumValue={4}
-						maximumValue={64}
-						step={1}
-						value={length}
-						onValueChange={setLength}
-						minimumTrackTintColor="#3b82f6"
-						maximumTrackTintColor="#e5e7eb"
-						thumbTintColor="#3b82f6"
-					/>
-					<View style={styles.sliderLabels}>
-						<Text style={styles.sliderLabel}>4 位</Text>
-						<Text style={styles.sliderLabel}>64 位</Text>
-					</View>
-					<View style={styles.lengthTips}>
-						<Text style={styles.lengthTipText}>💡 推荐使用 16 位以上密码</Text>
-					</View>
-				</View>
+
+
 
 				{/* 字符类型开关 */}
 				<View style={styles.controlCard}>
@@ -421,20 +421,32 @@ const styles = StyleSheet.create({
 		fontWeight: '700',
 		color: '#3b82f6',
 	},
-	slider: {
-		width: '100%',
-		height: 40,
-	},
-	sliderLabels: {
+	lengthPresets: {
 		flexDirection: 'row',
-		justifyContent: 'space-between',
-		marginTop: -8,
+		flexWrap: 'wrap',
+		gap: 8,
 		marginBottom: 12,
 	},
-	sliderLabel: {
-		fontSize: 12,
-		color: '#9ca3af',
+	presetBtn: {
+		paddingHorizontal: 16,
+		paddingVertical: 8,
+		borderRadius: 10,
+		backgroundColor: '#f3f4f6',
+		borderWidth: 1,
+		borderColor: '#e5e7eb',
+	},
+	presetBtnActive: {
+		backgroundColor: '#eff6ff',
+		borderColor: '#3b82f6',
+	},
+	presetBtnText: {
+		fontSize: 15,
 		fontWeight: '500',
+		color: '#4b5563',
+	},
+	presetBtnTextActive: {
+		color: '#3b82f6',
+		fontWeight: '700',
 	},
 	lengthTips: {
 		marginTop: 8,
