@@ -20,6 +20,7 @@ import { RootStackParamList } from '../App';
 import { useForm, Controller } from 'react-hook-form';
 import { register, sendVerifyCode } from '../service/api';
 import PasswordStrengthIndicator from '../components/PasswordStrengthIndicator';
+import { useToast } from '../components/Toast';
 
 type RegisterPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'RegisterPage'>;
 
@@ -34,6 +35,7 @@ interface RegisterFormData {
 const RegisterScreen = () => {
 	const navigation = useNavigation<RegisterPageNavigationProp>();
 	const insets = useSafeAreaInsets();
+	const toast = useToast();
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
@@ -59,7 +61,7 @@ const RegisterScreen = () => {
 
 	const handleSendCode = async () => {
 		if (!emailValue || !/^[^\s@]+@([^\s@.,]+\.)+[^\s@.,]{2,}$/.test(emailValue)) {
-			alert('请先输入有效的邮箱地址');
+			toast.warning('验证邮箱', '请先输入有效的邮箱地址');
 			return;
 		}
 		setCanSendCode(false);
@@ -67,7 +69,7 @@ const RegisterScreen = () => {
 		try {
 			await sendVerifyCode({ email: emailValue });
 		} catch (error) {
-			alert('发送验证码失败，请重试');
+			toast.error('发送失败', '发送验证码失败，请重试');
 		}
 	};
 
@@ -87,9 +89,9 @@ const RegisterScreen = () => {
 		try {
 			console.log('Register attempt with:', data.username, data.email, data.password);
 			await register(data);
-			alert('注册成功！');
+			toast.success('注册成功！', '欢迎使用 Vault');
 		} catch (error) {
-			alert('注册失败，请重试');
+			toast.error('注册失败', '请稍后重试');
 		} finally {
 			navigation.navigate('LoginPage');
 			setIsLoading(false);

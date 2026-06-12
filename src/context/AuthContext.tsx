@@ -1,7 +1,7 @@
 import { useState, useEffect, createContext, ReactNode, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useUserInfoStore } from '@/store';
-import { eventBus } from '@/utils';
+import { eventBus, EventName } from '@/utils';
 
 type User = {
 	token: string;
@@ -56,9 +56,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		const handleTokenExpired = async () => {
 			await signOut();
 		};
-		eventBus.on('TOKEN_EXPIRED', handleTokenExpired);
+		eventBus.on(EventName.TOKEN_EXPIRED, handleTokenExpired);
 		return () => {
-			eventBus.off('TOKEN_EXPIRED', handleTokenExpired);
+			eventBus.off(EventName.TOKEN_EXPIRED, handleTokenExpired);
 		};
 	}, []);
 

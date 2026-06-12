@@ -16,17 +16,18 @@ import {
 	Keyboard,
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { Picker } from '@react-native-picker/picker';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../App';
-import { ACCOUNT_CATEGORIES, AccountCategory } from '../types';
+import { AccountCategory } from '../type';
 import { useAccountsStore } from '../store';
 import { addAccount, updateAccount } from '../service/api';
 import { calculatePasswordStrength } from '../utils';
 import { LoadingMask } from '../components/Mask';
 import PasswordStrengthIndicator from '../components/PasswordStrengthIndicator';
+import { useToast } from '../components/Toast';
+import CategoryPicker, { CategoryOption } from '../components/CategoryPicker';
 
 type EditAccountPageRouteProp = RouteProp<RootStackParamList, 'EditAccount'>;
 type EditAccountPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'EditAccount'>;
@@ -47,6 +48,7 @@ export default function EditAccountPage() {
 	const navigation = useNavigation<EditAccountPageNavigationProp>();
 	const { id, mode } = route.params;
 	const { getAccountDetailById } = useAccountsStore();
+	const toast = useToast();
 
 	const account = getAccountDetailById(id);
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,6 +65,14 @@ export default function EditAccountPage() {
 		color: '#e5e7eb',
 		feedback: '请输入密码',
 	});
+
+	const categoryOptions: CategoryOption[] = [
+		{ key: 'social', label: '社交', icon: 'people-outline', color: '#8b5cf6' },
+		{ key: 'work', label: '工作', icon: 'briefcase-outline', color: '#3b82f6' },
+		{ key: 'finance', label: '财务', icon: 'card-outline', color: '#10b981' },
+		{ key: 'entertainment', label: '娱乐', icon: 'game-controller-outline', color: '#f59e0b' },
+		{ key: 'other', label: '其他', icon: 'apps-outline', color: '#6b7280' },
+	];
 
 	// 用于滚动到当前输入框的 ref
 	const scrollViewRef = useRef<KeyboardAwareScrollView>(null);
@@ -108,7 +118,7 @@ export default function EditAccountPage() {
 	const handlePickImage = async () => {
 		const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 		if (status !== 'granted') {
-			Alert.alert('需要权限', '请允许访问相册以更换图标');
+			toast.warning('需要权限', '请允许访问相册以更换图标');
 			return;
 		}
 
@@ -175,19 +185,19 @@ export default function EditAccountPage() {
 			if (mode === 'add') {
 				const { success } = await addAccount(formData);
 				if (success) {
-					Alert.alert('成功', '账号已添加');
+					toast.success('添加成功', '账号已添加到 Vault');
 				}
 			} else if (mode === 'edit' && account) {
 				const { success } = await updateAccount(id, formData);
 				if (success) {
-					Alert.alert('成功', '账号信息已更新');
+					toast.success('更新成功', '账号信息已更新');
 				}
 			}
 
 			navigation.navigate('VaultPage');
 		} catch (error) {
 			console.error('保存失败:', error);
-			Alert.alert('错误', '保存失败，请重试');
+			toast.error('保存失败', '请检查网络后重试');
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -296,18 +306,13 @@ export default function EditAccountPage() {
 										name="category"
 										rules={{ required: '账号类型不能为空' }}
 										render={({ field: { value, onChange } }) => (
-											<View style={[styles.formSelect, errors.category && styles.inputError]}>
-												<Picker
-													selectedValue={value}
-													onValueChange={onChange}
-													style={styles.picker}
-													enabled={!isSubmitting}
-												>
-													{Object.entries(ACCOUNT_CATEGORIES).map(([category, label]) => (
-														<Picker.Item label={label} value={category} />
-													))}
-												</Picker>
-											</View>
+									<CategoryPicker
+										value={value}
+										options={categoryOptions}
+										onChange={onChange}
+										disabled={isSubmitting}
+										hasError={!!errors.category}
+									/>
 										)}
 									/>
 									{errors.category && <Text style={styles.errorText}>{errors.category.message}</Text>}
@@ -582,17 +587,6 @@ const styles = StyleSheet.create({
 		fontSize: 16,
 		color: '#1f2937',
 	},
-	formSelect: {
-		backgroundColor: '#f9fafb',
-		borderRadius: 12,
-		borderWidth: 1,
-		borderColor: '#e5e7eb',
-		paddingLeft: 16,
-		paddingRight: 6,
-		paddingVertical: 12,
-		fontSize: 16,
-		color: '#1f2937',
-	},
 	textArea: {
 		backgroundColor: '#f9fafb',
 		borderRadius: 12,
@@ -671,9 +665,6 @@ const styles = StyleSheet.create({
 		fontSize: 12,
 		color: '#ef4444',
 		marginTop: 4,
-	},
-	picker: {
-		fontSize: 12,
 	},
 	disabledButton: {
 		opacity: 0.6,

@@ -10,6 +10,7 @@ import { Account } from '../types';
 import { useAccountsStore } from '../store';
 import { deleteAccount } from '../service/api';
 import PasswordStrengthIndicator from '../components/PasswordStrengthIndicator';
+import { useToast } from '../components/Toast';
 
 type AccountDetailsPageRouteProp = RouteProp<RootStackParamList, 'AccountDetails'>;
 type AccountDetailsPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'AccountDetails'>;
@@ -19,6 +20,7 @@ export default function AccountDetailsPage() {
 	const navigation = useNavigation<AccountDetailsPageNavigationProp>();
 	const { id } = route.params;
 
+	const toast = useToast();
 	const [account, setAccount] = useState<Account>();
 	const { getAccountDetailById } = useAccountsStore();
 
@@ -26,7 +28,7 @@ export default function AccountDetailsPage() {
 	const copyToClipboard = async (text: string, type: string) => {
 		if (!text) return;
 		await Clipboard.setStringAsync(text);
-		Alert.alert('复制成功', `${type}已复制到剪贴板`);
+		toast.success('复制成功', `${type}已复制到剪贴板`);
 	};
 
 	const deleteAccountPress = () => {

@@ -10,6 +10,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ToastProvider } from './components/Toast';
 import ProfileEditPage from './pages/ProfileEditPage';
 
 export type EditAccountMode = 'add' | 'edit';
@@ -76,7 +77,9 @@ export default function App() {
 	return (
 		<AuthProvider>
 			<NavigationContainer>
-				<AppNavigator />
+				<ToastProvider>
+					<AppNavigator />
+				</ToastProvider>
 			</NavigationContainer>
 		</AuthProvider>
 	);

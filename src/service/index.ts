@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { eventBus } from '@/utils';
+import { eventBus, EventName } from '@/utils';
 
 interface RequestConfig {
 	method?: string;
@@ -58,11 +58,11 @@ const request = async (url: string, config: RequestConfig = {}): Promise<CustomR
 		if (response.status === 401 && !isRedirecting) {
 			isRedirecting = true;
 
-			eventBus.emit('TOKEN_EXPIRED');
+			eventBus.emit(EventName.TOKEN_EXPIRED);
 			setTimeout(() => {
 				isRedirecting = false;
 			}, 1000);
-			alert('登录已过期，请重新登录');
+			eventBus.emit(EventName.SHOW_TOAST, { type: 'error', title: '登录已过期', message: '请重新登录' });
 			throw new Error('登录已过期，请重新登录');
 		}
 

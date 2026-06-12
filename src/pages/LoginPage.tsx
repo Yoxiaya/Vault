@@ -18,6 +18,7 @@ import { RootStackParamList } from '../App';
 import { login } from '../service/api';
 import { useAuth } from '../context/AuthContext';
 import { useForm, Controller } from 'react-hook-form';
+import { useToast } from '../components/Toast';
 
 type LoginPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'LoginPage'>;
 
@@ -30,6 +31,7 @@ const LoginScreen = () => {
 	const navigation = useNavigation<LoginPageNavigationProp>();
 	const insets = useSafeAreaInsets();
 	const { signIn } = useAuth();
+	const toast = useToast();
 	const [showPassword, setShowPassword] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
 
@@ -51,11 +53,11 @@ const LoginScreen = () => {
 			if (result.success) {
 				await signIn(result.data);
 			} else {
-				alert(result.message);
+				toast.error('登录失败', result.message);
 			}
 		} catch (error) {
 			console.log(error);
-			alert('登录失败，请检查网络或稍后重试');
+			toast.error('登录失败', '请检查网络或稍后重试');
 		} finally {
 			setIsLoading(false);
 		}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -8,6 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../App';
 import { uploadProfileAvatar } from '../service/api';
 import LoadingOverlay from '../components/LoadingOverlay';
+import { useToast } from '../components/Toast';
 import { useUserInfoStore } from '../store';
 
 type ProfilePageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'ProfilePage'>;
@@ -15,6 +16,7 @@ type ProfilePageNavigationProp = NativeStackNavigationProp<RootStackParamList, '
 export default function ProfilePage() {
 	const navigation = useNavigation<ProfilePageNavigationProp>();
 	const { userInfo, loading, fetchUserInfo } = useUserInfoStore();
+	const toast = useToast();
 	const [isLoading, setIsLoading] = useState(false);
 
 	const [securityInfo, setSecurityInfo] = useState({
@@ -37,7 +39,7 @@ export default function ProfilePage() {
 	const updateAvatar = async () => {
 		const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 		if (status !== 'granted') {
-			Alert.alert('需要权限', '请允许访问相册以更换图标');
+			toast.warning('需要权限', '请允许访问相册以更换图标');
 			return;
 		}
 		const result = await ImagePicker.launchImageLibraryAsync({

@@ -1,11 +1,13 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Switch, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Switch } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import PasswordStrengthIndicator from '../components/PasswordStrengthIndicator';
+import { useToast } from '../components/Toast';
 
 export default function GeneratorPage() {
+	const toast = useToast();
 	const [password, setPassword] = useState('');
 	const [length, setLength] = useState(16);
 	const [options, setOptions] = useState({
@@ -108,11 +110,11 @@ export default function GeneratorPage() {
 	// 复制密码
 	const copyToClipboard = async () => {
 		if (!password || password === '请至少选择一个选项') {
-			Alert.alert('提示', '没有可复制的密码');
+			toast.warning('无法复制', '请先生成密码');
 			return;
 		}
 		await Clipboard.setString(password);
-		Alert.alert('成功', '密码已复制到剪贴板');
+		toast.success('复制成功', '密码已复制到剪贴板');
 	};
 
 	// 切换选项（确保至少保留一个选项）
@@ -120,7 +122,7 @@ export default function GeneratorPage() {
 		const newOptions = { ...options, [key]: !options[key] };
 		const anySelected = Object.values(newOptions).some((v) => v === true);
 		if (!anySelected) {
-			Alert.alert('提示', '请至少保留一个字符类型');
+			toast.warning('提示', '请至少保留一个字符类型');
 			return;
 		}
 		setOptions(newOptions);
