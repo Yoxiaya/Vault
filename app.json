@@ -44,7 +44,8 @@
         }
       ],
       "expo-image",
-      "./plugins/withAndroidResourceFix",
+      "./plugins/withAndroidColorFix",
+      "./plugins/withLocalProperties",
       [
         "expo-build-properties",
         {
