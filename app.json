@@ -8,8 +8,8 @@
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/640.jpg",
-      "contentFit": "contain",
-      "backgroundColor": "transparent"
+      "contentFit": "cover",
+      "backgroundColor": "#ffffff"
     },
     "ios": {
       "supportsTablet": true
@@ -45,6 +45,7 @@
       ],
       "expo-image",
       "./plugins/withAndroidColorFix",
+      "./plugins/withGradleLocalDist",
       "./plugins/withLocalProperties",
       [
         "expo-build-properties",
