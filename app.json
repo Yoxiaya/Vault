@@ -7,7 +7,7 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/640.jpg",
+      "image": "./assets/640.png",
       "contentFit": "cover",
       "backgroundColor": "#ffffff"
     },
@@ -17,7 +17,7 @@
     "android": {
       "usesCleartextTraffic": true,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/aj.jpg",
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"
       },
       "permissions": [
