@@ -44,10 +44,10 @@
         }
       ],
       "expo-image",
-      "./plugins/withSplashScreenFix",
       "./plugins/withAndroidColorFix",
       "./plugins/withGradleLocalDist",
       "./plugins/withLocalProperties",
+      "./plugins/withAndroidSplashFullScreen",
       [
         "expo-build-properties",
         {

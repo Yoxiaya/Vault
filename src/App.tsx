@@ -1,8 +1,7 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import * as SplashScreen from 'expo-splash-screen';
 import AccountDetailsPage from './pages/AccountDetailsPage';
 import EditAccountPage from './pages/EditAccountPage';
 import MainTabs from './components/Footer';
@@ -25,17 +24,10 @@ export type RootStackParamList = {
 	ProfilePage: undefined;
 	ProfileEditPage: undefined;
 };
-SplashScreen.preventAutoHideAsync();
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 function AppNavigator() {
 	const { user, isLoading, isReady } = useAuth();
-
-	useEffect(() => {
-		if (!isLoading && isReady) {
-			SplashScreen.hideAsync();
-		}
-	}, [isLoading, isReady]);
 
 	if (isLoading || !isReady) {
 		return (
