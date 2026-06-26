@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import AccountDetailsPage from './pages/AccountDetailsPage';
@@ -12,12 +12,10 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './components/Toast';
 import ProfileEditPage from './pages/ProfileEditPage';
 
-export type EditAccountMode = 'add' | 'edit';
-
 export type RootStackParamList = {
 	VaultPage: undefined;
-	AccountDetails: { id: string; mode: EditAccountMode };
-	EditAccount: { id: string; mode: EditAccountMode };
+	AccountDetails: { id: string; mode: 'add' | 'edit' };
+	EditAccount: { id: string; mode: 'add' | 'edit' };
 	LoginPage: undefined;
 	SettingsPage: undefined;
 	RegisterPage: undefined;
@@ -30,11 +28,7 @@ function AppNavigator() {
 	const { user, isLoading, isReady } = useAuth();
 
 	if (isLoading || !isReady) {
-		return (
-			<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-				<ActivityIndicator size="large" />
-			</View>
-		);
+		return <View style={{ flex: 1, backgroundColor: '#ffffff' }} />;
 	}
 	return (
 		<Stack.Navigator

@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { eventBus, EventName } from '@/utils';
+import { eventBus, EventName, isTokenExpired } from '@/utils';
 
 interface RequestConfig {
 	method?: string;
@@ -19,6 +19,17 @@ let isRedirecting = false;
 
 const request = async (url: string, config: RequestConfig = {}): Promise<CustomResponse> => {
 	const token = (await AsyncStorage.getItem('token')) || '';
+
+	// 在发起请求前主动检查 JWT 是否过期，避免不必要的 401 请求
+	if (token && isTokenExpired(token) && !isRedirecting) {
+		isRedirecting = true;
+		eventBus.emit(EventName.TOKEN_EXPIRED);
+		setTimeout(() => {
+			isRedirecting = false;
+		}, 1000);
+		eventBus.emit(EventName.SHOW_TOAST, { type: 'error', title: '登录已过期', message: '请重新登录' });
+		throw new Error('登录已过期，请重新登录');
+	}
 
 	const {
 		method = 'GET',
@@ -54,7 +65,7 @@ const request = async (url: string, config: RequestConfig = {}): Promise<CustomR
 	try {
 		const response = await fetch(fullUrl, fetchOptions);
 
-		// 处理401
+		// 处理401（兜底 — 通常前面已经拦截了过期 token）
 		if (response.status === 401 && !isRedirecting) {
 			isRedirecting = true;
 

@@ -2,12 +2,12 @@
   "expo": {
     "name": "密码保管器",
     "slug": "Vault",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/640.png",
+      "image": "./assets/image1.jpg",
       "contentFit": "cover",
       "backgroundColor": "#ffffff"
     },

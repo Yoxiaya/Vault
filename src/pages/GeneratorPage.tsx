@@ -127,22 +127,6 @@ export default function GeneratorPage() {
 		setOptions(newOptions);
 	};
 
-	// 获取强度条宽度百分比
-	const getStrengthWidth = () => {
-		switch (strength.level) {
-			case '非常强':
-				return '100%';
-			case '强':
-				return '75%';
-			case '中等':
-				return '50%';
-			case '弱':
-				return '25%';
-			default:
-				return '0%';
-		}
-	};
-
 	return (
 		<ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
 			{/* 显示密码区域 */}

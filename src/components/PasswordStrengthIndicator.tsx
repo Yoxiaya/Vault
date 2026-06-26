@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { calculatePasswordStrength } from '../utils';
 
-export type StrengthMode = 'bars' | 'progress';
+type StrengthMode = 'bars' | 'progress';
 
 interface PasswordStrengthIndicatorProps {
 	password: string;

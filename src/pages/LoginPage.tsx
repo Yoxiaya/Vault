@@ -49,9 +49,10 @@ const LoginScreen = () => {
 	const onSubmit = async (data: LoginFormData) => {
 		setIsLoading(true);
 		try {
-			const result = await login({ account: data.accountId, password: data.password });
+			const result = await login({ account: data.accountId, password: data.password, clientType: 'app' });
 			if (result.success) {
-				await signIn(result.data);
+				// result.data 为标准 JWT 三段格式 token 字符串
+				await signIn({ token: result.data });
 			} else {
 				toast.error('登录失败', result.message);
 			}

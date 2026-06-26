@@ -36,7 +36,7 @@ export const deleteAccount = (id: string) => {
  * 用户登录
  * @param data - 登录信息（账户名和密码）
  */
-export const login = (data: { account: string; password: string }): Promise<any> => {
+export const login = (data: { account: string; password: string; clientType: string }): Promise<any> => {
 	return request('/auth/login', { method: 'post', data });
 };
 
