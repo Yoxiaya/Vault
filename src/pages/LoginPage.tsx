@@ -52,7 +52,7 @@ const LoginScreen = () => {
 			const result = await login({ account: data.accountId, password: data.password, clientType: 'app' });
 			if (result.success) {
 				// result.data 为标准 JWT 三段格式 token 字符串
-				await signIn({ token: result.data });
+				await signIn(result.data);
 			} else {
 				toast.error('登录失败', result.message);
 			}

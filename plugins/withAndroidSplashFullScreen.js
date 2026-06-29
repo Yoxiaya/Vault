@@ -1,4 +1,4 @@
-const { withDangerousMod } = require('expo/config-plugins');
+const { withAndroidStyles, withDangerousMod } = require('expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
 
@@ -18,52 +18,92 @@ const path = require('path');
  *   视觉过渡基本无感。
  */
 function withAndroidSplashFullScreen(config) {
-  return withDangerousMod(config, [
+  // ── 1. 复制闪屏图片并生成 scale-to-fill 的 XML drawable ──
+  config = withDangerousMod(config, [
     'android',
     (cfg) => {
       const projectRoot = cfg.modRequest.platformProjectRoot;
       const mainResDir = path.join(projectRoot, 'app', 'src', 'main', 'res');
 
-      // ── 1. 复制闪屏图片到 drawable-nodpi（全尺寸，不做密度缩放）──
-      const splashImageSrc = path.join(cfg.modRequest.projectRoot, 'assets', '640.png');
-      const nodpiDir = path.join(mainResDir, 'drawable-nodpi');
-      const splashImageDest = path.join(nodpiDir, 'splash_screen_image.png');
+      // 从 app.json 读取 splash.image 路径
+      const splashImageRelPath = config.splash?.image;
+      const splashImageSrc = splashImageRelPath
+        ? path.join(cfg.modRequest.projectRoot, splashImageRelPath)
+        : null;
 
-      if (fs.existsSync(splashImageSrc)) {
+      if (splashImageSrc && fs.existsSync(splashImageSrc)) {
+        // 复制位图到 drawable-nodpi（不做密度缩放），保留原始扩展名
+        const srcExt = path.extname(splashImageSrc); // 如 .jpg / .png
+        const nodpiDir = path.join(mainResDir, 'drawable-nodpi');
+        const bitmapDest = path.join(nodpiDir, `splash_screen_image_bitmap${srcExt}`);
         fs.mkdirSync(nodpiDir, { recursive: true });
-        fs.copyFileSync(splashImageSrc, splashImageDest);
-        console.log('\x1b[32m[withAndroidSplashFullScreen]\x1b[0m: splash image → drawable-nodpi/splash_screen_image.png');
-      }
+        fs.copyFileSync(splashImageSrc, bitmapDest);
 
-      // ── 2. 覆写 styles.xml —— 切到 legacy 全屏模式 ──
-      const stylesPath = path.join(mainResDir, 'values', 'styles.xml');
-      if (fs.existsSync(stylesPath)) {
-        let content = fs.readFileSync(stylesPath, 'utf-8');
-
-        // 移除旧的 Theme.App.SplashScreen (含 Theme.SplashScreen parent)
-        content = content.replace(
-          /<style name="Theme\.App\.SplashScreen" parent="[^"]*">[\s\S]*?<\/style>/g,
+        // 创建 XML drawable 使图片 scale-to-fill（拉伸铺满）
+        const drawableDir = path.join(mainResDir, 'drawable');
+        const xmlDrawablePath = path.join(drawableDir, 'splash_screen_image.xml');
+        fs.mkdirSync(drawableDir, { recursive: true });
+        fs.writeFileSync(xmlDrawablePath, [
+          '<?xml version="1.0" encoding="utf-8"?>',
+          '<bitmap xmlns:android="http://schemas.android.com/apk/res/android"',
+          '    android:src="@drawable/splash_screen_image_bitmap"',
+          '    android:gravity="fill" />',
           ''
+        ].join('\n'), 'utf-8');
+
+        console.log('\x1b[32m[withAndroidSplashFullScreen]\x1b[0m: splash image → drawable-nodpi + fill XML');
+      } else {
+        console.warn(
+          '\x1b[33m[withAndroidSplashFullScreen]\x1b[0m: splash image not found at "%s"',
+          splashImageRelPath || '(not configured)'
         );
-
-        // 注入新的 legacy 全屏主题
-        const newStyle = `  <style name="Theme.App.SplashScreen" parent="AppTheme">
-    <item name="android:windowBackground">@drawable/splash_screen_image</item>
-    <item name="postSplashScreenTheme">@style/AppTheme</item>
-  </style>`;
-
-        content = content.replace('</resources>', `${newStyle}\n</resources>`);
-
-        fs.writeFileSync(stylesPath, content, 'utf-8');
-        console.log('\x1b[32m[withAndroidSplashFullScreen]\x1b[0m: styles.xml → legacy full-screen mode');
       }
 
-      // ── 3. 覆写 MainActivity.kt —— 移除 Theme.SplashScreen 专用 API ──
-      const mainActivityPaths = [
-        path.join(projectRoot, 'app', 'src', 'main', 'java'),
-      ];
+      return cfg;
+    },
+  ]);
 
-      // 递归查找 MainActivity.kt
+  // ── 2. 用 withAndroidStyles API 覆写闪屏主题（XML 解析，不用脆弱的正则）──
+  config = withAndroidStyles(config, (expoConfig) => {
+    const xml = expoConfig.modResults;
+    let found = false;
+
+    xml.resources.style = (xml.resources.style || []).map((style) => {
+      if (style.$.name === 'Theme.App.SplashScreen') {
+        found = true;
+        // 替换为 legacy 全屏主题
+        return {
+          $: { name: 'Theme.App.SplashScreen', parent: 'AppTheme' },
+          item: [
+            { $: { name: 'android:windowBackground' }, _: '@drawable/splash_screen_image' },
+            { $: { name: 'postSplashScreenTheme' }, _: '@style/AppTheme' },
+          ],
+        };
+      }
+      return style;
+    });
+
+    // 如果样式不存在则新增
+    if (!found) {
+      xml.resources.style.push({
+        $: { name: 'Theme.App.SplashScreen', parent: 'AppTheme' },
+        item: [
+          { $: { name: 'android:windowBackground' }, _: '@drawable/splash_screen_image' },
+          { $: { name: 'postSplashScreenTheme' }, _: '@style/AppTheme' },
+        ],
+      });
+    }
+
+    console.log('\x1b[32m[withAndroidSplashFullScreen]\x1b[0m: styles.xml → legacy full-screen mode');
+    return expoConfig;
+  });
+
+  // ── 3. 移除 MainActivity.kt 中的 SplashScreenManager ──
+  config = withDangerousMod(config, [
+    'android',
+    (cfg) => {
+      const projectRoot = cfg.modRequest.platformProjectRoot;
+
       function findKotlinFile(dir) {
         if (!fs.existsSync(dir)) return null;
         const entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -79,17 +119,19 @@ function withAndroidSplashFullScreen(config) {
         return null;
       }
 
+      const mainActivityPaths = [
+        path.join(projectRoot, 'app', 'src', 'main', 'java'),
+      ];
+
       const ktPath = findKotlinFile(mainActivityPaths[0]);
       if (ktPath && fs.existsSync(ktPath)) {
         let content = fs.readFileSync(ktPath, 'utf-8');
 
-        // 移除 SplashScreenManager import
         content = content.replace(
           /import expo\.modules\.splashscreen\.SplashScreenManager\s*\n/g,
           ''
         );
 
-        // 移除 expo-splashscreen 代码块（包括注释）
         content = content.replace(
           /[ \t]*\/\/ @generated begin expo-splashscreen[\s\S]*?\/\/ @generated end expo-splashscreen\s*/g,
           ''
@@ -102,6 +144,8 @@ function withAndroidSplashFullScreen(config) {
       return cfg;
     },
   ]);
+
+  return config;
 }
 
 module.exports = withAndroidSplashFullScreen;

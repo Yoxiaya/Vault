@@ -97,10 +97,14 @@ export function extractUserFromJwt(token: string): {
 	const decoded = decodeJwt(token);
 	if (!decoded) return null;
 
-	const { sub, username, email, preferred_username } = decoded.payload;
+	const { sub, username, email, preferred_username, userId } = decoded.payload;
+
+	// 优先取 userId 字段，其次取 sub；number 类型统一转 string
+	const rawId = userId ?? sub;
+	const userIdStr = rawId != null ? String(rawId) : '';
 
 	return {
-		userId: sub || '',
+		userId: userIdStr,
 		username: (username as string) || (preferred_username as string),
 		email: (email as string),
 	};
