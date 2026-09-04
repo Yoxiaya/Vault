@@ -1,80 +1,22 @@
-import request from '../index';
+import request, { ApiResponse } from '../index';
+import { Account } from '../../type';
 
-/**
- * 获取账户列表
- */
-export const getAccounts = () => {
-	return request('/vault-accounts', { method: 'get' });
-};
+export interface PublicUser { id: number; username: string; email: string }
+export interface Profile { id: number; userId: number; profileName: string; profileAvatar: string | null; phoneNumber: string | null }
+export type AccountPayload = Pick<Account, 'appName' | 'username' | 'password'> & Partial<Pick<Account, 'email' | 'webSite' | 'category' | 'logoUrl' | 'lastUpdated' | 'twoFactorEnabled' | 'storageType' | 'description'>>;
 
-/**
- * 添加新账户
- * @param account - 账户信息
- */
-export const addAccount = (account: FormData) => {
-	return request('/vault-accounts', { method: 'post', data: account });
-};
+export const getAccounts = (): Promise<ApiResponse<Account[]>> => request('/vault-accounts');
+export const getAccount = (id: string | number): Promise<ApiResponse<Account>> => request(`/vault-accounts/${id}`);
+export const addAccount = (data: AccountPayload): Promise<ApiResponse> => request('/vault-accounts', { method: 'POST', data });
+export const updateAccount = (id: string | number, data: Partial<AccountPayload>): Promise<ApiResponse> => request(`/vault-accounts/${id}`, { method: 'PUT', data });
+export const deleteAccount = (id: string | number): Promise<ApiResponse> => request(`/vault-accounts/${id}`, { method: 'DELETE' });
+export const uploadAccountLogo = (id: string | number, data: FormData): Promise<ApiResponse<{ logoUrl: string }>> => request(`/vault-accounts/${id}/image`, { method: 'POST', data });
+export const uploadImage = (data: FormData): Promise<ApiResponse<{ url: string }>> => request('/images', { method: 'POST', data });
 
-/**
- * 更新账户信息
- * @param id - 账户ID
- * @param account - 更新后的账户信息
- */
-export const updateAccount = (id: string, account: FormData) => {
-	return request(`/vault-accounts/${id}`, { method: 'put', data: account });
-};
+export const login = (data: { account: string; password: string; clientType?: 'app' | 'web' }): Promise<ApiResponse<{ token: string; user: PublicUser }>> => request('/auth/login', { method: 'POST', data, auth: false });
+export const register = (data: { username: string; password: string; email: string; code: string }): Promise<ApiResponse> => request('/auth/register', { method: 'POST', data, auth: false });
+export const sendVerifyCode = (data: { email: string }): Promise<ApiResponse> => request('/auth/send-code', { method: 'POST', data, auth: false });
 
-/**
- * 删除账户
- * @param id - 账户ID
- */
-export const deleteAccount = (id: string) => {
-	return request(`/vault-accounts/${id}`, { method: 'delete' });
-};
-
-/**
- * 用户登录
- * @param data - 登录信息（账户名和密码）
- */
-export const login = (data: { account: string; password: string; clientType: string }): Promise<any> => {
-	return request('/auth/login', { method: 'post', data });
-};
-
-/**
- * 用户注册
- * @param data - 注册信息（用户名、邮箱、密码）
- */
-export const register = (data: { username: string; email: string; password: string }) => {
-	return request('/auth/register', { method: 'post', data });
-};
-/**
- * 获取用户信息
- */
-export const getUserInfo = () => {
-	return request('/user/profile', { method: 'get' });
-};
-/**
- * 上传图片
- * @param file - 图片文件
- */
-export const uploadProfileAvatar = (file: FormData) => {
-	return request('/user/updateAvatar', {
-		method: 'post',
-		data: file,
-	});
-};
-
-/**
- * 更新用户信息
- * @param data - 更新后的用户信息
- */
-export const updateUserInfo = (data: { profileName: string }) => {
-	return request('/user/updateProfile', { method: 'post', data });
-};
-/**
- * 发送验证码
- * @param data - 包含邮箱的对象
- */
-export const sendVerifyCode = (data: { email: string }) => {
-	return request('/auth/send-code', { method: 'post', data });
-};
+export const getUserInfo = (): Promise<ApiResponse<Profile | null>> => request('/users/me/profile');
+export const updateUserInfo = (data: { profileName?: string; profileAvatar?: string | null; phoneNumber?: string | null }): Promise<ApiResponse> => request('/users/me/profile', { method: 'PATCH', data });
+export const uploadProfileAvatar = (data: FormData): Promise<ApiResponse<string>> => request('/users/me/avatar', { method: 'PUT', data });

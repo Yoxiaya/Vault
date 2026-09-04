@@ -6,7 +6,7 @@ interface AccountsStore {
 	accounts: Account[];
 	loading: boolean;
 	fetchAccounts: () => Promise<void>;
-	getAccountDetailById: (id: string) => Account | undefined;
+	getAccountDetailById: (id: string | number) => Account | undefined;
 }
 
 export const useAccountsStore = create<AccountsStore>((set, get) => ({
@@ -15,10 +15,10 @@ export const useAccountsStore = create<AccountsStore>((set, get) => ({
 	fetchAccounts: async () => {
 		set({ loading: true });
 		const res = await getAccounts();
-		set({ accounts: res.data, loading: false });
+		set({ accounts: res.data || [], loading: false });
 	},
-	getAccountDetailById: (id: string) => {
+	getAccountDetailById: (id: string | number) => {
 		const { accounts } = get();
-		return accounts.find((a) => a.id === id);
+		return accounts.find((a) => String(a.id) === String(id));
 	},
 }));

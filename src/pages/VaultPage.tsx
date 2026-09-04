@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
 		justifyContent: 'center',
 		alignItems: 'center',
 		backgroundColor: '#ffffff',
-		borderWidth: 1,
+		borderWidth: 0.5,
 		borderColor: '#e5e7eb',
 	},
 	logoPlaceholder: {

@@ -14,8 +14,8 @@ import ProfileEditPage from './pages/ProfileEditPage';
 
 export type RootStackParamList = {
 	VaultPage: undefined;
-	AccountDetails: { id: string; mode: 'add' | 'edit' };
-	EditAccount: { id: string; mode: 'add' | 'edit' };
+	AccountDetails: { id: string | number; mode: 'add' | 'edit' };
+	EditAccount: { id: string | number; mode: 'add' | 'edit' };
 	LoginPage: undefined;
 	SettingsPage: undefined;
 	RegisterPage: undefined;

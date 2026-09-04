@@ -2,92 +2,55 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { eventBus, EventName, isTokenExpired } from '@/utils';
 
 interface RequestConfig {
-	method?: string;
-	data?: any;
+	method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+	data?: unknown;
 	headers?: Record<string, string>;
+	auth?: boolean;
 }
 
-interface CustomResponse {
-	code: number;
-	data: any;
+export interface ApiResponse<T = never> {
 	success: boolean;
+	message?: string;
+	data?: T;
 }
 
 const baseURL = 'https://vault.yoxiaya.com';
 
 let isRedirecting = false;
 
-const request = async (url: string, config: RequestConfig = {}): Promise<CustomResponse> => {
-	const token = (await AsyncStorage.getItem('token')) || '';
+const notifyTokenExpired = () => {
+	if (isRedirecting) return;
+	isRedirecting = true;
+	eventBus.emit(EventName.TOKEN_EXPIRED);
+	eventBus.emit(EventName.SHOW_TOAST, { type: 'error', title: '登录已过期', message: '请重新登录' });
+	setTimeout(() => {
+		isRedirecting = false;
+	}, 1000);
+};
 
-	// 在发起请求前主动检查 JWT 是否过期，避免不必要的 401 请求
-	if (token && isTokenExpired(token) && !isRedirecting) {
-		isRedirecting = true;
-		eventBus.emit(EventName.TOKEN_EXPIRED);
-		setTimeout(() => {
-			isRedirecting = false;
-		}, 1000);
-		eventBus.emit(EventName.SHOW_TOAST, { type: 'error', title: '登录已过期', message: '请重新登录' });
+const request = async <T = never>(url: string, config: RequestConfig = {}): Promise<ApiResponse<T>> => {
+	const { method = 'GET', data, headers = {}, auth = true } = config;
+	const token = auth ? (await AsyncStorage.getItem('token')) || '' : '';
+	if (auth && token && isTokenExpired(token)) {
+		notifyTokenExpired();
 		throw new Error('登录已过期，请重新登录');
 	}
 
-	const {
-		method = 'GET',
-		data,
-		headers = {
-			'Content-Type': 'application/json',
-			Authorization: `Bearer ${token}`,
-		},
-	} = config;
+	const requestHeaders: Record<string, string> = { ...headers };
+	if (auth && token) requestHeaders.Authorization = `Bearer ${token}`;
+	if (!(data instanceof FormData)) requestHeaders['Content-Type'] = 'application/json';
 
-	const fullUrl = `${baseURL}${url}`;
-	const fetchOptions: RequestInit = {
+	const response = await fetch(`${baseURL}${url}`, {
 		method,
-		headers: headers as Record<string, string>,
-	};
+		headers: requestHeaders,
+		body: data == null ? undefined : data instanceof FormData ? data : JSON.stringify(data),
+	});
+	const contentType = response.headers.get('content-type') || '';
+	const payload = contentType.includes('application/json') ? await response.json() : undefined;
 
-	// 处理请求体
-	if (data) {
-		// 检查是否是 FormData
-		if (data instanceof FormData) {
-			// FormData 不需要设置 Content-Type，浏览器会自动设置
-			const headersObj = fetchOptions.headers as Record<string, string>;
-			if (headersObj) {
-				delete headersObj['Content-Type'];
-			}
-			fetchOptions.body = data;
-		} else {
-			// 其他情况转换为 JSON
-			fetchOptions.body = JSON.stringify(data);
-		}
-	}
-
-	try {
-		const response = await fetch(fullUrl, fetchOptions);
-
-		// 处理401（兜底 — 通常前面已经拦截了过期 token）
-		if (response.status === 401 && !isRedirecting) {
-			isRedirecting = true;
-
-			eventBus.emit(EventName.TOKEN_EXPIRED);
-			setTimeout(() => {
-				isRedirecting = false;
-			}, 1000);
-			eventBus.emit(EventName.SHOW_TOAST, { type: 'error', title: '登录已过期', message: '请重新登录' });
-			throw new Error('登录已过期，请重新登录');
-		}
-
-		if (!response.ok) {
-			throw new Error(`HTTP error! status: ${response.status}`);
-		}
-
-		const responseData = await response.json();
-
-		return responseData;
-	} catch (error) {
-		console.log('请求出错', error);
-		throw error;
-	}
+	if (response.status === 401 && auth) notifyTokenExpired();
+	if (!response.ok) throw new Error(payload?.message || `请求失败 (${response.status})`);
+	return payload as ApiResponse<T>;
 };
 
 export default request;

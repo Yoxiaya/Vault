@@ -20,12 +20,12 @@ export const useUserInfoStore = create<UserInfoStore>((set, get) => ({
 	fetchUserInfo: async () => {
 		set({ loading: true });
 		const res = await getUserInfo();
-		set({ userInfo: res.data, loading: false });
+		set({ userInfo: (res.data || {}) as UserInfo, loading: false });
 	},
 	updateUserInfo: async (data: Partial<UserInfo>) => {
 		const { userInfo } = get();
 		set({ loading: true });
-		const res = await updateUserInfo(userInfo as UserInfo);
+		const res = await updateUserInfo(data);
 		if (res.success) {
 			set({ userInfo: { ...userInfo, ...data } });
 		}

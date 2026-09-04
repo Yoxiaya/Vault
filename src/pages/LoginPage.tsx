@@ -50,7 +50,7 @@ const LoginScreen = () => {
 		setIsLoading(true);
 		try {
 			const result = await login({ account: data.accountId, password: data.password, clientType: 'app' });
-			if (result.success) {
+			if (result.success && result.data) {
 				// result.data 为标准 JWT 三段格式 token 字符串
 				await signIn(result.data);
 			} else {

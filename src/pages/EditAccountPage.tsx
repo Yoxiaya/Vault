@@ -22,7 +22,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../App';
 import { AccountCategory } from '../type';
 import { useAccountsStore } from '../store';
-import { addAccount, updateAccount } from '../service/api';
+import { addAccount, updateAccount, uploadAccountLogo, uploadImage, AccountPayload } from '../service/api';
 import { calculatePasswordStrength } from '../utils';
 import { LoadingMask } from '../components/Mask';
 import PasswordStrengthIndicator from '../components/PasswordStrengthIndicator';
@@ -163,32 +163,33 @@ export default function EditAccountPage() {
 				webSite: data.webSite,
 				category: data.category as AccountCategory,
 				description: data.description || '',
-				lastUpdated: new Date().toLocaleDateString(),
+				lastUpdated: new Date().toISOString(),
 				twoFactorEnabled: false,
 				storageType: '明文存储',
 			};
 
-			const formData = new FormData();
-
-			formData.append('data', JSON.stringify(baseAccountData));
+			const imageFormData = new FormData();
 			if (selectedImage) {
 				const image = {
 					uri: selectedImage.uri,
 					name: selectedImage.fileName || `photo_${Date.now()}.jpg`,
 					type: selectedImage.mimeType || 'image/jpeg',
 				} as any;
-				formData.append('image', image);
-				formData.append('action', 'update');
-			} else {
-				formData.append('action', 'keep');
+				imageFormData.append('file', image);
 			}
 			if (mode === 'add') {
-				const { success } = await addAccount(formData);
+				let accountData: AccountPayload = baseAccountData;
+				if (selectedImage) {
+					const uploadResult = await uploadImage(imageFormData);
+					accountData = { ...baseAccountData, logoUrl: uploadResult.data?.url };
+				}
+				const { success } = await addAccount(accountData);
 				if (success) {
 					toast.success('添加成功', '账号已添加到 Vault');
 				}
 			} else if (mode === 'edit' && account) {
-				const { success } = await updateAccount(id, formData);
+				const { success } = await updateAccount(id, baseAccountData);
+				if (success && selectedImage) await uploadAccountLogo(id, imageFormData);
 				if (success) {
 					toast.success('更新成功', '账号信息已更新');
 				}
