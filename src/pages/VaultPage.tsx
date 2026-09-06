@@ -115,7 +115,7 @@ export default function VaultPage() {
 						<View style={styles.accountInfo}>
 							<View style={[styles.logoContainer, !account.logoUrl && styles.logoPlaceholder]}>
 								{account.logoUrl ? (
-									<Image source={{ uri: account.logoUrl }} style={styles.logo} />
+									<Image source={{ uri: account.logoUrl }} style={styles.logo} contentFit="cover" />
 								) : (
 									<Text style={styles.logoText}>{account.appName[0].toUpperCase()}</Text>
 								)}
@@ -300,6 +300,7 @@ const styles = StyleSheet.create({
 		width: 48,
 		height: 48,
 		borderRadius: 12,
+		overflow: 'hidden',
 		justifyContent: 'center',
 		alignItems: 'center',
 		backgroundColor: '#ffffff',
@@ -311,9 +312,8 @@ const styles = StyleSheet.create({
 		borderColor: '#dbeafe',
 	},
 	logo: {
-		width: 32,
-		height: 32,
-		resizeMode: 'contain',
+		width: '100%',
+		height: '100%',
 	},
 	logoText: {
 		fontSize: 18,

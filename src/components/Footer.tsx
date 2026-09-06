@@ -1,4 +1,5 @@
 import React from 'react';
+import { Image } from 'expo-image';
 import { View, Text, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -41,7 +42,7 @@ function MainTabs() {
 				headerTitle: () => {
 					return (
 						<View style={styles.headerTitle}>
-							<Ionicons name="shield" size={28} color="#1D4ED7" />
+							<Image source={require('../../assets/vault-mark.svg')} style={{ width: 28, height: 28 }} contentFit="contain" />
 							<Text style={styles.headerTitleText}>Vault</Text>
 						</View>
 					);

@@ -74,7 +74,7 @@ export default function AccountDetailsPage() {
 			<View style={styles.heroSection}>
 				<View style={styles.logoContainer}>
 					{account.logoUrl ? (
-						<Image source={{ uri: account.logoUrl }} style={styles.logo} />
+						<Image source={{ uri: account.logoUrl }} style={styles.logo} contentFit="cover" />
 					) : (
 						<Text style={styles.logoText}>{account.appName[0]}</Text>
 					)}
@@ -234,6 +234,7 @@ const styles = StyleSheet.create({
 		width: 128,
 		height: 128,
 		borderRadius: 12,
+		overflow: 'hidden',
 		backgroundColor: '#f9fafb',
 		justifyContent: 'center',
 		alignItems: 'center',
@@ -241,9 +242,8 @@ const styles = StyleSheet.create({
 		borderColor: '#e5e7eb',
 	},
 	logo: {
-		width: 96,
-		height: 96,
-		resizeMode: 'contain',
+		width: '100%',
+		height: '100%',
 	},
 	logoText: {
 		fontSize: 48,
