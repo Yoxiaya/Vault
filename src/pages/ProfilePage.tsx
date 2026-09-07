@@ -10,6 +10,7 @@ import { uploadProfileAvatar } from '../service/api';
 import LoadingOverlay from '../components/LoadingOverlay';
 import { useToast } from '../components/Toast';
 import { useUserInfoStore } from '../store';
+import { cardStyles } from '../theme';
 
 type ProfilePageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'ProfilePage'>;
 
@@ -81,7 +82,7 @@ export default function ProfilePage() {
 						<View style={styles.card}>
 							{renderMenuRow('头像', userInfo.profileAvatar, updateAvatar)}
 							{renderMenuRow('昵称', userInfo.profileName, () => navigation.navigate('ProfileEditPage'))}
-										{renderMenuRow('手机号码', userInfo.phoneNumber)}
+							{renderMenuRow('手机号码', userInfo.phoneNumber)}
 						</View>
 					</View>
 
@@ -146,11 +147,8 @@ const styles = StyleSheet.create({
 		paddingLeft: 8,
 	},
 	card: {
-		backgroundColor: '#f9fafb',
-		borderRadius: 12,
+		...cardStyles.base,
 		overflow: 'hidden',
-		borderWidth: 1,
-		borderColor: '#e5e7eb',
 	},
 	menuRow: {
 		flexDirection: 'row',

@@ -1,6 +1,8 @@
 import React from 'react';
-import { Image } from 'expo-image';
 import { View, Text, StyleSheet } from 'react-native';
+import { Image } from 'expo-image';
+import { colors } from '../theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import VaultPage from '../pages/VaultPage';
@@ -17,6 +19,7 @@ export type MainTabParamList = {
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 function MainTabs() {
+	const insets = useSafeAreaInsets();
 	return (
 		<Tab.Navigator
 			screenOptions={({ route }) => ({
@@ -31,42 +34,51 @@ function MainTabs() {
 					} else if (route.name === 'Settings') {
 						iconName = focused ? 'settings' : 'settings-outline';
 					}
-					return <Ionicons name={iconName} size={size} color={color} />;
-				},
-				tabBarActiveTintColor: '#3b82f6',
-				tabBarInactiveTintColor: 'gray',
-				tabBarStyle: {
-					height: 64,
-				},
-				tabBarItemStyle: { alignItems: 'center', paddingTop: 6 },
-				headerTitle: () => {
 					return (
-						<View style={styles.headerTitle}>
-							<Image source={require('../../assets/vault-mark.svg')} style={{ width: 28, height: 28 }} contentFit="contain" />
-							<Text style={styles.headerTitleText}>Vault</Text>
+						<View style={[styles.tabIcon, focused && styles.tabIconActive]}>
+							<Ionicons name={iconName} size={22} color={color} />
 						</View>
 					);
 				},
+				tabBarActiveTintColor: colors.primary,
+				tabBarInactiveTintColor: colors.muted,
+				tabBarStyle: {
+					height: 64 + Math.max(insets.bottom, 8),
+					paddingBottom: Math.max(insets.bottom, 8),
+					paddingTop: 6,
+					backgroundColor: colors.surface,
+					borderTopColor: colors.border,
+					elevation: 0,
+				},
+				tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
+				headerStyle: { backgroundColor: colors.background },
+				headerShadowVisible: false,
+				headerTitleAlign: 'left',
+				headerTintColor: colors.text,
+				headerTitle: () => (
+					<View style={styles.brand} accessibilityLabel="Vault">
+						<Image
+							source={require('../../assets/vault-mark.svg')}
+							style={styles.logo}
+							contentFit="contain"
+						/>
+						<Text style={styles.brandName}>Vault</Text>
+					</View>
+				),
 			})}
 		>
 			<Tab.Screen name="Vault" component={VaultPage} options={{ title: '保险库' }} />
 			<Tab.Screen name="Generator" component={GeneratorPage} options={{ title: '生成器' }} />
-			<Tab.Screen name="Health" component={HealthPage} options={{ title: '健康状况' }} />
+			<Tab.Screen name="Health" component={HealthPage} options={{ title: '安全' }} />
 			<Tab.Screen name="Settings" component={SettingsPage} options={{ title: '设置' }} />
 		</Tab.Navigator>
 	);
 }
 const styles = StyleSheet.create({
-	headerTitle: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		gap: 12,
-	},
-	headerTitleText: {
-		fontSize: 24,
-		fontWeight: 'bold',
-		color: '#1D4ED7',
-	},
+	brand: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+	logo: { width: 36, height: 36 },
+	brandName: { fontSize: 24, fontWeight: '700', color: colors.brand },
+	tabIcon: { width: 52, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
+	tabIconActive: { backgroundColor: colors.primarySoft },
 });
-
 export default MainTabs;

@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useForm, Controller } from 'react-hook-form';
-import { Image } from 'expo-image';
-import * as ImagePicker from 'expo-image-picker';
 import {
 	View,
 	Text,
@@ -22,12 +20,13 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../App';
 import { AccountCategory } from '../type';
 import { useAccountsStore } from '../store';
-import { addAccount, updateAccount, uploadAccountLogo, uploadImage, AccountPayload } from '../service/api';
+import { addAccount, updateAccount } from '../service/api';
 import { calculatePasswordStrength } from '../utils';
 import { LoadingMask } from '../components/Mask';
 import PasswordStrengthIndicator from '../components/PasswordStrengthIndicator';
 import { useToast } from '../components/Toast';
 import CategoryPicker, { CategoryOption } from '../components/CategoryPicker';
+import { cardStyles, colors } from '../theme';
 
 type EditAccountPageRouteProp = RouteProp<RootStackParamList, 'EditAccount'>;
 type EditAccountPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'EditAccount'>;
@@ -39,7 +38,6 @@ type FormData = {
 	username: string;
 	password: string;
 	email?: string;
-	logoUrl?: string;
 	description?: string;
 };
 
@@ -53,7 +51,6 @@ export default function EditAccountPage() {
 	const account = getAccountDetailById(id);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [showPassword, setShowPassword] = useState(false);
-	const [selectedImage, setSelectedImage] = useState<ImagePicker.ImagePickerAsset | null>(null);
 	const [passwordStrength, setPasswordStrength] = useState<{
 		score: number;
 		level: string;
@@ -82,7 +79,6 @@ export default function EditAccountPage() {
 		control,
 		handleSubmit,
 		formState: { errors },
-		setValue,
 		watch,
 	} = useForm<FormData>({
 		defaultValues: {
@@ -91,7 +87,6 @@ export default function EditAccountPage() {
 			webSite: account?.webSite || '',
 			username: account?.username || '',
 			password: account?.password || '',
-			logoUrl: account?.logoUrl || '',
 			description: account?.description || '',
 		},
 	});
@@ -113,28 +108,6 @@ export default function EditAccountPage() {
 			});
 		}
 	}, [passwordValue]);
-
-	// 处理图片选择
-	const handlePickImage = async () => {
-		const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-		if (status !== 'granted') {
-			toast.warning('需要权限', '请允许访问相册以更换图标');
-			return;
-		}
-
-		const result = await ImagePicker.launchImageLibraryAsync({
-			mediaTypes: ['images'],
-			allowsEditing: true,
-			aspect: [1, 1],
-			quality: 0.8,
-		});
-
-		if (!result.canceled && result.assets?.[0]) {
-			const imageAsset = result.assets[0];
-			setSelectedImage(imageAsset);
-			setValue('logoUrl', imageAsset.uri);
-		}
-	};
 
 	// 保存或更新账号
 	const onSubmit = async (data: FormData) => {
@@ -168,28 +141,13 @@ export default function EditAccountPage() {
 				storageType: '明文存储',
 			};
 
-			const imageFormData = new FormData();
-			if (selectedImage) {
-				const image = {
-					uri: selectedImage.uri,
-					name: selectedImage.fileName || `photo_${Date.now()}.jpg`,
-					type: selectedImage.mimeType || 'image/jpeg',
-				} as any;
-				imageFormData.append('file', image);
-			}
 			if (mode === 'add') {
-				let accountData: AccountPayload = baseAccountData;
-				if (selectedImage) {
-					const uploadResult = await uploadImage(imageFormData);
-					accountData = { ...baseAccountData, logoUrl: uploadResult.data?.url };
-				}
-				const { success } = await addAccount(accountData);
+				const { success } = await addAccount(baseAccountData);
 				if (success) {
 					toast.success('添加成功', '账号已添加到 Vault');
 				}
 			} else if (mode === 'edit' && account) {
 				const { success } = await updateAccount(id, baseAccountData);
-				if (success && selectedImage) await uploadAccountLogo(id, imageFormData);
 				if (success) {
 					toast.success('更新成功', '账号信息已更新');
 				}
@@ -247,218 +205,267 @@ export default function EditAccountPage() {
 						scrollEnabled={true}
 						contentContainerStyle={styles.scrollContent}
 					>
-						{/* Icon Edit */}
-						<View style={styles.iconSection}>
-							<Controller
-								control={control}
-								name="logoUrl"
-								render={({ field: { value } }) => (
-									<View style={styles.logoContainer}>
-										{value ? (
-											<Image source={{ uri: value }} style={styles.logo} />
-										) : (
-											<Text style={styles.logoText}>{account?.appName?.[0] || '?'}</Text>
-										)}
-										<TouchableOpacity
-											style={styles.editButton}
-											onPress={handlePickImage}
-											disabled={isSubmitting}
-										>
-											<Ionicons name="create" size={16} color="white" />
-										</TouchableOpacity>
-									</View>
-								)}
-							/>
+						<View style={styles.pageIntro}>
+							<View style={styles.introIcon}>
+								<Ionicons
+									name={mode === 'add' ? 'add' : 'create-outline'}
+									size={24}
+									color={colors.primary}
+								/>
+							</View>
+							<View style={styles.introContent}>
+								<Text style={styles.introTitle}>{mode === 'add' ? '添加新账户' : '编辑账户信息'}</Text>
+								<Text style={styles.introDescription}>完善账户信息，方便日后快速查找和使用</Text>
+							</View>
 						</View>
 
 						{/* Form */}
 						<View style={styles.formContainer}>
 							<View style={styles.formGrid}>
-								{/* Account Name */}
-								<View style={styles.formGroup}>
-									<Text style={styles.formLabel}>账号名称</Text>
-									<Controller
-										control={control}
-										name="accountName"
-										rules={{ required: '账号名称不能为空' }}
-										render={({ field: { onChange, value } }) => (
-											<TextInput
-												//@ts-ignore
-												ref={(ref) => (inputRefs.current.accountName = ref)}
-												value={value}
-												onChangeText={onChange}
-												onFocus={() => handleInputFocus('accountName')}
-												style={[styles.formInput, errors.accountName && styles.inputError]}
-												editable={!isSubmitting}
-												placeholder="请输入账号名称"
-											/>
-										)}
-									/>
-									{errors.accountName && (
-										<Text style={styles.errorText}>{errors.accountName.message}</Text>
-									)}
-								</View>
-
-								{/* Category */}
-								<View style={styles.formGroup}>
-									<Text style={styles.formLabel}>账号类型</Text>
-									<Controller
-										control={control}
-										name="category"
-										rules={{ required: '账号类型不能为空' }}
-										render={({ field: { value, onChange } }) => (
-									<CategoryPicker
-										value={value}
-										options={categoryOptions}
-										onChange={onChange}
-										disabled={isSubmitting}
-										hasError={!!errors.category}
-									/>
-										)}
-									/>
-									{errors.category && <Text style={styles.errorText}>{errors.category.message}</Text>}
-								</View>
-
-								{/* Website */}
-								<View style={styles.formGroup}>
-									<Text style={styles.formLabel}>官方网址</Text>
-									<Controller
-										control={control}
-										name="webSite"
-										rules={{
-											pattern: {
-												value: /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/,
-												message: '请输入有效的网址',
-											},
-										}}
-										render={({ field: { onChange, value } }) => (
-											<View style={styles.inputWithIcon}>
-												<TextInput
-													//@ts-ignore
-													ref={(ref) => (inputRefs.current.webSite = ref)}
-													value={value}
-													onChangeText={onChange}
-													onFocus={() => handleInputFocus('webSite')}
-													style={[styles.formInput, errors.webSite && styles.inputError]}
-													placeholder="https://"
-													editable={!isSubmitting}
-												/>
-												<Ionicons
-													name="globe-outline"
-													size={20}
-													color="#6b7280"
-													style={styles.inputIcon}
-												/>
-											</View>
-										)}
-									/>
-									{errors.webSite && <Text style={styles.errorText}>{errors.webSite.message}</Text>}
-								</View>
-
-								{/* Username */}
-								<View style={styles.formGroup}>
-									<Text style={styles.formLabel}>用户名 / 邮箱</Text>
-									<Controller
-										control={control}
-										name="username"
-										rules={{ required: '用户名不能为空' }}
-										render={({ field: { onChange, value } }) => (
-											<View style={styles.inputWithIcon}>
-												<TextInput
-													//@ts-ignore
-													ref={(ref) => (inputRefs.current.username = ref)}
-													value={value}
-													onChangeText={onChange}
-													onFocus={() => handleInputFocus('username')}
-													style={[styles.formInput, errors.username && styles.inputError]}
-													editable={!isSubmitting}
-													placeholder="请输入用户名或邮箱"
-												/>
-												<Ionicons
-													name="mail-outline"
-													size={20}
-													color="#6b7280"
-													style={styles.inputIcon}
-												/>
-											</View>
-										)}
-									/>
-									{errors.username && <Text style={styles.errorText}>{errors.username.message}</Text>}
-								</View>
-
-								{/* Password */}
-								<View style={[styles.formGroup, styles.fullWidth]}>
-									<Text style={styles.formLabel}>密码</Text>
-									<Controller
-										control={control}
-										name="password"
-										rules={{
-											required: '密码不能为空',
-											minLength: {
-												value: 6,
-												message: '密码至少6位',
-											},
-										}}
-										render={({ field: { onChange, value } }) => (
-											<View>
-												<View style={styles.inputWithIcon}>
+								<View style={styles.sectionCard}>
+									<View style={styles.sectionHeading}>
+										<Ionicons name="apps-outline" size={20} color={colors.primary} />
+										<Text style={styles.sectionTitle}>基础信息</Text>
+									</View>
+									<View style={styles.sectionFields}>
+										{/* Account Name */}
+										<View style={styles.formGroup}>
+											<Text style={styles.formLabel}>账号名称</Text>
+											<Controller
+												control={control}
+												name="accountName"
+												rules={{ required: '账号名称不能为空' }}
+												render={({ field: { onChange, value } }) => (
 													<TextInput
 														//@ts-ignore
-														ref={(ref) => (inputRefs.current.password = ref)}
+														ref={(ref) => (inputRefs.current.accountName = ref)}
 														value={value}
 														onChangeText={onChange}
-														onFocus={() => handleInputFocus('password')}
-														style={[styles.formInput, errors.password && styles.inputError]}
-														secureTextEntry={!showPassword}
+														onFocus={() => handleInputFocus('accountName')}
+														style={[
+															styles.formInput,
+															errors.accountName && styles.inputError,
+														]}
 														editable={!isSubmitting}
-														placeholder="请输入密码"
+														placeholder="请输入账号名称"
+														placeholderTextColor="#98A2B3"
+														returnKeyType="next"
 													/>
-													<View style={styles.passwordActions}>
-														<TouchableOpacity
-															onPress={() => setShowPassword(!showPassword)}
-															disabled={isSubmitting}
-														>
-															<Ionicons
-																name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-																size={20}
-																color="#6b7280"
-															/>
-														</TouchableOpacity>
-													</View>
-												</View>
-
-												{/* 密码强度指示器 */}
-												{passwordValue && passwordValue.length > 0 && (
-													<PasswordStrengthIndicator password={passwordValue} />
 												)}
-											</View>
-										)}
-									/>
-									{errors.password && <Text style={styles.errorText}>{errors.password.message}</Text>}
+											/>
+											{errors.accountName && (
+												<Text style={styles.errorText}>{errors.accountName.message}</Text>
+											)}
+										</View>
+
+										{/* Category */}
+										<View style={styles.formGroup}>
+											<Text style={styles.formLabel}>账号类型</Text>
+											<Controller
+												control={control}
+												name="category"
+												rules={{ required: '账号类型不能为空' }}
+												render={({ field: { value, onChange } }) => (
+													<CategoryPicker
+														value={value}
+														options={categoryOptions}
+														onChange={onChange}
+														disabled={isSubmitting}
+														hasError={!!errors.category}
+													/>
+												)}
+											/>
+											{errors.category && (
+												<Text style={styles.errorText}>{errors.category.message}</Text>
+											)}
+										</View>
+
+										{/* Website */}
+										<View style={styles.formGroup}>
+											<Text style={styles.formLabel}>官方网址</Text>
+											<Controller
+												control={control}
+												name="webSite"
+												rules={{
+													pattern: {
+														value: /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/,
+														message: '请输入有效的网址',
+													},
+												}}
+												render={({ field: { onChange, value } }) => (
+													<View style={styles.inputWithIcon}>
+														<TextInput
+															//@ts-ignore
+															ref={(ref) => (inputRefs.current.webSite = ref)}
+															value={value}
+															onChangeText={onChange}
+															onFocus={() => handleInputFocus('webSite')}
+															style={[
+																styles.formInput,
+																errors.webSite && styles.inputError,
+															]}
+															placeholder="https://"
+															placeholderTextColor="#98A2B3"
+															editable={!isSubmitting}
+															keyboardType="url"
+															autoCapitalize="none"
+															autoCorrect={false}
+														/>
+														<Ionicons
+															name="globe-outline"
+															size={20}
+															color={colors.primary}
+															style={styles.inputIcon}
+														/>
+													</View>
+												)}
+											/>
+											{errors.webSite && (
+												<Text style={styles.errorText}>{errors.webSite.message}</Text>
+											)}
+										</View>
+									</View>
 								</View>
 
-								{/* 账号描述 - Textarea */}
-								<View style={[styles.formGroup, styles.fullWidth]}>
-									<Text style={styles.formLabel}>账号描述</Text>
-									<Controller
-										control={control}
-										name="description"
-										render={({ field: { onChange, value } }) => (
-											<TextInput
-												//@ts-ignore
-												ref={(ref) => (inputRefs.current.description = ref)}
-												value={value}
-												onChangeText={onChange}
-												onFocus={() => handleInputFocus('description')}
-												style={[styles.textArea, errors.description && styles.inputError]}
-												placeholder="添加账号描述、备注信息..."
-												multiline={true}
-												numberOfLines={4}
-												textAlignVertical="top"
-												editable={!isSubmitting}
+								<View style={styles.sectionCard}>
+									<View style={styles.sectionHeading}>
+										<Ionicons name="key-outline" size={20} color={colors.primary} />
+										<Text style={styles.sectionTitle}>登录凭据</Text>
+									</View>
+									<View style={styles.sectionFields}>
+										{/* Username */}
+										<View style={styles.formGroup}>
+											<Text style={styles.formLabel}>用户名 / 邮箱</Text>
+											<Controller
+												control={control}
+												name="username"
+												rules={{ required: '用户名不能为空' }}
+												render={({ field: { onChange, value } }) => (
+													<View style={styles.inputWithIcon}>
+														<TextInput
+															//@ts-ignore
+															ref={(ref) => (inputRefs.current.username = ref)}
+															value={value}
+															onChangeText={onChange}
+															onFocus={() => handleInputFocus('username')}
+															style={[
+																styles.formInput,
+																errors.username && styles.inputError,
+															]}
+															editable={!isSubmitting}
+															placeholder="请输入用户名或邮箱"
+															placeholderTextColor="#98A2B3"
+															autoCapitalize="none"
+															autoCorrect={false}
+														/>
+														<Ionicons
+															name="mail-outline"
+															size={20}
+															color={colors.primary}
+															style={styles.inputIcon}
+														/>
+													</View>
+												)}
 											/>
-										)}
-									/>
+											{errors.username && (
+												<Text style={styles.errorText}>{errors.username.message}</Text>
+											)}
+										</View>
+
+										{/* Password */}
+										<View style={[styles.formGroup, styles.fullWidth]}>
+											<Text style={styles.formLabel}>密码</Text>
+											<Controller
+												control={control}
+												name="password"
+												rules={{
+													required: '密码不能为空',
+													minLength: {
+														value: 6,
+														message: '密码至少6位',
+													},
+												}}
+												render={({ field: { onChange, value } }) => (
+													<View>
+														<View style={styles.inputWithIcon}>
+															<TextInput
+																//@ts-ignore
+																ref={(ref) => (inputRefs.current.password = ref)}
+																value={value}
+																onChangeText={onChange}
+																onFocus={() => handleInputFocus('password')}
+																style={[
+																	styles.formInput,
+																	errors.password && styles.inputError,
+																]}
+																secureTextEntry={!showPassword}
+																editable={!isSubmitting}
+																placeholder="请输入密码"
+																placeholderTextColor="#98A2B3"
+																autoCapitalize="none"
+																autoCorrect={false}
+															/>
+															<View style={styles.passwordActions}>
+																<TouchableOpacity
+																	onPress={() => setShowPassword(!showPassword)}
+																	disabled={isSubmitting}
+																>
+																	<Ionicons
+																		name={
+																			showPassword
+																				? 'eye-off-outline'
+																				: 'eye-outline'
+																		}
+																		size={20}
+																		color={colors.primary}
+																	/>
+																</TouchableOpacity>
+															</View>
+														</View>
+
+														{/* 密码强度指示器 */}
+														{passwordValue && passwordValue.length > 0 && (
+															<PasswordStrengthIndicator password={passwordValue} />
+														)}
+													</View>
+												)}
+											/>
+											{errors.password && (
+												<Text style={styles.errorText}>{errors.password.message}</Text>
+											)}
+										</View>
+									</View>
+								</View>
+
+								<View style={styles.sectionCard}>
+									<View style={styles.sectionHeading}>
+										<Ionicons name="document-text-outline" size={20} color={colors.primary} />
+										<Text style={styles.sectionTitle}>备注</Text>
+									</View>
+									{/* 账号描述 - Textarea */}
+									<View style={[styles.formGroup, styles.fullWidth]}>
+										<Text style={styles.formLabel}>账号描述</Text>
+										<Controller
+											control={control}
+											name="description"
+											render={({ field: { onChange, value } }) => (
+												<TextInput
+													//@ts-ignore
+													ref={(ref) => (inputRefs.current.description = ref)}
+													value={value}
+													onChangeText={onChange}
+													onFocus={() => handleInputFocus('description')}
+													style={[styles.textArea, errors.description && styles.inputError]}
+													placeholder="添加账号描述、备注信息..."
+													placeholderTextColor="#98A2B3"
+													multiline={true}
+													numberOfLines={4}
+													textAlignVertical="top"
+													editable={!isSubmitting}
+												/>
+											)}
+										/>
+									</View>
 								</View>
 							</View>
 						</View>
@@ -475,7 +482,9 @@ export default function EditAccountPage() {
 								) : (
 									<>
 										<Ionicons name="checkmark-circle" size={20} color="white" />
-										<Text style={styles.primaryButtonText}>保存修改</Text>
+										<Text style={styles.primaryButtonText}>
+											{mode === 'add' ? '添加账户' : '保存修改'}
+										</Text>
 									</>
 								)}
 							</TouchableOpacity>
@@ -501,11 +510,11 @@ const styles = StyleSheet.create({
 	},
 	container: {
 		flex: 1,
-		backgroundColor: '#ffffff',
+		backgroundColor: colors.background,
 	},
 	scrollContent: {
 		flexGrow: 1,
-		paddingTop: 16,
+		paddingTop: 12,
 		paddingBottom: Platform.OS === 'ios' ? 40 : 20,
 	},
 	errorContainer: {
@@ -513,56 +522,59 @@ const styles = StyleSheet.create({
 		justifyContent: 'center',
 		alignItems: 'center',
 	},
-	iconSection: {
+	pageIntro: {
+		flexDirection: 'row',
 		alignItems: 'center',
-		gap: 16,
-		padding: 16,
+		gap: 12,
+		paddingHorizontal: 20,
+		paddingVertical: 12,
 	},
-	logoContainer: {
-		position: 'relative',
-		width: 128,
-		height: 128,
-		borderRadius: 64,
-		backgroundColor: '#f9fafb',
+	introIcon: {
+		width: 48,
+		height: 48,
+		borderRadius: 14,
+		alignItems: 'center',
 		justifyContent: 'center',
-		alignItems: 'center',
-		borderWidth: 4,
-		borderColor: '#f9fafb',
+		backgroundColor: colors.primarySoft,
 	},
-	logo: {
-		width: 128,
-		height: 128,
-		borderRadius: 64,
-		opacity: 0.8,
+	introContent: {
+		flex: 1,
+		gap: 3,
 	},
-	logoText: {
-		fontSize: 40,
-		fontWeight: 'bold',
-		color: '#3b82f6',
+	introTitle: {
+		fontSize: 20,
+		fontWeight: '700',
+		color: colors.text,
 	},
-	editButton: {
-		position: 'absolute',
-		bottom: 0,
-		right: 0,
-		backgroundColor: '#3b82f6',
-		width: 32,
-		height: 32,
-		borderRadius: 16,
-		justifyContent: 'center',
-		alignItems: 'center',
-		borderWidth: 2,
-		borderColor: 'white',
+	introDescription: {
+		fontSize: 13,
+		lineHeight: 18,
+		color: colors.muted,
 	},
 	formContainer: {
-		backgroundColor: '#f9fafb',
-		borderRadius: 12,
-		padding: 24,
-		margin: 16,
-		borderWidth: 1,
-		borderColor: '#e5e7eb',
+		paddingHorizontal: 16,
+		paddingTop: 8,
 	},
 	formGrid: {
-		gap: 24,
+		gap: 14,
+	},
+	sectionCard: {
+		...cardStyles.base,
+		padding: 16,
+		gap: 18,
+	},
+	sectionHeading: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		gap: 8,
+	},
+	sectionTitle: {
+		fontSize: 16,
+		fontWeight: '700',
+		color: colors.text,
+	},
+	sectionFields: {
+		gap: 18,
 	},
 	formGroup: {
 		gap: 8,
@@ -571,32 +583,31 @@ const styles = StyleSheet.create({
 		width: '100%',
 	},
 	formLabel: {
-		fontSize: 10,
-		fontWeight: 'bold',
-		color: '#6b7280',
-		textTransform: 'uppercase',
-		letterSpacing: 1,
+		fontSize: 13,
+		fontWeight: '600',
+		color: colors.muted,
 	},
 	formInput: {
-		backgroundColor: '#f9fafb',
+		backgroundColor: colors.surface,
 		borderRadius: 12,
 		borderWidth: 1,
-		borderColor: '#e5e7eb',
-		paddingVertical: 12,
+		borderColor: colors.border,
+		minHeight: 52,
+		paddingVertical: 13,
 		paddingLeft: 16,
 		paddingRight: 44,
 		fontSize: 16,
-		color: '#1f2937',
+		color: colors.text,
 	},
 	textArea: {
-		backgroundColor: '#f9fafb',
+		backgroundColor: colors.surface,
 		borderRadius: 12,
 		borderWidth: 1,
-		borderColor: '#e5e7eb',
+		borderColor: colors.border,
 		paddingVertical: 12,
 		paddingHorizontal: 16,
 		fontSize: 16,
-		color: '#1f2937',
+		color: colors.text,
 		minHeight: 100,
 		textAlignVertical: 'top',
 	},
@@ -606,18 +617,22 @@ const styles = StyleSheet.create({
 	inputIcon: {
 		position: 'absolute',
 		right: 16,
-		top: 12,
+		top: 16,
 	},
 	passwordActions: {
 		position: 'absolute',
-		right: 16,
-		top: 10,
+		right: 6,
+		top: 4,
+		width: 44,
+		height: 44,
+		alignItems: 'center',
+		justifyContent: 'center',
 		flexDirection: 'row',
 		gap: 12,
 	},
 	actionsContainer: {
 		flexDirection: 'row',
-		gap: 16,
+		gap: 12,
 		padding: 16,
 		paddingBottom: 32,
 		marginBottom: Platform.OS === 'ios' ? 20 : 0,
@@ -629,16 +644,9 @@ const styles = StyleSheet.create({
 		justifyContent: 'center',
 		gap: 8,
 		backgroundColor: '#3b82f6',
-		borderRadius: 24,
-		padding: 16,
-		shadowColor: '#000',
-		shadowOffset: {
-			width: 0,
-			height: 4,
-		},
-		shadowOpacity: 0.2,
-		shadowRadius: 4,
-		elevation: 5,
+		minHeight: 52,
+		borderRadius: 14,
+		padding: 14,
 	},
 	primaryButtonText: {
 		fontSize: 16,
@@ -649,9 +657,12 @@ const styles = StyleSheet.create({
 		flex: 1,
 		alignItems: 'center',
 		justifyContent: 'center',
-		backgroundColor: '#f9fafb',
-		borderRadius: 24,
-		padding: 16,
+		backgroundColor: colors.surface,
+		borderRadius: 14,
+		borderWidth: 1,
+		borderColor: colors.border,
+		minHeight: 52,
+		padding: 14,
 	},
 	secondaryButtonText: {
 		fontSize: 16,

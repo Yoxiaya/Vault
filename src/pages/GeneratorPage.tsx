@@ -1,3 +1,4 @@
+import { cardStyles, colors } from '../theme';
 import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Switch } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
@@ -7,6 +8,7 @@ import { useToast } from '../components/Toast';
 
 export default function GeneratorPage() {
 	const toast = useToast();
+	const [tipsExpanded, setTipsExpanded] = useState(false);
 	const [password, setPassword] = useState('');
 	const [length, setLength] = useState(16);
 	const [options, setOptions] = useState({
@@ -15,8 +17,6 @@ export default function GeneratorPage() {
 		numbers: true,
 		symbols: true,
 	});
-	const [strength, setStrength] = useState({ level: '中等', color: '#f59e0b', description: '' });
-
 	// 字符集定义（排除易混淆字符）
 	const charset = {
 		uppercase: 'ABCDEFGHJKLMNPQRSTUVWXYZ',
@@ -24,41 +24,6 @@ export default function GeneratorPage() {
 		numbers: '23456789',
 		symbols: '!@#$%^&*()_+[]{}<>?',
 	};
-
-	// 计算密码强度
-	const calculateStrength = useCallback((pwd: string, pwdOptions: typeof options, pwdLength: number) => {
-		if (!pwd) return { level: '无效', color: '#9ca3af', description: '请选择至少一个字符类型' };
-
-		let score = 0;
-		let hasUpper = /[A-Z]/.test(pwd);
-		let hasLower = /[a-z]/.test(pwd);
-		let hasNumber = /[0-9]/.test(pwd);
-		let hasSymbol = /[^A-Za-z0-9]/.test(pwd);
-
-		// 长度评分
-		if (pwdLength >= 20) score += 40;
-		else if (pwdLength >= 16) score += 30;
-		else if (pwdLength >= 12) score += 20;
-		else if (pwdLength >= 8) score += 10;
-
-		// 字符类型评分
-		const typesUsed = [hasUpper, hasLower, hasNumber, hasSymbol].filter(Boolean).length;
-		score += typesUsed * 15;
-
-		// 额外奖励：混合使用多种类型
-		if (typesUsed >= 3) score += 10;
-		if (typesUsed === 4) score += 5;
-
-		if (score >= 80) {
-			return { level: '非常强', color: '#10b981', description: '极其安全的密码，适合银行、邮箱等核心账户' };
-		} else if (score >= 60) {
-			return { level: '强', color: '#3b82f6', description: '安全性较高，可满足大多数场景需求' };
-		} else if (score >= 40) {
-			return { level: '中等', color: '#f59e0b', description: '建议增加长度或启用更多字符类型' };
-		} else {
-			return { level: '弱', color: '#ef4444', description: '不够安全，建议使用更长密码或启用更多选项' };
-		}
-	}, []);
 
 	// 生成密码
 	const generatePassword = useCallback(() => {
@@ -70,7 +35,6 @@ export default function GeneratorPage() {
 
 		if (!chars) {
 			setPassword('请至少选择一个选项');
-			setStrength({ level: '无效', color: '#9ca3af', description: '请选择至少一个字符类型' });
 			return;
 		}
 
@@ -98,8 +62,7 @@ export default function GeneratorPage() {
 			.sort(() => Math.random() - 0.5)
 			.join('');
 		setPassword(result);
-		setStrength(calculateStrength(result, options, length));
-	}, [options, length, calculateStrength]);
+	}, [options, length]);
 
 	// 当选项或长度变化时重新生成
 	useEffect(() => {
@@ -128,83 +91,66 @@ export default function GeneratorPage() {
 	};
 
 	return (
-		<ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+		<ScrollView
+			style={styles.container}
+			contentContainerStyle={{ paddingBottom: 24 }}
+			showsVerticalScrollIndicator={false}
+		>
 			{/* 显示密码区域 */}
 			<View style={styles.passwordSection}>
 				<View style={styles.passwordCard}>
-					<Text style={styles.passwordLabel}>生成的安全密码</Text>
-					<Text style={styles.passwordText} numberOfLines={2} adjustsFontSizeToFit>
+					<Text style={styles.passwordLabel}>密码生成器</Text>
+					<Text style={styles.passwordText} selectable>
 						{password || '点击刷新生成密码'}
 					</Text>
 
-					<PasswordStrengthIndicator password={password} mode="progress" />
+					<PasswordStrengthIndicator password={password} mode="progress" showFeedback={false} />
 
 					<View style={styles.passwordActions}>
 						<TouchableOpacity style={styles.copyButton} onPress={copyToClipboard}>
 							<Ionicons name="copy-outline" size={20} color="white" />
 							<Text style={styles.copyButtonText}>复制密码</Text>
 						</TouchableOpacity>
-						<TouchableOpacity style={styles.refreshButton} onPress={generatePassword}>
+						<TouchableOpacity
+							accessibilityRole="button"
+							accessibilityLabel="重新生成密码"
+							style={styles.refreshButton}
+							onPress={generatePassword}
+						>
 							<Ionicons name="refresh" size={24} color="#4b5563" />
 						</TouchableOpacity>
 					</View>
-				</View>
-
-				<View
-					style={[
-						styles.strengthCard,
-						{ backgroundColor: strength.color + '10', borderColor: strength.color + '30' },
-					]}
-				>
-					<Ionicons name="information-circle-outline" size={32} color={strength.color} />
-					<Text style={[styles.strengthTitle, { color: strength.color }]}>密码强度：{strength.level}</Text>
-					<Text style={[styles.strengthDescription, { color: strength.color }]}>
-						{strength.description || '建议每3-6个月更换一次核心资产密码以确保最高级别的安全性。'}
-					</Text>
-				</View>
-				{/* 快捷生成按钮 */}
-				<View style={styles.quickActions}>
-					<TouchableOpacity
-						style={[styles.quickButton, styles.quickButtonPrimary]}
-						onPress={generatePassword}
-					>
-						<Ionicons name="flash" size={20} color="white" />
-						<Text style={styles.quickButtonText}>立即生成</Text>
-					</TouchableOpacity>
-					<TouchableOpacity style={styles.quickButton} onPress={() => setLength(20)}>
-						<Text style={styles.quickButtonTextSecondary}>推荐20位</Text>
-					</TouchableOpacity>
 				</View>
 			</View>
 
 			{/* 控制区域 */}
 			<View style={styles.controlsSection}>
-
 				{/* 长度选择 */}
-					<View style={styles.controlCard}>
-						<View style={styles.lengthHeader}>
-							<Text style={styles.controlTitle}>密码长度</Text>
-							<Text style={styles.lengthValue}>{length}</Text>
-						</View>
-						<View style={styles.lengthPresets}>
-							{[8, 12, 16, 20, 24, 32, 48, 64].map((n) => (
-								<TouchableOpacity
-									key={n}
-									style={[styles.presetBtn, length === n && styles.presetBtnActive]}
-									onPress={() => setLength(n)}
-								>
-									<Text style={[styles.presetBtnText, length === n && styles.presetBtnTextActive]}>
-										{n}
-									</Text>
-								</TouchableOpacity>
-							))}
-						</View>
-						<View style={styles.lengthTips}>
-							<Text style={styles.lengthTipText}>💡 推荐使用 16 位以上密码</Text>
-						</View>
+				<View style={styles.controlCard}>
+					<View style={styles.lengthHeader}>
+						<Text style={styles.controlTitle}>密码长度</Text>
+						<Text style={styles.lengthValue}>{length}</Text>
 					</View>
-
-
+					<View style={styles.lengthPresets}>
+						{[8, 12, 16, 20, 24, 32, 48, 64].map((n) => (
+							<TouchableOpacity
+								key={n}
+								accessibilityRole="button"
+								accessibilityState={{ selected: length === n }}
+								accessibilityLabel={`${n} 位密码`}
+								style={[styles.presetBtn, length === n && styles.presetBtnActive]}
+								onPress={() => setLength(n)}
+							>
+								<Text style={[styles.presetBtnText, length === n && styles.presetBtnTextActive]}>
+									{n}
+								</Text>
+							</TouchableOpacity>
+						))}
+					</View>
+					<View style={styles.lengthTips}>
+						<Text style={styles.lengthTipText}>建议使用至少 16 位密码</Text>
+					</View>
+				</View>
 
 				{/* 字符类型开关 */}
 				<View style={styles.controlCard}>
@@ -250,40 +196,48 @@ export default function GeneratorPage() {
 
 			{/* 安全建议区域 */}
 			<View style={styles.tipsSection}>
-				<View style={styles.tipsHeader}>
+				<TouchableOpacity
+					accessibilityRole="button"
+					accessibilityState={{ expanded: tipsExpanded }}
+					onPress={() => setTipsExpanded(!tipsExpanded)}
+					style={styles.tipsHeader}
+				>
 					<Ionicons name="checkmark-circle-outline" size={24} color="#10b981" />
-					<Text style={styles.tipsTitle}>专业安全建议</Text>
-				</View>
-				<View style={styles.tipsGrid}>
-					<View style={styles.tipItem}>
-						<View style={styles.tipIcon}>
-							<Ionicons name="trending-up-outline" size={20} color="#3b82f6" />
-							<Text style={styles.tipTitle}>长度优先</Text>
+					<Text style={styles.tipsTitle}>密码使用建议</Text>
+					<Ionicons name={tipsExpanded ? 'chevron-up' : 'chevron-down'} size={18} color={colors.muted} />
+				</TouchableOpacity>
+				{tipsExpanded && (
+					<View style={styles.tipsGrid}>
+						<View style={styles.tipItem}>
+							<View style={styles.tipIcon}>
+								<Ionicons name="trending-up-outline" size={20} color="#3b82f6" />
+								<Text style={styles.tipTitle}>长度优先</Text>
+							</View>
+							<Text style={styles.tipDescription}>
+								相比于字符复杂性，增加长度对防止暴力破解更为有效。当前推荐{' '}
+								{length >= 16 ? '✓ 长度充足' : '⚠ 建议使用16位以上'}。
+							</Text>
 						</View>
-						<Text style={styles.tipDescription}>
-							相比于字符复杂性，增加长度对防止暴力破解更为有效。当前推荐{' '}
-							{length >= 16 ? '✓ 长度充足' : '⚠ 建议使用16位以上'}。
-						</Text>
-					</View>
-					<View style={styles.tipItem}>
-						<View style={styles.tipIcon}>
-							<Ionicons name="eye-off-outline" size={20} color="#3b82f6" />
-							<Text style={styles.tipTitle}>避免规律</Text>
+						<View style={styles.tipItem}>
+							<View style={styles.tipIcon}>
+								<Ionicons name="eye-off-outline" size={20} color="#3b82f6" />
+								<Text style={styles.tipTitle}>避免规律</Text>
+							</View>
+							<Text style={styles.tipDescription}>
+								生成器已自动排除易混淆字符，确保手动输入时不会出错，同时避免使用生日、姓名等个人信息。
+							</Text>
 						</View>
-						<Text style={styles.tipDescription}>
-							生成器已自动排除易混淆字符，确保手动输入时不会出错，同时避免使用生日、姓名等个人信息。
-						</Text>
-					</View>
-					<View style={styles.tipItem}>
-						<View style={styles.tipIcon}>
-							<Ionicons name="refresh-circle-outline" size={20} color="#3b82f6" />
-							<Text style={styles.tipTitle}>切勿重用</Text>
+						<View style={styles.tipItem}>
+							<View style={styles.tipIcon}>
+								<Ionicons name="refresh-circle-outline" size={20} color="#3b82f6" />
+								<Text style={styles.tipTitle}>切勿重用</Text>
+							</View>
+							<Text style={styles.tipDescription}>
+								每个账号应使用唯一的随机密码。若一个账号泄露，其他账号依然安全。建议使用密码管理器统一管理。
+							</Text>
 						</View>
-						<Text style={styles.tipDescription}>
-							每个账号应使用唯一的随机密码。若一个账号泄露，其他账号依然安全。建议使用密码管理器统一管理。
-						</Text>
 					</View>
-				</View>
+				)}
 			</View>
 		</ScrollView>
 	);
@@ -292,34 +246,28 @@ export default function GeneratorPage() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: '#ffffff',
+		backgroundColor: colors.background,
 	},
 	passwordSection: {
-		padding: 16,
-		gap: 16,
+		padding: 20,
+		paddingBottom: 0,
 	},
 	passwordCard: {
-		backgroundColor: '#f9fafb',
-		borderRadius: 14,
-		padding: 24,
+		...cardStyles.base,
+		backgroundColor: '#F0F5FF',
+		borderColor: '#DBE7FF',
+		padding: 20,
 		gap: 16,
-		shadowColor: '#000',
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.05,
-		shadowRadius: 10,
-		elevation: 2,
 	},
 	passwordLabel: {
-		fontSize: 12,
+		fontSize: 16,
 		fontWeight: '600',
-		color: '#3b82f6',
-		textTransform: 'uppercase',
-		letterSpacing: 1,
+		color: colors.brand,
 	},
 	passwordText: {
 		fontSize: 22,
 		fontWeight: '600',
-		color: '#1f2937',
+		color: colors.text,
 		fontFamily: 'monospace',
 		lineHeight: 32,
 		letterSpacing: 0.5,
@@ -335,8 +283,9 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 		justifyContent: 'center',
 		gap: 8,
-		backgroundColor: '#3b82f6',
-		borderRadius: 24,
+		backgroundColor: colors.primary,
+		borderRadius: 26,
+		minHeight: 52,
 		padding: 14,
 	},
 	copyButtonText: {
@@ -354,39 +303,18 @@ const styles = StyleSheet.create({
 		borderWidth: 1,
 		borderColor: '#e5e7eb',
 	},
-	strengthCard: {
-		borderRadius: 16,
-		padding: 20,
-		gap: 8,
-		borderWidth: 1,
-	},
-	strengthTitle: {
-		fontSize: 16,
-		fontWeight: '600',
-	},
-	strengthDescription: {
-		fontSize: 14,
-		opacity: 0.8,
-		lineHeight: 20,
-	},
 	controlsSection: {
-		padding: 16,
+		padding: 20,
 		gap: 16,
 	},
 	controlCard: {
-		backgroundColor: '#f9fafb',
-		borderRadius: 14,
-		padding: 20,
-		shadowColor: '#000',
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.05,
-		shadowRadius: 10,
-		elevation: 2,
+		...cardStyles.base,
+		padding: 16,
 	},
 	controlTitle: {
 		fontSize: 18,
 		fontWeight: '600',
-		color: '#1f2937',
+		color: colors.text,
 	},
 	sectionSubtitle: {
 		fontSize: 14,
@@ -412,16 +340,20 @@ const styles = StyleSheet.create({
 		marginBottom: 12,
 	},
 	presetBtn: {
-		paddingHorizontal: 16,
-		paddingVertical: 8,
-		borderRadius: 10,
-		backgroundColor: '#f3f4f6',
+		width: '22%',
+		flexGrow: 1,
+		minHeight: 44,
+		paddingVertical: 10,
+		alignItems: 'center',
+		justifyContent: 'center',
+		borderRadius: 12,
+		backgroundColor: colors.surface,
 		borderWidth: 1,
-		borderColor: '#e5e7eb',
+		borderColor: colors.border,
 	},
 	presetBtnActive: {
-		backgroundColor: '#eff6ff',
-		borderColor: '#3b82f6',
+		backgroundColor: colors.primary,
+		borderColor: colors.primary,
 	},
 	presetBtnText: {
 		fontSize: 15,
@@ -429,7 +361,7 @@ const styles = StyleSheet.create({
 		color: '#4b5563',
 	},
 	presetBtnTextActive: {
-		color: '#3b82f6',
+		color: 'white',
 		fontWeight: '700',
 	},
 	lengthTips: {
@@ -439,8 +371,8 @@ const styles = StyleSheet.create({
 		borderTopColor: '#e5e7eb',
 	},
 	lengthTipText: {
-		fontSize: 12,
-		color: '#f59e0b',
+		fontSize: 13,
+		color: colors.muted,
 	},
 	switchItem: {
 		flexDirection: 'row',
@@ -454,6 +386,8 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		alignItems: 'center',
 		gap: 12,
+		flex: 1,
+		paddingRight: 8,
 	},
 	switchIcon: {
 		padding: 8,
@@ -463,8 +397,8 @@ const styles = StyleSheet.create({
 		borderColor: '#e5e7eb',
 	},
 	switchIconActive: {
-		backgroundColor: '#3b82f6',
-		borderColor: '#3b82f6',
+		backgroundColor: colors.primarySoft,
+		borderColor: colors.primarySoft,
 	},
 	switchIconText: {
 		fontSize: 12,
@@ -473,12 +407,12 @@ const styles = StyleSheet.create({
 		textTransform: 'uppercase',
 	},
 	switchIconTextActive: {
-		color: 'white',
+		color: colors.primary,
 	},
 	switchText: {
-		fontSize: 15,
-		fontWeight: '500',
-		color: '#1f2937',
+		fontSize: 14,
+		color: colors.text,
+		flexShrink: 1,
 	},
 	charNote: {
 		flexDirection: 'row',
@@ -491,60 +425,27 @@ const styles = StyleSheet.create({
 	},
 	charNoteText: {
 		fontSize: 12,
-		color: '#9ca3af',
-	},
-	quickActions: {
-		flexDirection: 'row',
-		gap: 12,
-	},
-	quickButton: {
+		lineHeight: 18,
+		color: colors.muted,
 		flex: 1,
-		flexDirection: 'row',
-		alignItems: 'center',
-		justifyContent: 'center',
-		gap: 8,
-		padding: 14,
-		backgroundColor: '#f9fafb',
-		borderRadius: 24,
-		borderWidth: 1,
-		borderColor: '#e5e7eb',
-	},
-	quickButtonPrimary: {
-		backgroundColor: '#3b82f6',
-		borderColor: '#3b82f6',
-	},
-	quickButtonText: {
-		fontSize: 14,
-		fontWeight: '600',
-		color: 'white',
-	},
-	quickButtonTextSecondary: {
-		fontSize: 14,
-		fontWeight: '500',
-		color: '#4b5563',
 	},
 	tipsSection: {
-		margin: 16,
-		padding: 20,
-		backgroundColor: '#ffffff',
-		borderRadius: 14,
+		...cardStyles.surface,
+		marginHorizontal: 20,
+		padding: 16,
 		gap: 20,
-		shadowColor: '#000',
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.05,
-		shadowRadius: 10,
-		elevation: 2,
-		marginBottom: 32,
 	},
 	tipsHeader: {
 		flexDirection: 'row',
 		alignItems: 'center',
 		gap: 12,
+		minHeight: 44,
 	},
 	tipsTitle: {
-		fontSize: 18,
+		fontSize: 14,
 		fontWeight: '600',
-		color: '#1f2937',
+		color: colors.text,
+		flex: 1,
 	},
 	tipsGrid: {
 		gap: 20,
@@ -560,7 +461,7 @@ const styles = StyleSheet.create({
 	tipTitle: {
 		fontSize: 15,
 		fontWeight: '600',
-		color: '#1f2937',
+		color: colors.text,
 	},
 	tipDescription: {
 		fontSize: 14,

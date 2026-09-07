@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
@@ -8,12 +9,23 @@ import * as Clipboard from 'expo-clipboard';
 import { RootStackParamList } from '../App';
 import { Account } from '../type';
 import { useAccountsStore } from '../store';
-import { deleteAccount } from '../service/api';
+import { deleteAccount, uploadAccountLogo } from '../service/api';
 import PasswordStrengthIndicator from '../components/PasswordStrengthIndicator';
 import { useToast } from '../components/Toast';
+import { cardStyles, colors } from '../theme';
 
 type AccountDetailsPageRouteProp = RouteProp<RootStackParamList, 'AccountDetails'>;
 type AccountDetailsPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'AccountDetails'>;
+
+const formatLastUpdated = (value: string | null) => {
+	if (!value) return '暂无记录';
+
+	const date = new Date(value);
+	if (Number.isNaN(date.getTime())) return '暂无记录';
+
+	const pad = (number: number) => String(number).padStart(2, '0');
+	return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
 
 export default function AccountDetailsPage() {
 	const route = useRoute<AccountDetailsPageRouteProp>();
@@ -22,13 +34,58 @@ export default function AccountDetailsPage() {
 
 	const toast = useToast();
 	const [account, setAccount] = useState<Account>();
-	const { getAccountDetailById } = useAccountsStore();
+	const [passwordVisible, setPasswordVisible] = useState(false);
+	const [isLogoUploading, setIsLogoUploading] = useState(false);
+	const { getAccountDetailById, fetchAccounts } = useAccountsStore();
 
 	// 复制到剪贴板的通用函数
 	const copyToClipboard = async (text: string, type: string) => {
 		if (!text) return;
 		await Clipboard.setStringAsync(text);
 		toast.success('复制成功', `${type}已复制到剪贴板`);
+	};
+
+	const changeAccountLogo = async () => {
+		if (isLogoUploading) return;
+
+		const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+		if (status !== 'granted') {
+			toast.warning('需要相册权限', '请允许访问相册后再修改应用图标');
+			return;
+		}
+
+		const result = await ImagePicker.launchImageLibraryAsync({
+			mediaTypes: ['images'],
+			allowsEditing: true,
+			aspect: [1, 1],
+			quality: 0.8,
+		});
+
+		if (result.canceled || !result.assets[0]) return;
+
+		const asset = result.assets[0];
+		const formData = new FormData();
+		formData.append('file', {
+			uri: asset.uri,
+			name: asset.fileName || `account_logo_${Date.now()}.jpg`,
+			type: asset.mimeType || 'image/jpeg',
+		} as any);
+
+		setIsLogoUploading(true);
+		try {
+			const response = await uploadAccountLogo(id, formData);
+			const logoUrl = response.data?.logoUrl;
+			if (!response.success || !logoUrl) throw new Error('上传接口未返回图标地址');
+
+			setAccount((current) => (current ? { ...current, logoUrl } : current));
+			await fetchAccounts();
+			toast.success('修改成功', '应用图标已更新');
+		} catch (error) {
+			console.error('图标上传失败:', error);
+			toast.error('修改失败', '请检查网络后重试');
+		} finally {
+			setIsLogoUploading(false);
+		}
 	};
 
 	const deleteAccountPress = () => {
@@ -55,6 +112,7 @@ export default function AccountDetailsPage() {
 	// 密码强度计算
 
 	useEffect(() => {
+		setPasswordVisible(false);
 		const accountDetails = getAccountDetailById(id);
 		if (accountDetails) {
 			setAccount(accountDetails);
@@ -72,12 +130,27 @@ export default function AccountDetailsPage() {
 		<ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
 			{/* Hero Section */}
 			<View style={styles.heroSection}>
-				<View style={styles.logoContainer}>
-					{account.logoUrl ? (
-						<Image source={{ uri: account.logoUrl }} style={styles.logo} contentFit="cover" />
-					) : (
-						<Text style={styles.logoText}>{account.appName[0]}</Text>
-					)}
+				<View style={styles.logoWrapper}>
+					<View style={styles.logoContainer}>
+						{account.logoUrl ? (
+							<Image source={{ uri: account.logoUrl }} style={styles.logo} contentFit="cover" />
+						) : (
+							<Text style={styles.logoText}>{account.appName.charAt(0).toUpperCase() || '?'}</Text>
+						)}
+					</View>
+					<TouchableOpacity
+						style={styles.logoEditButton}
+						onPress={changeAccountLogo}
+						disabled={isLogoUploading}
+						accessibilityRole="button"
+						accessibilityLabel="修改应用图标"
+					>
+						{isLogoUploading ? (
+							<Ionicons name="hourglass-outline" size={18} color="white" />
+						) : (
+							<Ionicons name="camera-outline" size={19} color="white" />
+						)}
+					</TouchableOpacity>
 				</View>
 				<View style={styles.accountInfo}>
 					<View style={styles.securityBadge}>
@@ -96,15 +169,28 @@ export default function AccountDetailsPage() {
 			<View style={styles.detailsContainer}>
 				{/* Credentials Card */}
 				<View style={styles.credentialsCard}>
-					<Text style={styles.sectionTitle}>登录凭据</Text>
+					<View style={styles.sectionHeader}>
+						<View>
+							<Text style={styles.sectionTitle}>登录凭据</Text>
+							<Text style={styles.sectionSubtitle}>轻触右侧图标即可快速复制</Text>
+						</View>
+						<View style={styles.secureBadge}>
+							<Ionicons name="shield-checkmark" size={14} color={colors.primary} />
+							<Text style={styles.secureBadgeText}>加密保存</Text>
+						</View>
+					</View>
 					<View style={styles.credentialsList}>
 						{/* Username */}
 						<View style={styles.credentialItem}>
 							<Text style={styles.credentialLabel}>用户名</Text>
 							<View style={styles.credentialValueContainer}>
-								<Text style={styles.credentialValue}>{account.username}</Text>
+								<Text numberOfLines={1} selectable style={styles.credentialValue}>
+									{account.username}
+								</Text>
 								<TouchableOpacity
 									style={styles.actionButton}
+									accessibilityRole="button"
+									accessibilityLabel="复制用户名"
 									onPress={() => copyToClipboard(account.username, '用户名')}
 								>
 									<Ionicons name="copy-outline" size={20} color="#3b82f6" />
@@ -115,13 +201,36 @@ export default function AccountDetailsPage() {
 						<View style={styles.credentialItem}>
 							<Text style={styles.credentialLabel}>密码</Text>
 							<View style={styles.credentialValueContainer}>
-								<Text style={styles.credentialValue}>••••••••••••••••</Text>
-								<TouchableOpacity
-									style={styles.actionButton}
-									onPress={() => copyToClipboard(account.password as string, '密码')}
+								<Text
+									numberOfLines={1}
+									selectable={passwordVisible}
+									style={[styles.credentialValue, styles.passwordValue]}
 								>
-									<Ionicons name="copy-outline" size={20} color="#3b82f6" />
-								</TouchableOpacity>
+									{passwordVisible ? account.password : '••••••••••••••••'}
+								</Text>
+								<View style={styles.credentialActions}>
+									<TouchableOpacity
+										style={styles.actionButton}
+										accessibilityRole="button"
+										accessibilityLabel={passwordVisible ? '隐藏密码' : '显示密码'}
+										accessibilityState={{ checked: passwordVisible }}
+										onPress={() => setPasswordVisible((visible) => !visible)}
+									>
+										<Ionicons
+											name={passwordVisible ? 'eye-off-outline' : 'eye-outline'}
+											size={21}
+											color={colors.primary}
+										/>
+									</TouchableOpacity>
+									<TouchableOpacity
+										style={styles.actionButton}
+										accessibilityRole="button"
+										accessibilityLabel="复制密码"
+										onPress={() => copyToClipboard(account.password as string, '密码')}
+									>
+										<Ionicons name="copy-outline" size={20} color={colors.primary} />
+									</TouchableOpacity>
+								</View>
 							</View>
 							<PasswordStrengthIndicator password={account?.password || ''} showFeedback={false} />
 						</View>
@@ -130,15 +239,19 @@ export default function AccountDetailsPage() {
 							<View style={styles.credentialItem}>
 								<Text style={styles.credentialLabel}>官方网站</Text>
 								<View style={styles.credentialValueContainer}>
-									<Text style={styles.credentialValueLink}>{account.webSite}</Text>
+									<Text numberOfLines={1} style={styles.credentialValueLink}>
+										{account.webSite}
+									</Text>
 									<TouchableOpacity
 										style={styles.actionButton}
+										accessibilityRole="button"
+										accessibilityLabel="复制网址"
 										onPress={() => {
 											// 可以添加打开链接的逻辑，目前仅复制
 											copyToClipboard(account.webSite!, '网址');
 										}}
 									>
-										<Ionicons name="open-outline" size={20} color="#3b82f6" />
+										<Ionicons name="copy-outline" size={20} color="#3b82f6" />
 									</TouchableOpacity>
 								</View>
 							</View>
@@ -150,7 +263,7 @@ export default function AccountDetailsPage() {
 				<View style={styles.metadataCard}>
 					<View style={styles.metadataItem}>
 						<Text style={styles.metadataLabel}>最后更新时间</Text>
-						<Text style={styles.metadataValue}>{account.lastUpdated}</Text>
+						<Text style={styles.metadataValue}>{formatLastUpdated(account.lastUpdated)}</Text>
 					</View>
 					<View style={styles.metadataItem}>
 						<Text style={styles.metadataLabel}>2FA 二步验证</Text>
@@ -230,6 +343,9 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 		gap: 24,
 	},
+	logoWrapper: {
+		position: 'relative',
+	},
 	logoContainer: {
 		width: 128,
 		height: 128,
@@ -249,6 +365,19 @@ const styles = StyleSheet.create({
 		fontSize: 48,
 		fontWeight: 'bold',
 		color: '#3b82f6',
+	},
+	logoEditButton: {
+		position: 'absolute',
+		right: -7,
+		bottom: -7,
+		width: 42,
+		height: 42,
+		borderRadius: 21,
+		alignItems: 'center',
+		justifyContent: 'center',
+		backgroundColor: colors.primary,
+		borderWidth: 3,
+		borderColor: colors.surface,
 	},
 	accountInfo: {
 		alignItems: 'center',
@@ -284,25 +413,46 @@ const styles = StyleSheet.create({
 		gap: 16,
 	},
 	credentialsCard: {
-		backgroundColor: '#f9fafb',
-		borderRadius: 12,
-		padding: 24,
-		gap: 24,
-		borderWidth: 1,
-		borderColor: '#e5e7eb',
+		gap: 14,
+	},
+	sectionHeader: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'space-between',
+		gap: 12,
+		paddingHorizontal: 4,
 	},
 	sectionTitle: {
-		fontSize: 10,
-		fontWeight: 'bold',
-		color: '#6b7280',
-		textTransform: 'uppercase',
-		letterSpacing: 1,
+		fontSize: 18,
+		fontWeight: '700',
+		color: colors.text,
+	},
+	sectionSubtitle: {
+		fontSize: 12,
+		color: colors.muted,
+		marginTop: 4,
+	},
+	secureBadge: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		gap: 5,
+		paddingHorizontal: 10,
+		paddingVertical: 6,
+		borderRadius: 14,
+		backgroundColor: colors.primarySoft,
+	},
+	secureBadgeText: {
+		fontSize: 11,
+		fontWeight: '600',
+		color: colors.primary,
 	},
 	credentialsList: {
-		gap: 24,
+		gap: 12,
 	},
 	credentialItem: {
-		gap: 8,
+		...cardStyles.surface,
+		gap: 10,
+		padding: 16,
 	},
 	credentialLabel: {
 		fontSize: 12,
@@ -313,27 +463,43 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		justifyContent: 'space-between',
 		alignItems: 'center',
-		backgroundColor: '#f9fafb',
-		padding: 16,
-		borderRadius: 8,
+		backgroundColor: '#f5f8ff',
+		minHeight: 56,
+		paddingLeft: 16,
+		paddingRight: 6,
+		borderRadius: 12,
+		borderWidth: 1,
+		borderColor: '#e2eaff',
 	},
 	credentialValue: {
 		fontSize: 16,
-		fontWeight: '500',
-		color: '#1f2937',
+		fontWeight: '600',
+		color: colors.text,
+		flex: 1,
+	},
+	passwordValue: {
+		letterSpacing: 0.5,
+	},
+	credentialActions: {
+		flexDirection: 'row',
+		gap: 4,
 	},
 	credentialValueLink: {
 		fontSize: 16,
 		fontWeight: '500',
 		color: '#3b82f6',
+		flex: 1,
 	},
 	actionButton: {
-		padding: 8,
-		borderRadius: 20,
+		width: 44,
+		height: 44,
+		alignItems: 'center',
+		justifyContent: 'center',
+		borderRadius: 12,
+		backgroundColor: '#ffffff',
 	},
 	metadataCard: {
-		backgroundColor: '#f9fafb',
-		borderRadius: 12,
+		...cardStyles.base,
 		padding: 24,
 		flexDirection: 'row',
 		flexWrap: 'wrap',
@@ -406,10 +572,8 @@ const styles = StyleSheet.create({
 		color: '#1f2937',
 	},
 	dangerZone: {
-		backgroundColor: '#f9fafb',
-		borderRadius: 12,
+		...cardStyles.base,
 		padding: 24,
-		borderWidth: 1,
 		borderColor: 'rgba(239, 68, 68, 0.1)',
 		gap: 16,
 	},
@@ -438,10 +602,9 @@ const styles = StyleSheet.create({
 		color: '#ef4444',
 	},
 	securityTip: {
+		...cardStyles.base,
 		backgroundColor: 'rgba(59, 130, 246, 0.1)',
-		borderRadius: 12,
 		padding: 24,
-		borderWidth: 1,
 		borderColor: 'rgba(59, 130, 246, 0.2)',
 		gap: 4,
 	},

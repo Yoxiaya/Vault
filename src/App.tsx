@@ -51,7 +51,11 @@ function AppNavigator() {
 						component={AccountDetailsPage}
 						options={{ title: '账户详情' }}
 					/>
-					<Stack.Screen name="EditAccount" component={EditAccountPage} options={{ title: '编辑账户' }} />
+					<Stack.Screen
+						name="EditAccount"
+						component={EditAccountPage}
+						options={({ route }) => ({ title: route.params.mode === 'add' ? '新增账户' : '编辑账户' })}
+					/>
 					<Stack.Screen name="ProfilePage" component={ProfilePage} options={{ title: '个人中心' }} />
 					<Stack.Screen name="ProfileEditPage" component={ProfileEditPage} />
 				</>

@@ -7,6 +7,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../App';
 import { useAuth } from '../context/AuthContext';
 import { useUserInfoStore } from '../store';
+import { cardStyles } from '../theme';
 
 type SettingsPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'SettingsPage'>;
 export default function SettingsPage() {
@@ -170,15 +171,12 @@ const styles = StyleSheet.create({
 		backgroundColor: '#ffffff',
 	},
 	profileSection: {
+		...cardStyles.base,
 		margin: 16,
 		padding: 20,
-		backgroundColor: '#f9fafb',
-		borderRadius: 12,
 		flexDirection: 'row',
 		alignItems: 'center',
 		gap: 20,
-		borderWidth: 1,
-		borderColor: '#e5e7eb',
 	},
 	profileImageContainer: {
 		position: 'relative',
@@ -243,10 +241,7 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 8,
 	},
 	sectionContent: {
-		backgroundColor: '#f9fafb',
-		borderRadius: 12,
-		borderWidth: 1,
-		borderColor: '#e5e7eb',
+		...cardStyles.base,
 		overflow: 'hidden',
 	},
 	settingItem: {

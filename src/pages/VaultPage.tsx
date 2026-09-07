@@ -1,3 +1,4 @@
+import { cardStyles, colors } from '../theme';
 import React, { useEffect, useState, useMemo, useLayoutEffect } from 'react';
 import { Image } from 'expo-image';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
@@ -30,18 +31,16 @@ export default function VaultPage() {
 	useLayoutEffect(() => {
 		navigation.setOptions({
 			headerRight: () => (
-				<TouchableOpacity style={styles.addAccountButton} onPress={onAddAccountPress}>
-					<Ionicons name="add" size={24} color="#3b82f6" />
+				<TouchableOpacity
+					accessibilityRole="button"
+					accessibilityLabel="添加账户"
+					style={styles.addAccountButton}
+					onPress={onAddAccountPress}
+				>
+					<Ionicons name="add" size={20} color={colors.primary} />
+					<Text style={styles.addLabel}>添加</Text>
 				</TouchableOpacity>
 			),
-			headerStyle: {
-				backgroundColor: '#ffffff',
-			},
-			headerTitleStyle: {
-				color: '#1f2937',
-				fontSize: 20,
-				fontWeight: '600',
-			},
 		});
 	}, [navigation]);
 
@@ -93,12 +92,24 @@ export default function VaultPage() {
 					<View style={styles.emptyIconWrapper}>
 						<Ionicons name="key-outline" size={48} color="#d1d5db" />
 					</View>
-					<Text style={styles.emptyTitle}>暂无账户</Text>
+					<Text style={styles.emptyTitle}>
+						{searchQuery || activeCategory !== '全部' ? '没有匹配的账户' : '你的保险库，从这里开始'}
+					</Text>
 					<Text style={styles.emptyDescription}>
 						{searchQuery || activeCategory !== '全部'
 							? '没有找到匹配的账户'
 							: '点击右上角 + 添加第一个账户'}
 					</Text>
+					{!searchQuery && activeCategory === '全部' && (
+						<TouchableOpacity
+							accessibilityRole="button"
+							style={styles.emptyAction}
+							onPress={onAddAccountPress}
+						>
+							<Ionicons name="add" size={20} color="white" />
+							<Text style={styles.emptyActionText}>添加第一个账户</Text>
+						</TouchableOpacity>
+					)}
 				</View>
 			);
 		}
@@ -117,12 +128,18 @@ export default function VaultPage() {
 								{account.logoUrl ? (
 									<Image source={{ uri: account.logoUrl }} style={styles.logo} contentFit="cover" />
 								) : (
-									<Text style={styles.logoText}>{account.appName[0].toUpperCase()}</Text>
+									<Text style={styles.logoText}>
+										{account.appName.charAt(0).toUpperCase() || '?'}
+									</Text>
 								)}
 							</View>
 							<View style={styles.accountDetails}>
-								<Text style={styles.accountName}>{account.appName}</Text>
-								<Text style={styles.accountUsername}>{account.username}</Text>
+								<Text numberOfLines={1} style={styles.accountName}>
+									{account.appName}
+								</Text>
+								<Text numberOfLines={1} style={styles.accountUsername}>
+									{account.username}
+								</Text>
 							</View>
 						</View>
 						<Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
@@ -144,9 +161,17 @@ export default function VaultPage() {
 						value={searchQuery}
 						onChangeText={setSearchQuery}
 						returnKeyType="search"
+						autoCapitalize="none"
+						autoCorrect={false}
+						accessibilityLabel="搜索应用或用户名"
 					/>
 					{searchQuery.length > 0 && (
-						<TouchableOpacity onPress={onClearSearch} style={styles.clearButton}>
+						<TouchableOpacity
+							accessibilityRole="button"
+							accessibilityLabel="清除搜索"
+							onPress={onClearSearch}
+							style={styles.clearButton}
+						>
 							<Ionicons name="close-circle" size={18} color="#9ca3af" />
 						</TouchableOpacity>
 					)}
@@ -161,6 +186,8 @@ export default function VaultPage() {
 					{categories.map((cat) => (
 						<TouchableOpacity
 							key={cat}
+							accessibilityRole="button"
+							accessibilityState={{ selected: activeCategory === cat }}
 							onPress={() => setActiveCategory(cat)}
 							style={[styles.categoryButton, activeCategory === cat && styles.activeCategoryButton]}
 						>
@@ -172,10 +199,18 @@ export default function VaultPage() {
 				</ScrollView>
 			</View>
 
-			{(searchQuery || activeCategory !== '全部') && filteredAccounts.length > 0 && (
-				<View style={styles.resultInfo}>
-					<Text style={styles.resultInfoText}>共 {filteredAccounts.length} 个账户</Text>
+			<View style={styles.listHeading}>
+				<Text style={styles.listTitle}>
+					保险库{' '}
+					<Text style={styles.resultInfoText}>
+						{' '}
+						/ {loading ? '加载中' : `${filteredAccounts.length} 个账户`}
+					</Text>
+				</Text>
+				{searchQuery || activeCategory !== '全部' ? (
 					<TouchableOpacity
+						accessibilityRole="button"
+						style={styles.resetButton}
 						onPress={() => {
 							setSearchQuery('');
 							setActiveCategory('全部');
@@ -183,11 +218,14 @@ export default function VaultPage() {
 					>
 						<Text style={styles.clearFilterText}>清除筛选</Text>
 					</TouchableOpacity>
-				</View>
-			)}
-
+				) : null}
+			</View>
 			<View style={styles.accountSection}>
-				<ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+				<ScrollView
+					showsVerticalScrollIndicator={false}
+					keyboardShouldPersistTaps="handled"
+					contentContainerStyle={styles.scrollContent}
+				>
 					{renderContent()}
 				</ScrollView>
 			</View>
@@ -196,9 +234,34 @@ export default function VaultPage() {
 }
 
 const styles = StyleSheet.create({
+	resetButton: { minHeight: 44, justifyContent: 'center' },
+	emptyAction: {
+		flexDirection: 'row',
+		gap: 8,
+		alignItems: 'center',
+		justifyContent: 'center',
+		minHeight: 48,
+		paddingHorizontal: 20,
+		borderRadius: 24,
+		backgroundColor: colors.primary,
+		marginTop: 12,
+	},
+	emptyActionText: { color: 'white', fontSize: 15, fontWeight: '600' },
+	addLabel: { color: colors.primary, fontSize: 14, fontWeight: '600' },
+	listHeading: {
+		flexDirection: 'row',
+		flexWrap: 'wrap',
+		gap: 8,
+		justifyContent: 'space-between',
+		alignItems: 'center',
+		paddingHorizontal: 20,
+		minHeight: 48,
+		paddingVertical: 4,
+	},
+	listTitle: { fontSize: 16, fontWeight: '600', color: colors.text },
 	container: {
 		flex: 1,
-		backgroundColor: '#ffffff',
+		backgroundColor: colors.background,
 	},
 	searchSection: {
 		paddingHorizontal: 20,
@@ -209,12 +272,13 @@ const styles = StyleSheet.create({
 	searchContainer: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		backgroundColor: '#f9fafb',
-		borderRadius: 12,
+		backgroundColor: colors.card,
+		borderRadius: 14,
 		borderWidth: 1,
-		borderColor: '#e5e7eb',
-		paddingHorizontal: 16,
-		height: 48,
+		borderColor: colors.border,
+		paddingLeft: 16,
+		paddingRight: 4,
+		minHeight: 50,
 	},
 	searchIcon: {
 		marginRight: 12,
@@ -222,10 +286,13 @@ const styles = StyleSheet.create({
 	searchInput: {
 		flex: 1,
 		fontSize: 16,
-		color: '#1f2937',
+		color: colors.text,
 	},
 	clearButton: {
-		padding: 4,
+		minWidth: 44,
+		minHeight: 44,
+		alignItems: 'center',
+		justifyContent: 'center',
 	},
 	categoryContainer: {
 		flexDirection: 'row',
@@ -236,15 +303,16 @@ const styles = StyleSheet.create({
 	},
 	categoryButton: {
 		paddingHorizontal: 18,
-		paddingVertical: 8,
-		borderRadius: 20,
-		backgroundColor: '#f9fafb',
+		minHeight: 44,
+		justifyContent: 'center',
+		borderRadius: 22,
+		backgroundColor: colors.card,
 		borderWidth: 1,
-		borderColor: '#e5e7eb',
+		borderColor: colors.border,
 	},
 	activeCategoryButton: {
-		backgroundColor: '#3b82f6',
-		borderColor: '#3b82f6',
+		backgroundColor: colors.primary,
+		borderColor: colors.primary,
 	},
 	categoryText: {
 		fontSize: 14,
@@ -252,7 +320,8 @@ const styles = StyleSheet.create({
 		color: '#6b7280',
 	},
 	activeCategoryText: {
-		color: '#ffffff',
+		color: '#FFFFFF',
+		fontWeight: '600',
 	},
 	accountSection: {
 		flex: 1,
@@ -261,16 +330,9 @@ const styles = StyleSheet.create({
 	scrollContent: {
 		paddingBottom: 20,
 	},
-	resultInfo: {
-		flexDirection: 'row',
-		justifyContent: 'space-between',
-		alignItems: 'center',
-		paddingHorizontal: 20,
-		paddingVertical: 8,
-	},
 	resultInfoText: {
 		fontSize: 13,
-		color: '#9ca3af',
+		color: colors.muted,
 	},
 	clearFilterText: {
 		fontSize: 13,
@@ -281,14 +343,12 @@ const styles = StyleSheet.create({
 		gap: 12,
 	},
 	accountItem: {
+		...cardStyles.base,
 		flexDirection: 'row',
 		alignItems: 'center',
 		justifyContent: 'space-between',
-		backgroundColor: '#f9fafb',
-		borderRadius: 14,
 		padding: 16,
-		borderWidth: 1,
-		borderColor: '#f0f0f0',
+		minHeight: 84,
 	},
 	accountInfo: {
 		flexDirection: 'row',
@@ -327,15 +387,21 @@ const styles = StyleSheet.create({
 	accountName: {
 		fontSize: 16,
 		fontWeight: '600',
-		color: '#1f2937',
+		color: colors.text,
 	},
 	accountUsername: {
 		fontSize: 13,
-		color: '#9ca3af',
+		color: colors.muted,
 	},
 	addAccountButton: {
-		padding: 8,
+		flexDirection: 'row',
+		alignItems: 'center',
+		gap: 4,
+		paddingHorizontal: 12,
+		minHeight: 44,
 		marginRight: 12,
+		borderRadius: 12,
+		backgroundColor: colors.primarySoft,
 	},
 	// 空状态
 	emptyContainer: {
@@ -347,8 +413,8 @@ const styles = StyleSheet.create({
 	emptyIconWrapper: {
 		width: 80,
 		height: 80,
-		borderRadius: 40,
-		backgroundColor: '#f9fafb',
+		borderRadius: 24,
+		backgroundColor: colors.primarySoft,
 		justifyContent: 'center',
 		alignItems: 'center',
 		marginBottom: 8,
@@ -360,7 +426,7 @@ const styles = StyleSheet.create({
 	},
 	emptyDescription: {
 		fontSize: 14,
-		color: '#9ca3af',
+		color: colors.muted,
 		textAlign: 'center',
 	},
 });
