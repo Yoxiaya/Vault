@@ -274,10 +274,6 @@ export default function AccountDetailsPage() {
 							</Text>
 						</View>
 					</View>
-					<View style={styles.metadataItem}>
-						<Text style={styles.metadataLabel}>存储库</Text>
-						<Text style={styles.metadataValue}>{account.storageType}</Text>
-					</View>
 				</View>
 
 				{/* Action Panel */}

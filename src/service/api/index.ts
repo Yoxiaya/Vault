@@ -3,7 +3,7 @@ import { Account } from '../../type';
 
 export interface PublicUser { id: number; username: string; email: string }
 export interface Profile { id: number; userId: number; profileName: string; profileAvatar: string | null; phoneNumber: string | null }
-export type AccountPayload = Pick<Account, 'appName' | 'username' | 'password'> & Partial<Pick<Account, 'email' | 'webSite' | 'category' | 'logoUrl' | 'lastUpdated' | 'twoFactorEnabled' | 'storageType' | 'description'>>;
+export type AccountPayload = Pick<Account, 'appName' | 'username' | 'password'> & Partial<Pick<Account, 'email' | 'webSite' | 'category' | 'logoUrl' | 'lastUpdated' | 'twoFactorEnabled' | 'description'>>;
 
 export const getAccounts = (): Promise<ApiResponse<Account[]>> => request('/vault-accounts');
 export const getAccount = (id: string | number): Promise<ApiResponse<Account>> => request(`/vault-accounts/${id}`);

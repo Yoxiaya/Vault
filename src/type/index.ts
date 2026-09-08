@@ -10,7 +10,6 @@ export interface Account {
 	logoImageId?: number | null;
 	lastUpdated: string | null;
 	twoFactorEnabled: boolean | null;
-	storageType: string | null;
 	description?: string | null;
 	userId: number;
 }

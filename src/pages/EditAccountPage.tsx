@@ -138,7 +138,6 @@ export default function EditAccountPage() {
 				description: data.description || '',
 				lastUpdated: new Date().toISOString(),
 				twoFactorEnabled: false,
-				storageType: '明文存储',
 			};
 
 			if (mode === 'add') {

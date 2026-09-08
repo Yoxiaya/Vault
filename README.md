@@ -77,10 +77,9 @@ eas build --platform android --profile preview
 ```
 Vault/
 ├── assets/                # 静态资源文件
-│   ├── adaptive-icon.png
-│   ├── favicon.png
 │   ├── icon.png
-│   └── splash-icon.png
+│   ├── image1.png
+│   └── vault-mark.svg
 ├── src/                   # 源代码
 │   ├── components/        # 可复用组件
 │   │   ├── Footer.tsx              # 底部导航栏
@@ -169,7 +168,6 @@ interface Account {
 	logoUrl?: string; // 图标 URL（可选）
 	lastUpdated: string; // 最后更新时间
 	twoFactorEnabled: boolean; // 是否启用双因素认证
-	storageType: string; // 存储类型
 	description?: string; // 描述（可选）
 }
 ```
