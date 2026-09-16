@@ -18,8 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../App';
-import { AccountCategory } from '../type';
-import { useAccountsStore } from '../store';
+import { useAccountsStore, useCategoriesStore } from '../store';
 import { addAccount, updateAccount } from '../service/api';
 import { calculatePasswordStrength } from '../utils';
 import { LoadingMask } from '../components/Mask';
@@ -27,13 +26,14 @@ import PasswordStrengthIndicator from '../components/PasswordStrengthIndicator';
 import { useToast } from '../components/Toast';
 import CategoryPicker, { CategoryOption } from '../components/CategoryPicker';
 import { cardStyles, colors } from '../theme';
+import { categoryColorMap, categoryIconMap } from '../constants/category';
 
 type EditAccountPageRouteProp = RouteProp<RootStackParamList, 'EditAccount'>;
 type EditAccountPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'EditAccount'>;
 
 type FormData = {
 	accountName: string;
-	category: string;
+	categoryId: string;
 	webSite: string;
 	username: string;
 	password: string;
@@ -45,7 +45,8 @@ export default function EditAccountPage() {
 	const route = useRoute<EditAccountPageRouteProp>();
 	const navigation = useNavigation<EditAccountPageNavigationProp>();
 	const { id, mode } = route.params;
-	const { getAccountDetailById } = useAccountsStore();
+	const { getAccountDetailById, fetchAccounts } = useAccountsStore();
+	const { categories, fetchCategories } = useCategoriesStore();
 	const toast = useToast();
 
 	const account = getAccountDetailById(id);
@@ -64,11 +65,13 @@ export default function EditAccountPage() {
 	});
 
 	const categoryOptions: CategoryOption[] = [
-		{ key: 'social', label: '社交', icon: 'people-outline', color: '#8b5cf6' },
-		{ key: 'work', label: '工作', icon: 'briefcase-outline', color: '#3b82f6' },
-		{ key: 'finance', label: '财务', icon: 'card-outline', color: '#10b981' },
-		{ key: 'entertainment', label: '娱乐', icon: 'game-controller-outline', color: '#f59e0b' },
-		{ key: 'other', label: '其他', icon: 'apps-outline', color: '#6b7280' },
+		{ key: '', label: '未分类', icon: 'albums-outline', color: '#64748B' },
+		...categories.map((category) => ({
+			key: category.id,
+			label: category.name,
+			icon: categoryIconMap[category.icon],
+			color: categoryColorMap[category.color],
+		})),
 	];
 
 	// 用于滚动到当前输入框的 ref
@@ -83,13 +86,17 @@ export default function EditAccountPage() {
 	} = useForm<FormData>({
 		defaultValues: {
 			accountName: account?.appName || '',
-			category: account?.category || 'other',
+			categoryId: account?.categoryId || '',
 			webSite: account?.webSite || '',
 			username: account?.username || '',
 			password: account?.password || '',
 			description: account?.description || '',
 		},
 	});
+
+	useEffect(() => {
+		fetchCategories().catch(() => toast.error('加载失败', '无法获取账号分类'));
+	}, []);
 
 	// 监听密码变化
 	const passwordValue = watch('password');
@@ -134,7 +141,7 @@ export default function EditAccountPage() {
 				password: data.password,
 				email: data?.email || '',
 				webSite: data.webSite,
-				category: data.category as AccountCategory,
+				categoryId: data.categoryId || null,
 				description: data.description || '',
 				lastUpdated: new Date().toISOString(),
 				twoFactorEnabled: false,
@@ -151,6 +158,7 @@ export default function EditAccountPage() {
 					toast.success('更新成功', '账号信息已更新');
 				}
 			}
+			await fetchAccounts();
 
 			navigation.navigate('VaultPage');
 		} catch (error) {
@@ -262,20 +270,19 @@ export default function EditAccountPage() {
 											<Text style={styles.formLabel}>账号类型</Text>
 											<Controller
 												control={control}
-												name="category"
-												rules={{ required: '账号类型不能为空' }}
+												name="categoryId"
 												render={({ field: { value, onChange } }) => (
 													<CategoryPicker
 														value={value}
 														options={categoryOptions}
 														onChange={onChange}
 														disabled={isSubmitting}
-														hasError={!!errors.category}
+														hasError={!!errors.categoryId}
 													/>
 												)}
 											/>
-											{errors.category && (
-												<Text style={styles.errorText}>{errors.category.message}</Text>
+											{errors.categoryId && (
+												<Text style={styles.errorText}>{errors.categoryId.message}</Text>
 											)}
 										</View>
 

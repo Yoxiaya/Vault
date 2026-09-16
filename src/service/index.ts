@@ -14,6 +14,17 @@ export interface ApiResponse<T = never> {
 	data?: T;
 }
 
+export class ApiError extends Error {
+	constructor(
+		message: string,
+		public readonly status: number,
+		public readonly payload?: unknown
+	) {
+		super(message);
+		this.name = 'ApiError';
+	}
+}
+
 const baseURL = 'https://vault.yoxiaya.com';
 
 let isRedirecting = false;
@@ -49,7 +60,7 @@ const request = async <T = never>(url: string, config: RequestConfig = {}): Prom
 	const payload = contentType.includes('application/json') ? await response.json() : undefined;
 
 	if (response.status === 401 && auth) notifyTokenExpired();
-	if (!response.ok) throw new Error(payload?.message || `请求失败 (${response.status})`);
+	if (!response.ok) throw new ApiError(payload?.message || `请求失败 (${response.status})`, response.status, payload);
 	return payload as ApiResponse<T>;
 };
 

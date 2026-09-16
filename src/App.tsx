@@ -11,6 +11,8 @@ import ProfilePage from './pages/ProfilePage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './components/Toast';
 import ProfileEditPage from './pages/ProfileEditPage';
+import CategoryManagementPage from './pages/CategoryManagementPage';
+import CategoryEditPage from './pages/CategoryEditPage';
 
 export type RootStackParamList = {
 	VaultPage: undefined;
@@ -21,6 +23,8 @@ export type RootStackParamList = {
 	RegisterPage: undefined;
 	ProfilePage: undefined;
 	ProfileEditPage: undefined;
+	CategoryManagementPage: undefined;
+	CategoryEditPage: { id?: string } | undefined;
 };
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -58,6 +62,8 @@ function AppNavigator() {
 					/>
 					<Stack.Screen name="ProfilePage" component={ProfilePage} options={{ title: '个人中心' }} />
 					<Stack.Screen name="ProfileEditPage" component={ProfileEditPage} />
+					<Stack.Screen name="CategoryManagementPage" component={CategoryManagementPage} />
+					<Stack.Screen name="CategoryEditPage" component={CategoryEditPage} />
 				</>
 			)}
 		</Stack.Navigator>

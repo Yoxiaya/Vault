@@ -42,6 +42,12 @@ export default function SettingsPage() {
 			title: '应用偏好',
 			items: [
 				{
+					label: '账号分类',
+					icon: 'folder-open-outline',
+					type: 'link',
+					to: 'CategoryManagementPage',
+				},
+				{
 					label: '深色模式',
 					icon: 'moon-outline',
 					type: 'switch',

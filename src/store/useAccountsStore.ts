@@ -14,8 +14,12 @@ export const useAccountsStore = create<AccountsStore>((set, get) => ({
 	loading: false,
 	fetchAccounts: async () => {
 		set({ loading: true });
-		const res = await getAccounts();
-		set({ accounts: res.data || [], loading: false });
+		try {
+			const res = await getAccounts();
+			set({ accounts: res.data || [] });
+		} finally {
+			set({ loading: false });
+		}
 	},
 	getAccountDetailById: (id: string | number) => {
 		const { accounts } = get();

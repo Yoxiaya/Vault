@@ -1,32 +1,26 @@
 import { cardStyles, colors } from '../theme';
-import React, { useEffect, useState, useMemo, useLayoutEffect } from 'react';
+import React, { useCallback, useEffect, useState, useMemo, useLayoutEffect } from 'react';
 import { Image } from 'expo-image';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SkeletonItem } from '../components/SkeletonItem';
 import { RootStackParamList } from '../App';
-import { useAccountsStore } from '../store';
+import { useAccountsStore, useCategoriesStore } from '../store';
 
 type VaultPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'VaultPage'>;
 
-// 分类映射
-const categoryMap: Record<string, string> = {
-	全部: '',
-	社交: 'social',
-	财务: 'finance',
-	娱乐: 'entertainment',
-	其他: 'other',
-};
+const ALL_CATEGORIES = 'all';
+const UNCATEGORIZED = 'uncategorized';
 
 export default function VaultPage() {
 	const navigation = useNavigation<VaultPageNavigationProp>();
 	const [searchQuery, setSearchQuery] = useState('');
-	const [activeCategory, setActiveCategory] = useState('全部');
-	const categories = ['全部', '社交', '财务', '娱乐', '其他'];
+	const [activeCategory, setActiveCategory] = useState(ALL_CATEGORIES);
 
 	const { accounts, loading, fetchAccounts } = useAccountsStore();
+	const { categories, fetchCategories } = useCategoriesStore();
 
 	useLayoutEffect(() => {
 		navigation.setOptions({
@@ -44,16 +38,29 @@ export default function VaultPage() {
 		});
 	}, [navigation]);
 
+	useFocusEffect(
+		useCallback(() => {
+			void Promise.all([fetchAccounts(), fetchCategories()]);
+		}, [fetchAccounts, fetchCategories])
+	);
+
 	useEffect(() => {
-		fetchAccounts();
-	}, []);
+		if (
+			activeCategory !== ALL_CATEGORIES &&
+			activeCategory !== UNCATEGORIZED &&
+			!categories.some((category) => category.id === activeCategory)
+		) {
+			setActiveCategory(ALL_CATEGORIES);
+		}
+	}, [activeCategory, categories]);
 
 	const filteredAccounts = useMemo(() => {
 		let filtered = [...accounts];
 
-		if (activeCategory !== '全部') {
-			const categoryValue = categoryMap[activeCategory];
-			filtered = filtered.filter((account) => account.category === categoryValue);
+		if (activeCategory === UNCATEGORIZED) {
+			filtered = filtered.filter((account) => account.categoryId === null);
+		} else if (activeCategory !== ALL_CATEGORIES) {
+			filtered = filtered.filter((account) => account.categoryId === activeCategory);
 		}
 
 		if (searchQuery.trim()) {
@@ -93,14 +100,14 @@ export default function VaultPage() {
 						<Ionicons name="key-outline" size={48} color="#d1d5db" />
 					</View>
 					<Text style={styles.emptyTitle}>
-						{searchQuery || activeCategory !== '全部' ? '没有匹配的账户' : '你的保险库，从这里开始'}
+						{searchQuery || activeCategory !== ALL_CATEGORIES ? '没有匹配的账户' : '你的保险库，从这里开始'}
 					</Text>
 					<Text style={styles.emptyDescription}>
-						{searchQuery || activeCategory !== '全部'
+						{searchQuery || activeCategory !== ALL_CATEGORIES
 							? '没有找到匹配的账户'
 							: '点击右上角 + 添加第一个账户'}
 					</Text>
-					{!searchQuery && activeCategory === '全部' && (
+					{!searchQuery && activeCategory === ALL_CATEGORIES && (
 						<TouchableOpacity
 							accessibilityRole="button"
 							style={styles.emptyAction}
@@ -183,16 +190,28 @@ export default function VaultPage() {
 					style={styles.categoryContainer}
 					contentContainerStyle={styles.categoryContent}
 				>
-					{categories.map((cat) => (
+					{[
+						{ id: ALL_CATEGORIES, name: '全部' },
+						...categories.map((category) => ({ id: category.id, name: category.name })),
+						{ id: UNCATEGORIZED, name: '未分类' },
+					].map((category) => (
 						<TouchableOpacity
-							key={cat}
+							key={category.id}
 							accessibilityRole="button"
-							accessibilityState={{ selected: activeCategory === cat }}
-							onPress={() => setActiveCategory(cat)}
-							style={[styles.categoryButton, activeCategory === cat && styles.activeCategoryButton]}
+							accessibilityState={{ selected: activeCategory === category.id }}
+							onPress={() => setActiveCategory(category.id)}
+							style={[
+								styles.categoryButton,
+								activeCategory === category.id && styles.activeCategoryButton,
+							]}
 						>
-							<Text style={[styles.categoryText, activeCategory === cat && styles.activeCategoryText]}>
-								{cat}
+							<Text
+								style={[
+									styles.categoryText,
+									activeCategory === category.id && styles.activeCategoryText,
+								]}
+							>
+								{category.name}
 							</Text>
 						</TouchableOpacity>
 					))}
@@ -207,13 +226,13 @@ export default function VaultPage() {
 						/ {loading ? '加载中' : `${filteredAccounts.length} 个账户`}
 					</Text>
 				</Text>
-				{searchQuery || activeCategory !== '全部' ? (
+				{searchQuery || activeCategory !== ALL_CATEGORIES ? (
 					<TouchableOpacity
 						accessibilityRole="button"
 						style={styles.resetButton}
 						onPress={() => {
 							setSearchQuery('');
-							setActiveCategory('全部');
+							setActiveCategory(ALL_CATEGORIES);
 						}}
 					>
 						<Text style={styles.clearFilterText}>清除筛选</Text>

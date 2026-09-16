@@ -8,6 +8,7 @@ import {
 	StyleSheet,
 	useWindowDimensions,
 	Pressable,
+	ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { cardStyles } from '../theme';
@@ -123,13 +124,13 @@ export default function CategoryPicker({
 					{/* 面板 — 从下方滑入 */}
 					<Animated.View style={[styles.sheet, { transform: [{ translateY: sheetTranslateY }] }]}>
 						<View style={styles.sheetHeader}>
-							<Text style={styles.sheetTitle}>选择账号类型</Text>
+							<Text style={styles.sheetTitle}>选择账号分类</Text>
 							<TouchableOpacity style={styles.closeBtn} onPress={() => close()}>
 								<Ionicons name="close" size={22} color="#6b7280" />
 							</TouchableOpacity>
 						</View>
 
-						<View style={styles.grid}>
+						<ScrollView contentContainerStyle={styles.grid} showsVerticalScrollIndicator={false}>
 							{options.map((opt) => {
 								const isActive = opt.key === value;
 								return (
@@ -171,7 +172,7 @@ export default function CategoryPicker({
 							{Array.from({ length: (3 - (options.length % 3)) % 3 }).map((_, i) => (
 								<View key={`spacer-${i}`} style={[styles.card, { width: cardWidth, opacity: 0 }]} />
 							))}
-						</View>
+						</ScrollView>
 					</Animated.View>
 				</View>
 			</Modal>
