@@ -19,7 +19,6 @@ import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../App';
 import { useAccountsStore, useCategoriesStore } from '../store';
-import { addAccount, updateAccount } from '../service/api';
 import { calculatePasswordStrength } from '../utils';
 import { LoadingMask } from '../components/Mask';
 import PasswordStrengthIndicator from '../components/PasswordStrengthIndicator';
@@ -45,7 +44,7 @@ export default function EditAccountPage() {
 	const route = useRoute<EditAccountPageRouteProp>();
 	const navigation = useNavigation<EditAccountPageNavigationProp>();
 	const { id, mode } = route.params;
-	const { getAccountDetailById, fetchAccounts } = useAccountsStore();
+	const { getAccountDetailById, addAccount, updateAccount } = useAccountsStore();
 	const { categories, fetchCategories } = useCategoriesStore();
 	const toast = useToast();
 
@@ -148,17 +147,12 @@ export default function EditAccountPage() {
 			};
 
 			if (mode === 'add') {
-				const { success } = await addAccount(baseAccountData);
-				if (success) {
-					toast.success('添加成功', '账号已添加到 Vault');
-				}
+				await addAccount(baseAccountData);
+				toast.success('添加成功', '账号已添加到 Vault');
 			} else if (mode === 'edit' && account) {
-				const { success } = await updateAccount(id, baseAccountData);
-				if (success) {
-					toast.success('更新成功', '账号信息已更新');
-				}
+				await updateAccount(id, baseAccountData);
+				toast.success('更新成功', '账号信息已更新');
 			}
-			await fetchAccounts();
 
 			navigation.navigate('VaultPage');
 		} catch (error) {

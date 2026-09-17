@@ -1,6 +1,6 @@
 import { useState, useEffect, createContext, ReactNode, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useUserInfoStore } from '@/store';
+import { useAccountsStore, useUserInfoStore, useVaultStore } from '@/store';
 import { eventBus, EventName, isTokenExpired, extractUserFromJwt } from '@/utils';
 
 type User = {
@@ -21,7 +21,7 @@ type SignInData = {
 
 interface AuthContextValue {
 	user: User | null;
-	signIn: (userData: SignInData) => Promise<void>;
+	signIn: (userData: SignInData, masterPassword: string) => Promise<void>;
 	signOut: () => Promise<void>;
 	isLoading: boolean;
 	isReady: boolean;
@@ -36,6 +36,7 @@ const AuthContext = createContext<AuthContextValue>({
 
 export function AuthProvider({ children }: { children: ReactNode }) {
 	const { fetchUserInfo } = useUserInfoStore();
+	const initializeVault = useVaultStore((state) => state.initializeWithPassword);
 	const [user, setUser] = useState<User | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [isReady, setIsReady] = useState(false);
@@ -68,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		}
 	};
 
-	const signIn = async (userData: SignInData) => {
+	const signIn = async (userData: SignInData, masterPassword: string) => {
 		// 从 JWT 中解码用户信息
 		const jwtUser = extractUserFromJwt(userData.token);
 		const fullUser: User = {
@@ -80,9 +81,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		setUser(fullUser);
 		await AsyncStorage.setItem('token', userData.token);
 		await fetchUserInfo();
+		try {
+			await initializeVault(masterPassword);
+		} catch {
+			// 登录密码与主密码可以不同；保留登录态，交由解锁页重试。
+		}
 	};
 
 	const signOut = async () => {
+		useAccountsStore.getState().clearAccounts();
+		useVaultStore.getState().lock();
 		setUser(null);
 		await AsyncStorage.removeItem('token');
 	};

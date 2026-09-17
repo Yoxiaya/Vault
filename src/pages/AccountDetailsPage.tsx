@@ -9,7 +9,6 @@ import * as Clipboard from 'expo-clipboard';
 import { RootStackParamList } from '../App';
 import { Account } from '../type';
 import { useAccountsStore } from '../store';
-import { deleteAccount, uploadAccountLogo } from '../service/api';
 import PasswordStrengthIndicator from '../components/PasswordStrengthIndicator';
 import { useToast } from '../components/Toast';
 import { cardStyles, colors } from '../theme';
@@ -36,7 +35,7 @@ export default function AccountDetailsPage() {
 	const [account, setAccount] = useState<Account>();
 	const [passwordVisible, setPasswordVisible] = useState(false);
 	const [isLogoUploading, setIsLogoUploading] = useState(false);
-	const { getAccountDetailById, fetchAccounts } = useAccountsStore();
+	const { getAccountDetailById, deleteAccount, uploadAccountLogo } = useAccountsStore();
 
 	// 复制到剪贴板的通用函数
 	const copyToClipboard = async (text: string, type: string) => {
@@ -73,12 +72,9 @@ export default function AccountDetailsPage() {
 
 		setIsLogoUploading(true);
 		try {
-			const response = await uploadAccountLogo(id, formData);
-			const logoUrl = response.data?.logoUrl;
-			if (!response.success || !logoUrl) throw new Error('上传接口未返回图标地址');
+			const logoUrl = await uploadAccountLogo(id, formData);
 
 			setAccount((current) => (current ? { ...current, logoUrl } : current));
-			await fetchAccounts();
 			toast.success('修改成功', '应用图标已更新');
 		} catch (error) {
 			console.error('图标上传失败:', error);

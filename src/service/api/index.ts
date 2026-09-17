@@ -1,5 +1,13 @@
 import request, { ApiResponse } from '../index';
-import { Account, AccountCategory, CategoryColor, CategoryIcon } from '../../type';
+import {
+	Account,
+	AccountCategory,
+	CategoryColor,
+	CategoryIcon,
+	EncryptedAccountPayload,
+	EncryptedAccountResponse,
+} from '../../type';
+import type { VaultMetadata } from 'vault-cryption';
 
 export interface PublicUser {
 	id: number;
@@ -26,18 +34,28 @@ export interface CategoryPayload {
 	color: CategoryColor;
 }
 
-export const getAccounts = (): Promise<ApiResponse<Account[]>> => request('/vault-accounts');
-export const getAccount = (id: string | number): Promise<ApiResponse<Account>> => request(`/vault-accounts/${id}`);
-export const addAccount = (data: AccountPayload): Promise<ApiResponse> =>
+export const getAccounts = (): Promise<ApiResponse<Array<Account | EncryptedAccountResponse>>> =>
+	request('/vault-accounts');
+export const getAccount = (id: string | number): Promise<ApiResponse<Account | EncryptedAccountResponse>> =>
+	request(`/vault-accounts/${id}`);
+export const addAccount = (data: EncryptedAccountPayload): Promise<ApiResponse<EncryptedAccountResponse>> =>
 	request('/vault-accounts', { method: 'POST', data });
-export const updateAccount = (id: string | number, data: Partial<AccountPayload>): Promise<ApiResponse> =>
-	request(`/vault-accounts/${id}`, { method: 'PUT', data });
+export const updateAccount = (
+	id: string | number,
+	data: EncryptedAccountPayload
+): Promise<ApiResponse<EncryptedAccountResponse>> => request(`/vault-accounts/${id}`, { method: 'PUT', data });
 export const deleteAccount = (id: string | number): Promise<ApiResponse> =>
 	request(`/vault-accounts/${id}`, { method: 'DELETE' });
 export const uploadAccountLogo = (id: string | number, data: FormData): Promise<ApiResponse<{ logoUrl: string }>> =>
 	request(`/vault-accounts/${id}/image`, { method: 'POST', data });
 export const uploadImage = (data: FormData): Promise<ApiResponse<{ url: string }>> =>
 	request('/images', { method: 'POST', data });
+
+export const getVaultMetadata = (): Promise<ApiResponse<VaultMetadata | null>> => request('/vault-metadata');
+export const createVaultMetadata = (data: VaultMetadata): Promise<ApiResponse<VaultMetadata>> =>
+	request('/vault-metadata', { method: 'POST', data });
+export const updateVaultWrappedKey = (data: VaultMetadata): Promise<ApiResponse<VaultMetadata>> =>
+	request('/vault-metadata/wrapped-key', { method: 'PUT', data });
 
 export const getCategories = (): Promise<ApiResponse<AccountCategory[]>> => request('/vault-categories');
 export const createCategory = (data: CategoryPayload): Promise<ApiResponse<AccountCategory>> =>

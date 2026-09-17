@@ -13,6 +13,8 @@ import { ToastProvider } from './components/Toast';
 import ProfileEditPage from './pages/ProfileEditPage';
 import CategoryManagementPage from './pages/CategoryManagementPage';
 import CategoryEditPage from './pages/CategoryEditPage';
+import UnlockPage from './pages/UnlockPage';
+import { useVaultStore } from './store';
 
 export type RootStackParamList = {
 	VaultPage: undefined;
@@ -21,6 +23,7 @@ export type RootStackParamList = {
 	LoginPage: undefined;
 	SettingsPage: undefined;
 	RegisterPage: undefined;
+	UnlockPage: undefined;
 	ProfilePage: undefined;
 	ProfileEditPage: undefined;
 	CategoryManagementPage: undefined;
@@ -30,6 +33,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 function AppNavigator() {
 	const { user, isLoading, isReady } = useAuth();
+	const isUnlocked = useVaultStore((state) => state.dek !== null);
 
 	if (isLoading || !isReady) {
 		return <View style={{ flex: 1, backgroundColor: '#ffffff' }} />;
@@ -47,6 +51,8 @@ function AppNavigator() {
 					<Stack.Screen name="LoginPage" component={LoginPage} options={{ headerShown: false }} />
 					<Stack.Screen name="RegisterPage" component={RegisterPage} options={{ title: '注册' }} />
 				</>
+			) : !isUnlocked ? (
+				<Stack.Screen name="UnlockPage" component={UnlockPage} options={{ headerShown: false }} />
 			) : (
 				<>
 					<Stack.Screen name="VaultPage" component={MainTabs} options={{ headerShown: false }} />

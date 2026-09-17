@@ -14,6 +14,28 @@ export interface Account {
 	userId: number;
 }
 
+export interface AccountSecret {
+	username: string;
+	password?: string;
+	email?: string | null;
+	webSite?: string | null;
+	twoFactorEnabled?: boolean | null;
+	description?: string | null;
+}
+
+export interface EncryptedAccountPayload {
+	appName: string;
+	categoryId: string | null;
+	lastUpdated?: string | null;
+	encryptedData: import('vault-cryption').EncryptedRecord;
+}
+
+export interface EncryptedAccountResponse extends EncryptedAccountPayload {
+	id: string | number;
+	logoUrl?: string | null;
+	logoImageId?: string | number | null;
+}
+
 export type CategoryIcon =
 	| 'share'
 	| 'briefcase'
