@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
@@ -10,7 +10,7 @@ import { uploadProfileAvatar } from '../service/api';
 import LoadingOverlay from '../components/LoadingOverlay';
 import { useToast } from '../components/Toast';
 import { useUserInfoStore } from '../store';
-import { cardStyles } from '../theme';
+import { ThemeColors, useAppTheme } from '../theme';
 
 type ProfilePageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'ProfilePage'>;
 
@@ -18,6 +18,8 @@ export default function ProfilePage() {
 	const navigation = useNavigation<ProfilePageNavigationProp>();
 	const { userInfo, loading, fetchUserInfo } = useUserInfoStore();
 	const toast = useToast();
+	const { colors } = useAppTheme();
+	const styles = useMemo(() => createStyles(colors), [colors]);
 	const [isLoading, setIsLoading] = useState(false);
 
 	const [securityInfo, setSecurityInfo] = useState({
@@ -67,7 +69,7 @@ export default function ProfilePage() {
 						style={styles.avatar}
 					/>
 				) : null}
-				<Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+				<Ionicons name="chevron-forward" size={20} color={colors.muted} />
 			</View>
 		</TouchableOpacity>
 	);
@@ -94,7 +96,7 @@ export default function ProfilePage() {
 							{renderMenuRow('受信任设备', securityInfo.trustedDevices)}
 							<TouchableOpacity style={styles.menuRow} activeOpacity={0.7}>
 								<View style={styles.menuRowWithIcon}>
-									<Ionicons name="shield-checkmark" size={20} color="#6b7280" />
+									<Ionicons name="shield-checkmark" size={20} color={colors.muted} />
 									<Text style={styles.menuTitle}>双重身份验证</Text>
 								</View>
 								<View style={styles.menuRowRight}>
@@ -102,7 +104,7 @@ export default function ProfilePage() {
 										<View style={styles.statusDot} />
 										<Text style={styles.statusText}>已开启</Text>
 									</View>
-									<Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+									<Ionicons name="chevron-forward" size={20} color={colors.muted} />
 								</View>
 							</TouchableOpacity>
 						</View>
@@ -114,10 +116,10 @@ export default function ProfilePage() {
 	);
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: '#ffffff',
+		backgroundColor: colors.page,
 	},
 
 	scrollView: {
@@ -140,14 +142,17 @@ const styles = StyleSheet.create({
 	sectionTitle: {
 		fontSize: 10,
 		fontWeight: 'bold',
-		color: '#6b7280',
+		color: colors.muted,
 		textTransform: 'uppercase',
 		letterSpacing: 1,
 		marginBottom: 12,
 		paddingLeft: 8,
 	},
 	card: {
-		...cardStyles.base,
+		backgroundColor: colors.card,
+		borderRadius: 16,
+		borderWidth: 1,
+		borderColor: colors.border,
 		overflow: 'hidden',
 	},
 	menuRow: {
@@ -156,7 +161,7 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 		padding: 16,
 		borderBottomWidth: 1,
-		borderBottomColor: '#e5e7eb',
+		borderBottomColor: colors.border,
 	},
 	menuRowWithIcon: {
 		flexDirection: 'row',
@@ -165,7 +170,7 @@ const styles = StyleSheet.create({
 	menuTitle: {
 		fontSize: 16,
 		fontWeight: '500',
-		color: '#1f2937',
+		color: colors.text,
 		marginLeft: 12,
 	},
 	menuRowRight: {
@@ -174,7 +179,7 @@ const styles = StyleSheet.create({
 	},
 	menuValue: {
 		fontSize: 14,
-		color: '#6b7280',
+		color: colors.muted,
 		marginRight: 8,
 	},
 	twoFactorStatus: {
@@ -186,12 +191,12 @@ const styles = StyleSheet.create({
 		width: 8,
 		height: 8,
 		borderRadius: 4,
-		backgroundColor: '#3b82f6',
+		backgroundColor: colors.primary,
 		marginRight: 6,
 	},
 	statusText: {
 		fontSize: 14,
-		color: '#3b82f6',
+		color: colors.primary,
 		fontWeight: '500',
 	},
 });

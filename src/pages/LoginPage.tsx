@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
 	View,
 	Text,
@@ -19,6 +19,7 @@ import { login } from '../service/api';
 import { useAuth } from '../context/AuthContext';
 import { useForm, Controller } from 'react-hook-form';
 import { useToast } from '../components/Toast';
+import { ThemeColors, useAppTheme } from '../theme';
 
 type LoginPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'LoginPage'>;
 
@@ -32,6 +33,8 @@ const LoginScreen = () => {
 	const insets = useSafeAreaInsets();
 	const { signIn } = useAuth();
 	const toast = useToast();
+	const { colors, isDark } = useAppTheme();
+	const styles = useMemo(() => createStyles(colors), [colors]);
 	const [showPassword, setShowPassword] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
 
@@ -70,7 +73,7 @@ const LoginScreen = () => {
 
 	return (
 		<View style={[styles.container, { paddingTop: insets.top }]}>
-			<StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+			<StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.page} />
 			<KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardView}>
 				<View style={styles.contentContainer}>
 					{/* 头部区域：登录标题 + 欢迎小字 */}
@@ -98,13 +101,13 @@ const LoginScreen = () => {
 											<Ionicons
 												name="person-outline"
 												size={20}
-												color="#9ca3af"
+												color={colors.muted}
 												style={styles.inputLeftIcon}
 											/>
 											<TextInput
 												style={styles.input}
 												placeholder="账号/邮箱"
-												placeholderTextColor="#9ca3af"
+												placeholderTextColor={colors.muted}
 												value={value}
 												onChangeText={onChange}
 												onBlur={onBlur}
@@ -137,13 +140,13 @@ const LoginScreen = () => {
 											<Ionicons
 												name="lock-closed-outline"
 												size={20}
-												color="#9ca3af"
+												color={colors.muted}
 												style={styles.inputLeftIcon}
 											/>
 											<TextInput
 												style={[styles.input, styles.passwordInput]}
 												placeholder="密码"
-												placeholderTextColor="#9ca3af"
+												placeholderTextColor={colors.muted}
 												value={value}
 												onChangeText={onChange}
 												onBlur={onBlur}
@@ -159,7 +162,7 @@ const LoginScreen = () => {
 												<Ionicons
 													name={showPassword ? 'eye-off-outline' : 'eye-outline'}
 													size={20}
-													color="#9ca3af"
+													color={colors.muted}
 												/>
 											</TouchableOpacity>
 										</View>
@@ -197,10 +200,10 @@ const LoginScreen = () => {
 	);
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: '#ffffff',
+		backgroundColor: colors.page,
 	},
 	keyboardView: {
 		flex: 1,
@@ -217,12 +220,12 @@ const styles = StyleSheet.create({
 	loginTitle: {
 		fontSize: 34,
 		fontWeight: '700',
-		color: '#1f2937',
+		color: colors.text,
 		marginBottom: 8,
 	},
 	welcomeText: {
 		fontSize: 14,
-		color: '#9ca3af', // 灰色，不突出
+		color: colors.muted,
 	},
 	// 表单区域
 	formWrapper: {
@@ -235,14 +238,14 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		alignItems: 'center',
 		borderWidth: 1,
-		borderColor: '#e5e7eb',
+		borderColor: colors.border,
 		borderRadius: 12,
-		backgroundColor: '#f9fafb',
+		backgroundColor: colors.surface,
 		height: 48,
 	},
 	inputContainerError: {
 		borderColor: '#ef4444',
-		backgroundColor: '#fef2f2',
+		backgroundColor: colors.surface,
 	},
 	inputLeftIcon: {
 		marginLeft: 16,
@@ -251,7 +254,7 @@ const styles = StyleSheet.create({
 	input: {
 		flex: 1,
 		fontSize: 16,
-		color: '#1f2937',
+		color: colors.text,
 		paddingVertical: 12,
 		paddingRight: 16,
 	},
@@ -270,13 +273,13 @@ const styles = StyleSheet.create({
 		marginLeft: 12,
 	},
 	loginButton: {
-		backgroundColor: '#3b82f6',
+		backgroundColor: colors.primary,
 		borderRadius: 24,
 		height: 52,
 		justifyContent: 'center',
 		alignItems: 'center',
 		marginTop: 8,
-		shadowColor: '#3b82f6',
+		shadowColor: colors.primary,
 		shadowOffset: { width: 0, height: 4 },
 		shadowOpacity: 0.2,
 		shadowRadius: 8,
@@ -294,10 +297,10 @@ const styles = StyleSheet.create({
 	},
 	signupText: {
 		fontSize: 14,
-		color: '#6b7280',
+		color: colors.muted,
 	},
 	signupLink: {
-		color: '#3b82f6',
+		color: colors.primary,
 		fontWeight: '500',
 	},
 });

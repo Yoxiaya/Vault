@@ -1,11 +1,14 @@
-import { Animated, View, StyleSheet } from 'react-native';
-import { useEffect } from 'react';
+import { Animated, StyleSheet, View } from 'react-native';
+import { useEffect, useMemo, useRef } from 'react';
+import { ThemeColors, useAppTheme } from '../theme';
 
 export const SkeletonItem = () => {
-	const animatedValue = new Animated.Value(0.3);
+	const { colors } = useAppTheme();
+	const styles = useMemo(() => createStyles(colors), [colors]);
+	const animatedValue = useRef(new Animated.Value(0.3)).current;
 
 	useEffect(() => {
-		Animated.loop(
+		const animation = Animated.loop(
 			Animated.sequence([
 				Animated.timing(animatedValue, {
 					toValue: 0.7,
@@ -18,8 +21,10 @@ export const SkeletonItem = () => {
 					useNativeDriver: true,
 				}),
 			]),
-		).start();
-	}, []);
+		);
+		animation.start();
+		return () => animation.stop();
+	}, [animatedValue]);
 
 	const opacity = animatedValue;
 
@@ -38,42 +43,44 @@ export const SkeletonItem = () => {
 		</View>
 	);
 };
-const styles = StyleSheet.create({
-	accountActions: {
-		flexDirection: 'row',
-		gap: 8,
-	},
-	accountDetails: {
-		justifyContent: 'center',
-	},
-	accountItem: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		justifyContent: 'space-between',
-		backgroundColor: '#f3f4f6',
-		borderRadius: 12,
-		padding: 20,
-	},
-	accountInfo: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		gap: 20,
-	},
-	// 骨架屏样式
-	skeletonLogo: {
-		width: 48,
-		height: 48,
-		borderRadius: 8,
-		backgroundColor: '#e5e7eb',
-	},
-	skeletonText: {
-		backgroundColor: '#e5e7eb',
-		borderRadius: 4,
-	},
-	skeletonIcon: {
-		width: 36,
-		height: 36,
-		borderRadius: 20,
-		backgroundColor: '#e5e7eb',
-	},
-});
+
+const createStyles = (colors: ThemeColors) =>
+	StyleSheet.create({
+		accountActions: {
+			flexDirection: 'row',
+			gap: 8,
+		},
+		accountDetails: {
+			justifyContent: 'center',
+		},
+		accountItem: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			justifyContent: 'space-between',
+			backgroundColor: colors.surface,
+			borderRadius: 12,
+			padding: 20,
+		},
+		accountInfo: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			gap: 20,
+		},
+		// 骨架屏样式
+		skeletonLogo: {
+			width: 48,
+			height: 48,
+			borderRadius: 8,
+			backgroundColor: colors.border,
+		},
+		skeletonText: {
+			backgroundColor: colors.border,
+			borderRadius: 4,
+		},
+		skeletonIcon: {
+			width: 36,
+			height: 36,
+			borderRadius: 20,
+			backgroundColor: colors.border,
+		},
+	});

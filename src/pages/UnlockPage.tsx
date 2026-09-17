@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
 	ActivityIndicator,
 	KeyboardAvoidingView,
@@ -13,9 +13,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useAccountsStore, useVaultStore } from '../store';
 import { useToast } from '../components/Toast';
-import { colors } from '../theme';
+import { ThemeColors, useAppTheme } from '../theme';
 
 export default function UnlockPage() {
+	const { colors } = useAppTheme();
+	const styles = useMemo(() => createStyles(colors), [colors]);
 	const { signOut } = useAuth();
 	const initializeWithPassword = useVaultStore((state) => state.initializeWithPassword);
 	const initializing = useVaultStore((state) => state.initializing);
@@ -48,7 +50,7 @@ export default function UnlockPage() {
 						value={password}
 						onChangeText={setPassword}
 						placeholder="主密码"
-						placeholderTextColor="#98A2B3"
+						placeholderTextColor={colors.muted}
 						secureTextEntry={!showPassword}
 						autoCapitalize="none"
 						onSubmitEditing={unlock}
@@ -66,7 +68,7 @@ export default function UnlockPage() {
 					onPress={unlock}
 					disabled={!password || initializing}
 				>
-					{initializing ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>解锁</Text>}
+					{initializing ? <ActivityIndicator color="white" /> : <Text style={styles.buttonText}>解锁</Text>}
 				</TouchableOpacity>
 				<TouchableOpacity style={styles.logout} onPress={signOut} disabled={initializing}>
 					<Ionicons name="log-out-outline" size={18} color={colors.muted} />
@@ -77,58 +79,59 @@ export default function UnlockPage() {
 	);
 }
 
-const styles = StyleSheet.create({
-	container: { flex: 1, justifyContent: 'center', padding: 24, backgroundColor: colors.background },
-	card: {
-		backgroundColor: colors.surface,
-		borderRadius: 20,
-		padding: 24,
-		borderWidth: 1,
-		borderColor: colors.border,
-		alignItems: 'center',
-	},
-	icon: {
-		width: 68,
-		height: 68,
-		borderRadius: 20,
-		backgroundColor: colors.primarySoft,
-		alignItems: 'center',
-		justifyContent: 'center',
-		marginBottom: 18,
-	},
-	title: { fontSize: 24, fontWeight: '700', color: colors.text, marginBottom: 8 },
-	subtitle: { fontSize: 14, lineHeight: 20, textAlign: 'center', color: colors.muted, marginBottom: 24 },
-	inputRow: { width: '100%', position: 'relative', marginBottom: 16 },
-	input: {
-		height: 52,
-		borderWidth: 1,
-		borderColor: colors.border,
-		borderRadius: 13,
-		paddingHorizontal: 16,
-		paddingRight: 50,
-		fontSize: 16,
-		color: colors.text,
-		backgroundColor: colors.background,
-	},
-	eye: {
-		position: 'absolute',
-		right: 4,
-		top: 4,
-		width: 44,
-		height: 44,
-		alignItems: 'center',
-		justifyContent: 'center',
-	},
-	button: {
-		width: '100%',
-		height: 52,
-		borderRadius: 13,
-		backgroundColor: colors.primary,
-		alignItems: 'center',
-		justifyContent: 'center',
-	},
-	disabled: { opacity: 0.55 },
-	buttonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
-	logout: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 20, padding: 8 },
-	logoutText: { color: colors.muted, fontSize: 14 },
-});
+const createStyles = (colors: ThemeColors) =>
+	StyleSheet.create({
+		container: { flex: 1, justifyContent: 'center', padding: 24, backgroundColor: colors.page },
+		card: {
+			backgroundColor: colors.surface,
+			borderRadius: 20,
+			padding: 24,
+			borderWidth: 1,
+			borderColor: colors.border,
+			alignItems: 'center',
+		},
+		icon: {
+			width: 68,
+			height: 68,
+			borderRadius: 20,
+			backgroundColor: colors.primarySoft,
+			alignItems: 'center',
+			justifyContent: 'center',
+			marginBottom: 18,
+		},
+		title: { fontSize: 24, fontWeight: '700', color: colors.text, marginBottom: 8 },
+		subtitle: { fontSize: 14, lineHeight: 20, textAlign: 'center', color: colors.muted, marginBottom: 24 },
+		inputRow: { width: '100%', position: 'relative', marginBottom: 16 },
+		input: {
+			height: 52,
+			borderWidth: 1,
+			borderColor: colors.border,
+			borderRadius: 13,
+			paddingHorizontal: 16,
+			paddingRight: 50,
+			fontSize: 16,
+			color: colors.text,
+			backgroundColor: colors.background,
+		},
+		eye: {
+			position: 'absolute',
+			right: 4,
+			top: 4,
+			width: 44,
+			height: 44,
+			alignItems: 'center',
+			justifyContent: 'center',
+		},
+		button: {
+			width: '100%',
+			height: 52,
+			borderRadius: 13,
+			backgroundColor: colors.primary,
+			alignItems: 'center',
+			justifyContent: 'center',
+		},
+		disabled: { opacity: 0.55 },
+		buttonText: { color: 'white', fontSize: 16, fontWeight: '700' },
+		logout: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 20, padding: 8 },
+		logoutText: { color: colors.muted, fontSize: 14 },
+	});

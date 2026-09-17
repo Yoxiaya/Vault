@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import {
 	View,
@@ -24,7 +24,7 @@ import { LoadingMask } from '../components/Mask';
 import PasswordStrengthIndicator from '../components/PasswordStrengthIndicator';
 import { useToast } from '../components/Toast';
 import CategoryPicker, { CategoryOption } from '../components/CategoryPicker';
-import { cardStyles, colors } from '../theme';
+import { ThemeColors, useAppTheme } from '../theme';
 import { categoryColorMap, categoryIconMap } from '../constants/category';
 
 type EditAccountPageRouteProp = RouteProp<RootStackParamList, 'EditAccount'>;
@@ -41,6 +41,8 @@ type FormData = {
 };
 
 export default function EditAccountPage() {
+	const { colors } = useAppTheme();
+	const styles = useMemo(() => createStyles(colors), [colors]);
 	const route = useRoute<EditAccountPageRouteProp>();
 	const navigation = useNavigation<EditAccountPageNavigationProp>();
 	const { id, mode } = route.params;
@@ -504,181 +506,186 @@ export default function EditAccountPage() {
 	);
 }
 
-const styles = StyleSheet.create({
-	keyboardAvoidingView: {
-		flex: 1,
-	},
-	container: {
-		flex: 1,
-		backgroundColor: colors.background,
-	},
-	scrollContent: {
-		flexGrow: 1,
-		paddingTop: 12,
-		paddingBottom: Platform.OS === 'ios' ? 40 : 20,
-	},
-	errorContainer: {
-		flex: 1,
-		justifyContent: 'center',
-		alignItems: 'center',
-	},
-	pageIntro: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		gap: 12,
-		paddingHorizontal: 20,
-		paddingVertical: 12,
-	},
-	introIcon: {
-		width: 48,
-		height: 48,
-		borderRadius: 14,
-		alignItems: 'center',
-		justifyContent: 'center',
-		backgroundColor: colors.primarySoft,
-	},
-	introContent: {
-		flex: 1,
-		gap: 3,
-	},
-	introTitle: {
-		fontSize: 20,
-		fontWeight: '700',
-		color: colors.text,
-	},
-	introDescription: {
-		fontSize: 13,
-		lineHeight: 18,
-		color: colors.muted,
-	},
-	formContainer: {
-		paddingHorizontal: 16,
-		paddingTop: 8,
-	},
-	formGrid: {
-		gap: 14,
-	},
-	sectionCard: {
-		...cardStyles.base,
-		padding: 16,
-		gap: 18,
-	},
-	sectionHeading: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		gap: 8,
-	},
-	sectionTitle: {
-		fontSize: 16,
-		fontWeight: '700',
-		color: colors.text,
-	},
-	sectionFields: {
-		gap: 18,
-	},
-	formGroup: {
-		gap: 8,
-	},
-	fullWidth: {
-		width: '100%',
-	},
-	formLabel: {
-		fontSize: 13,
-		fontWeight: '600',
-		color: colors.muted,
-	},
-	formInput: {
-		backgroundColor: colors.surface,
-		borderRadius: 12,
-		borderWidth: 1,
-		borderColor: colors.border,
-		minHeight: 52,
-		paddingVertical: 13,
-		paddingLeft: 16,
-		paddingRight: 44,
-		fontSize: 16,
-		color: colors.text,
-	},
-	textArea: {
-		backgroundColor: colors.surface,
-		borderRadius: 12,
-		borderWidth: 1,
-		borderColor: colors.border,
-		paddingVertical: 12,
-		paddingHorizontal: 16,
-		fontSize: 16,
-		color: colors.text,
-		minHeight: 100,
-		textAlignVertical: 'top',
-	},
-	inputWithIcon: {
-		position: 'relative',
-	},
-	inputIcon: {
-		position: 'absolute',
-		right: 16,
-		top: 16,
-	},
-	passwordActions: {
-		position: 'absolute',
-		right: 6,
-		top: 4,
-		width: 44,
-		height: 44,
-		alignItems: 'center',
-		justifyContent: 'center',
-		flexDirection: 'row',
-		gap: 12,
-	},
-	actionsContainer: {
-		flexDirection: 'row',
-		gap: 12,
-		padding: 16,
-		paddingBottom: 32,
-		marginBottom: Platform.OS === 'ios' ? 20 : 0,
-	},
-	primaryButton: {
-		flex: 1,
-		flexDirection: 'row',
-		alignItems: 'center',
-		justifyContent: 'center',
-		gap: 8,
-		backgroundColor: '#3b82f6',
-		minHeight: 52,
-		borderRadius: 14,
-		padding: 14,
-	},
-	primaryButtonText: {
-		fontSize: 16,
-		fontWeight: '600',
-		color: 'white',
-	},
-	secondaryButton: {
-		flex: 1,
-		alignItems: 'center',
-		justifyContent: 'center',
-		backgroundColor: colors.surface,
-		borderRadius: 14,
-		borderWidth: 1,
-		borderColor: colors.border,
-		minHeight: 52,
-		padding: 14,
-	},
-	secondaryButtonText: {
-		fontSize: 16,
-		fontWeight: '500',
-		color: '#4b5563',
-	},
-	inputError: {
-		borderColor: '#ef4444',
-		borderWidth: 1,
-	},
-	errorText: {
-		fontSize: 12,
-		color: '#ef4444',
-		marginTop: 4,
-	},
-	disabledButton: {
-		opacity: 0.6,
-	},
-});
+const createStyles = (colors: ThemeColors) =>
+	StyleSheet.create({
+		keyboardAvoidingView: {
+			flex: 1,
+		},
+		container: {
+			flex: 1,
+			backgroundColor: colors.page,
+		},
+		scrollContent: {
+			flexGrow: 1,
+			paddingTop: 12,
+			paddingBottom: Platform.OS === 'ios' ? 40 : 20,
+		},
+		errorContainer: {
+			flex: 1,
+			justifyContent: 'center',
+			alignItems: 'center',
+			backgroundColor: colors.page,
+		},
+		pageIntro: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			gap: 12,
+			paddingHorizontal: 20,
+			paddingVertical: 12,
+		},
+		introIcon: {
+			width: 48,
+			height: 48,
+			borderRadius: 14,
+			alignItems: 'center',
+			justifyContent: 'center',
+			backgroundColor: colors.primarySoft,
+		},
+		introContent: {
+			flex: 1,
+			gap: 3,
+		},
+		introTitle: {
+			fontSize: 20,
+			fontWeight: '700',
+			color: colors.text,
+		},
+		introDescription: {
+			fontSize: 13,
+			lineHeight: 18,
+			color: colors.muted,
+		},
+		formContainer: {
+			paddingHorizontal: 16,
+			paddingTop: 8,
+		},
+		formGrid: {
+			gap: 14,
+		},
+		sectionCard: {
+			backgroundColor: colors.card,
+			borderColor: colors.border,
+			borderWidth: 1,
+			borderRadius: 16,
+			padding: 16,
+			gap: 18,
+		},
+		sectionHeading: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			gap: 8,
+		},
+		sectionTitle: {
+			fontSize: 16,
+			fontWeight: '700',
+			color: colors.text,
+		},
+		sectionFields: {
+			gap: 18,
+		},
+		formGroup: {
+			gap: 8,
+		},
+		fullWidth: {
+			width: '100%',
+		},
+		formLabel: {
+			fontSize: 13,
+			fontWeight: '600',
+			color: colors.muted,
+		},
+		formInput: {
+			backgroundColor: colors.surface,
+			borderRadius: 12,
+			borderWidth: 1,
+			borderColor: colors.border,
+			minHeight: 52,
+			paddingVertical: 13,
+			paddingLeft: 16,
+			paddingRight: 44,
+			fontSize: 16,
+			color: colors.text,
+		},
+		textArea: {
+			backgroundColor: colors.surface,
+			borderRadius: 12,
+			borderWidth: 1,
+			borderColor: colors.border,
+			paddingVertical: 12,
+			paddingHorizontal: 16,
+			fontSize: 16,
+			color: colors.text,
+			minHeight: 100,
+			textAlignVertical: 'top',
+		},
+		inputWithIcon: {
+			position: 'relative',
+		},
+		inputIcon: {
+			position: 'absolute',
+			right: 16,
+			top: 16,
+		},
+		passwordActions: {
+			position: 'absolute',
+			right: 6,
+			top: 4,
+			width: 44,
+			height: 44,
+			alignItems: 'center',
+			justifyContent: 'center',
+			flexDirection: 'row',
+			gap: 12,
+		},
+		actionsContainer: {
+			flexDirection: 'row',
+			gap: 12,
+			padding: 16,
+			paddingBottom: 32,
+			marginBottom: Platform.OS === 'ios' ? 20 : 0,
+		},
+		primaryButton: {
+			flex: 1,
+			flexDirection: 'row',
+			alignItems: 'center',
+			justifyContent: 'center',
+			gap: 8,
+			backgroundColor: colors.primary,
+			minHeight: 52,
+			borderRadius: 14,
+			padding: 14,
+		},
+		primaryButtonText: {
+			fontSize: 16,
+			fontWeight: '600',
+			color: 'white',
+		},
+		secondaryButton: {
+			flex: 1,
+			alignItems: 'center',
+			justifyContent: 'center',
+			backgroundColor: colors.surface,
+			borderRadius: 14,
+			borderWidth: 1,
+			borderColor: colors.border,
+			minHeight: 52,
+			padding: 14,
+		},
+		secondaryButtonText: {
+			fontSize: 16,
+			fontWeight: '500',
+			color: colors.text,
+		},
+		inputError: {
+			borderColor: '#ef4444',
+			borderWidth: 1,
+		},
+		errorText: {
+			fontSize: 12,
+			color: '#ef4444',
+			marginTop: 4,
+		},
+		disabledButton: {
+			opacity: 0.6,
+		},
+	});

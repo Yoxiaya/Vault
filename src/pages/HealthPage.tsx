@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { cardStyles } from '../theme';
+import { ThemeColors, useAppTheme } from '../theme';
 
 export default function HealthPage() {
+	const { colors } = useAppTheme();
+	const styles = useMemo(() => createStyles(colors), [colors]);
 	const stats = [
 		{
 			label: '泄露账户',
@@ -45,7 +47,11 @@ export default function HealthPage() {
 	];
 
 	return (
-		<ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+		<ScrollView
+			style={styles.container}
+			contentContainerStyle={styles.content}
+			showsVerticalScrollIndicator={false}
+		>
 			{/* Hero Section */}
 			<View style={styles.heroSection}>
 				<View style={styles.heroContent}>
@@ -116,14 +122,14 @@ export default function HealthPage() {
 					</View>
 					<TouchableOpacity style={styles.viewAllButton}>
 						<Text style={styles.viewAllText}>查看全部</Text>
-						<Ionicons name="arrow-forward" size={16} color="#3b82f6" />
+						<Ionicons name="arrow-forward" size={16} color={colors.primary} />
 					</TouchableOpacity>
 				</View>
 				<View style={styles.logsList}>
 					{logs.map((log, index) => (
 						<TouchableOpacity key={index} style={styles.logItem}>
 							<View style={styles.logIcon}>
-								<Ionicons name={log.icon as any} size={24} color="#3b82f6" />
+								<Ionicons name={log.icon as any} size={24} color={colors.primary} />
 							</View>
 							<View style={styles.logContent}>
 								<Text style={styles.logTitle}>{log.title}</Text>
@@ -138,229 +144,237 @@ export default function HealthPage() {
 	);
 }
 
-const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		backgroundColor: '#ffffff',
-	},
-	heroSection: {
-		flexDirection: 'row',
-		padding: 16,
-		gap: 24,
-		alignItems: 'center',
-	},
-	heroContent: {
-		flex: 1,
-		gap: 16,
-	},
-	heroTitle: {
-		fontSize: 32,
-		fontWeight: 'bold',
-		color: '#1f2937',
-	},
-	heroDescription: {
-		fontSize: 14,
-		color: '#6b7280',
-		lineHeight: 20,
-	},
-	heroButton: {
-		backgroundColor: '#3b82f6',
-		borderRadius: 24,
-		paddingVertical: 12,
-		paddingHorizontal: 24,
-		alignSelf: 'flex-start',
-		shadowColor: '#000',
-		shadowOffset: {
-			width: 0,
-			height: 4,
+const createStyles = (colors: ThemeColors) =>
+	StyleSheet.create({
+		container: {
+			flex: 1,
+			backgroundColor: colors.page,
 		},
-		shadowOpacity: 0.2,
-		shadowRadius: 4,
-		elevation: 5,
-	},
-	heroButtonText: {
-		fontSize: 14,
-		fontWeight: '600',
-		color: 'white',
-	},
-	securityScoreContainer: {
-		alignItems: 'center',
-	},
-	scoreCircle: {
-		width: 256,
-		height: 256,
-		borderRadius: 128,
-		backgroundColor: '#f3f4f6',
-		justifyContent: 'center',
-		alignItems: 'center',
-		borderWidth: 1,
-		borderColor: '#e5e7eb',
-		shadowColor: '#000',
-		shadowOffset: {
-			width: 0,
-			height: 4,
+		content: { paddingBottom: 112 },
+		heroSection: {
+			flexDirection: 'row',
+			padding: 16,
+			gap: 24,
+			alignItems: 'center',
 		},
-		shadowOpacity: 0.05,
-		shadowRadius: 8,
-		elevation: 2,
-	},
-	scoreCircleBackground: {
-		position: 'absolute',
-		width: 224,
-		height: 224,
-		borderRadius: 112,
-		borderWidth: 12,
-		borderColor: '#f9fafb',
-	},
-	scoreCircleProgress: {
-		position: 'absolute',
-		width: 224,
-		height: 224,
-		borderRadius: 112,
-		borderWidth: 12,
-		borderColor: '#3b82f6',
-		borderTopColor: 'transparent',
-		borderRightColor: 'transparent',
-		borderBottomColor: 'transparent',
-		transform: [{ rotate: '-45deg' }],
-	},
-	scoreTextContainer: {
-		alignItems: 'center',
-	},
-	scoreValue: {
-		fontSize: 48,
-		fontWeight: 'bold',
-		color: '#3b82f6',
-	},
-	scoreLabel: {
-		fontSize: 12,
-		fontWeight: '500',
-		color: '#6b7280',
-		textTransform: 'uppercase',
-		letterSpacing: 1,
-	},
-	statsSection: {
-		flexDirection: 'row',
-		padding: 16,
-		gap: 16,
-		flexWrap: 'wrap',
-	},
-	statCard: {
-		...cardStyles.base,
-		flex: 1,
-		minWidth: 100,
-		padding: 20,
-		gap: 16,
-	},
-	statHeader: {
-		flexDirection: 'row',
-		justifyContent: 'space-between',
-		alignItems: 'flex-start',
-	},
-	badge: {
-		paddingHorizontal: 8,
-		paddingVertical: 4,
-		borderRadius: 4,
-	},
-	defaultBadge: {
-		backgroundColor: '#f9fafb',
-	},
-	errorBadge: {
-		backgroundColor: 'rgba(239, 68, 68, 0.1)',
-	},
-	primaryBadge: {
-		backgroundColor: 'rgba(59, 130, 246, 0.2)',
-	},
-	badgeText: {
-		fontSize: 10,
-		fontWeight: 'bold',
-		textTransform: 'uppercase',
-	},
-	defaultBadgeText: {
-		color: '#4b5563',
-	},
-	errorBadgeText: {
-		color: '#ef4444',
-	},
-	primaryBadgeText: {
-		color: '#3b82f6',
-	},
-	statContent: {
-		gap: 4,
-	},
-	statValue: {
-		fontSize: 24,
-		fontWeight: 'bold',
-		color: '#1f2937',
-	},
-	statLabel: {
-		fontSize: 14,
-		color: '#6b7280',
-		fontWeight: '500',
-	},
-	logsSection: {
-		...cardStyles.base,
-		margin: 16,
-		padding: 24,
-		gap: 24,
-	},
-	logsHeader: {
-		flexDirection: 'row',
-		justifyContent: 'space-between',
-		alignItems: 'flex-end',
-	},
-	logsTitle: {
-		fontSize: 20,
-		fontWeight: 'bold',
-		color: '#1f2937',
-	},
-	logsDescription: {
-		fontSize: 14,
-		color: '#6b7280',
-	},
-	viewAllButton: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		gap: 4,
-	},
-	viewAllText: {
-		fontSize: 14,
-		fontWeight: '600',
-		color: '#3b82f6',
-	},
-	logsList: {
-		gap: 4,
-	},
-	logItem: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		gap: 16,
-		padding: 16,
-		borderRadius: 12,
-	},
-	logIcon: {
-		width: 48,
-		height: 48,
-		borderRadius: 24,
-		backgroundColor: 'rgba(59, 130, 246, 0.1)',
-		justifyContent: 'center',
-		alignItems: 'center',
-	},
-	logContent: {
-		flex: 1,
-		gap: 4,
-	},
-	logTitle: {
-		fontSize: 16,
-		fontWeight: '600',
-		color: '#1f2937',
-	},
-	logDescription: {
-		fontSize: 14,
-		color: '#6b7280',
-	},
-	logTime: {
-		fontSize: 14,
-		color: '#6b7280',
-	},
-});
+		heroContent: {
+			flex: 1,
+			gap: 16,
+		},
+		heroTitle: {
+			fontSize: 32,
+			fontWeight: 'bold',
+			color: colors.text,
+		},
+		heroDescription: {
+			fontSize: 14,
+			color: colors.muted,
+			lineHeight: 20,
+		},
+		heroButton: {
+			backgroundColor: colors.primary,
+			borderRadius: 24,
+			paddingVertical: 12,
+			paddingHorizontal: 24,
+			alignSelf: 'flex-start',
+			shadowColor: '#000',
+			shadowOffset: {
+				width: 0,
+				height: 4,
+			},
+			shadowOpacity: 0.2,
+			shadowRadius: 4,
+			elevation: 5,
+		},
+		heroButtonText: {
+			fontSize: 14,
+			fontWeight: '600',
+			color: 'white',
+		},
+		securityScoreContainer: {
+			alignItems: 'center',
+		},
+		scoreCircle: {
+			width: 256,
+			height: 256,
+			borderRadius: 128,
+			backgroundColor: colors.card,
+			justifyContent: 'center',
+			alignItems: 'center',
+			borderWidth: 1,
+			borderColor: colors.border,
+			shadowColor: '#000',
+			shadowOffset: {
+				width: 0,
+				height: 4,
+			},
+			shadowOpacity: 0.05,
+			shadowRadius: 8,
+			elevation: 2,
+		},
+		scoreCircleBackground: {
+			position: 'absolute',
+			width: 224,
+			height: 224,
+			borderRadius: 112,
+			borderWidth: 12,
+			borderColor: colors.surface,
+		},
+		scoreCircleProgress: {
+			position: 'absolute',
+			width: 224,
+			height: 224,
+			borderRadius: 112,
+			borderWidth: 12,
+			borderColor: colors.primary,
+			borderTopColor: 'transparent',
+			borderRightColor: 'transparent',
+			borderBottomColor: 'transparent',
+			transform: [{ rotate: '-45deg' }],
+		},
+		scoreTextContainer: {
+			alignItems: 'center',
+		},
+		scoreValue: {
+			fontSize: 48,
+			fontWeight: 'bold',
+			color: colors.primary,
+		},
+		scoreLabel: {
+			fontSize: 12,
+			fontWeight: '500',
+			color: colors.muted,
+			textTransform: 'uppercase',
+			letterSpacing: 1,
+		},
+		statsSection: {
+			flexDirection: 'row',
+			padding: 16,
+			gap: 16,
+			flexWrap: 'wrap',
+		},
+		statCard: {
+			backgroundColor: colors.card,
+			borderColor: colors.border,
+			borderWidth: 1,
+			borderRadius: 16,
+			flex: 1,
+			minWidth: 100,
+			padding: 20,
+			gap: 16,
+		},
+		statHeader: {
+			flexDirection: 'row',
+			justifyContent: 'space-between',
+			alignItems: 'flex-start',
+		},
+		badge: {
+			paddingHorizontal: 8,
+			paddingVertical: 4,
+			borderRadius: 4,
+		},
+		defaultBadge: {
+			backgroundColor: colors.surface,
+		},
+		errorBadge: {
+			backgroundColor: 'rgba(239, 68, 68, 0.1)',
+		},
+		primaryBadge: {
+			backgroundColor: 'rgba(59, 130, 246, 0.2)',
+		},
+		badgeText: {
+			fontSize: 10,
+			fontWeight: 'bold',
+			textTransform: 'uppercase',
+		},
+		defaultBadgeText: {
+			color: colors.muted,
+		},
+		errorBadgeText: {
+			color: '#ef4444',
+		},
+		primaryBadgeText: {
+			color: colors.primary,
+		},
+		statContent: {
+			gap: 4,
+		},
+		statValue: {
+			fontSize: 24,
+			fontWeight: 'bold',
+			color: colors.text,
+		},
+		statLabel: {
+			fontSize: 14,
+			color: colors.muted,
+			fontWeight: '500',
+		},
+		logsSection: {
+			backgroundColor: colors.card,
+			borderColor: colors.border,
+			borderWidth: 1,
+			borderRadius: 16,
+			margin: 16,
+			padding: 24,
+			gap: 24,
+		},
+		logsHeader: {
+			flexDirection: 'row',
+			justifyContent: 'space-between',
+			alignItems: 'flex-end',
+		},
+		logsTitle: {
+			fontSize: 20,
+			fontWeight: 'bold',
+			color: colors.text,
+		},
+		logsDescription: {
+			fontSize: 14,
+			color: colors.muted,
+		},
+		viewAllButton: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			gap: 4,
+		},
+		viewAllText: {
+			fontSize: 14,
+			fontWeight: '600',
+			color: colors.primary,
+		},
+		logsList: {
+			gap: 4,
+		},
+		logItem: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			gap: 16,
+			padding: 16,
+			borderRadius: 12,
+		},
+		logIcon: {
+			width: 48,
+			height: 48,
+			borderRadius: 24,
+			backgroundColor: colors.primarySoft,
+			justifyContent: 'center',
+			alignItems: 'center',
+		},
+		logContent: {
+			flex: 1,
+			gap: 4,
+		},
+		logTitle: {
+			fontSize: 16,
+			fontWeight: '600',
+			color: colors.text,
+		},
+		logDescription: {
+			fontSize: 14,
+			color: colors.muted,
+		},
+		logTime: {
+			fontSize: 14,
+			color: colors.muted,
+		},
+	});

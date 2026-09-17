@@ -1,5 +1,5 @@
-import { cardStyles, colors } from '../theme';
-import React, { useState, useCallback, useEffect } from 'react';
+import { ThemeColors, useAppTheme } from '../theme';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Switch } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,6 +8,8 @@ import { useToast } from '../components/Toast';
 
 export default function GeneratorPage() {
 	const toast = useToast();
+	const { colors } = useAppTheme();
+	const styles = useMemo(() => createStyles(colors), [colors]);
 	const [tipsExpanded, setTipsExpanded] = useState(false);
 	const [password, setPassword] = useState('');
 	const [length, setLength] = useState(16);
@@ -93,7 +95,7 @@ export default function GeneratorPage() {
 	return (
 		<ScrollView
 			style={styles.container}
-			contentContainerStyle={{ paddingBottom: 24 }}
+			contentContainerStyle={{ paddingBottom: 112 }}
 			showsVerticalScrollIndicator={false}
 		>
 			{/* 显示密码区域 */}
@@ -117,7 +119,7 @@ export default function GeneratorPage() {
 							style={styles.refreshButton}
 							onPress={generatePassword}
 						>
-							<Ionicons name="refresh" size={24} color="#4b5563" />
+							<Ionicons name="refresh" size={24} color={colors.muted} />
 						</TouchableOpacity>
 					</View>
 				</View>
@@ -182,13 +184,13 @@ export default function GeneratorPage() {
 							<Switch
 								value={value}
 								onValueChange={() => toggleOption(key as keyof typeof options)}
-								trackColor={{ false: '#f3f4f6', true: '#3b82f6' }}
+								trackColor={{ false: colors.border, true: colors.primary }}
 								thumbColor="white"
 							/>
 						</View>
 					))}
 					<View style={styles.charNote}>
-						<Ionicons name="information-circle-outline" size={14} color="#9ca3af" />
+						<Ionicons name="information-circle-outline" size={14} color={colors.muted} />
 						<Text style={styles.charNoteText}>已自动排除 0/O、1/I/l 等易混淆字符</Text>
 					</View>
 				</View>
@@ -210,7 +212,7 @@ export default function GeneratorPage() {
 					<View style={styles.tipsGrid}>
 						<View style={styles.tipItem}>
 							<View style={styles.tipIcon}>
-								<Ionicons name="trending-up-outline" size={20} color="#3b82f6" />
+								<Ionicons name="trending-up-outline" size={20} color={colors.primary} />
 								<Text style={styles.tipTitle}>长度优先</Text>
 							</View>
 							<Text style={styles.tipDescription}>
@@ -220,7 +222,7 @@ export default function GeneratorPage() {
 						</View>
 						<View style={styles.tipItem}>
 							<View style={styles.tipIcon}>
-								<Ionicons name="eye-off-outline" size={20} color="#3b82f6" />
+								<Ionicons name="eye-off-outline" size={20} color={colors.primary} />
 								<Text style={styles.tipTitle}>避免规律</Text>
 							</View>
 							<Text style={styles.tipDescription}>
@@ -229,7 +231,7 @@ export default function GeneratorPage() {
 						</View>
 						<View style={styles.tipItem}>
 							<View style={styles.tipIcon}>
-								<Ionicons name="refresh-circle-outline" size={20} color="#3b82f6" />
+								<Ionicons name="refresh-circle-outline" size={20} color={colors.primary} />
 								<Text style={styles.tipTitle}>切勿重用</Text>
 							</View>
 							<Text style={styles.tipDescription}>
@@ -243,230 +245,238 @@ export default function GeneratorPage() {
 	);
 }
 
-const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		backgroundColor: colors.background,
-	},
-	passwordSection: {
-		padding: 20,
-		paddingBottom: 0,
-	},
-	passwordCard: {
-		...cardStyles.base,
-		backgroundColor: '#F0F5FF',
-		borderColor: '#DBE7FF',
-		padding: 20,
-		gap: 16,
-	},
-	passwordLabel: {
-		fontSize: 16,
-		fontWeight: '600',
-		color: colors.brand,
-	},
-	passwordText: {
-		fontSize: 22,
-		fontWeight: '600',
-		color: colors.text,
-		fontFamily: 'monospace',
-		lineHeight: 32,
-		letterSpacing: 0.5,
-	},
-	passwordActions: {
-		flexDirection: 'row',
-		gap: 12,
-		paddingTop: 8,
-	},
-	copyButton: {
-		flex: 1,
-		flexDirection: 'row',
-		alignItems: 'center',
-		justifyContent: 'center',
-		gap: 8,
-		backgroundColor: colors.primary,
-		borderRadius: 26,
-		minHeight: 52,
-		padding: 14,
-	},
-	copyButtonText: {
-		fontSize: 15,
-		fontWeight: '600',
-		color: 'white',
-	},
-	refreshButton: {
-		width: 52,
-		height: 52,
-		borderRadius: 12,
-		backgroundColor: '#f9fafb',
-		justifyContent: 'center',
-		alignItems: 'center',
-		borderWidth: 1,
-		borderColor: '#e5e7eb',
-	},
-	controlsSection: {
-		padding: 20,
-		gap: 16,
-	},
-	controlCard: {
-		...cardStyles.base,
-		padding: 16,
-	},
-	controlTitle: {
-		fontSize: 18,
-		fontWeight: '600',
-		color: colors.text,
-	},
-	sectionSubtitle: {
-		fontSize: 14,
-		fontWeight: '500',
-		color: '#6b7280',
-		marginBottom: 16,
-	},
-	lengthHeader: {
-		flexDirection: 'row',
-		justifyContent: 'space-between',
-		alignItems: 'center',
-		marginBottom: 16,
-	},
-	lengthValue: {
-		fontSize: 28,
-		fontWeight: '700',
-		color: '#3b82f6',
-	},
-	lengthPresets: {
-		flexDirection: 'row',
-		flexWrap: 'wrap',
-		gap: 8,
-		marginBottom: 12,
-	},
-	presetBtn: {
-		width: '22%',
-		flexGrow: 1,
-		minHeight: 44,
-		paddingVertical: 10,
-		alignItems: 'center',
-		justifyContent: 'center',
-		borderRadius: 12,
-		backgroundColor: colors.surface,
-		borderWidth: 1,
-		borderColor: colors.border,
-	},
-	presetBtnActive: {
-		backgroundColor: colors.primary,
-		borderColor: colors.primary,
-	},
-	presetBtnText: {
-		fontSize: 15,
-		fontWeight: '500',
-		color: '#4b5563',
-	},
-	presetBtnTextActive: {
-		color: 'white',
-		fontWeight: '700',
-	},
-	lengthTips: {
-		marginTop: 8,
-		paddingTop: 12,
-		borderTopWidth: 1,
-		borderTopColor: '#e5e7eb',
-	},
-	lengthTipText: {
-		fontSize: 13,
-		color: colors.muted,
-	},
-	switchItem: {
-		flexDirection: 'row',
-		justifyContent: 'space-between',
-		alignItems: 'center',
-		paddingVertical: 12,
-		borderBottomWidth: 1,
-		borderBottomColor: '#e5e7eb',
-	},
-	switchLabel: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		gap: 12,
-		flex: 1,
-		paddingRight: 8,
-	},
-	switchIcon: {
-		padding: 8,
-		backgroundColor: '#f9fafb',
-		borderRadius: 10,
-		borderWidth: 1,
-		borderColor: '#e5e7eb',
-	},
-	switchIconActive: {
-		backgroundColor: colors.primarySoft,
-		borderColor: colors.primarySoft,
-	},
-	switchIconText: {
-		fontSize: 12,
-		fontWeight: 'bold',
-		color: '#6b7280',
-		textTransform: 'uppercase',
-	},
-	switchIconTextActive: {
-		color: colors.primary,
-	},
-	switchText: {
-		fontSize: 14,
-		color: colors.text,
-		flexShrink: 1,
-	},
-	charNote: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		gap: 6,
-		marginTop: 12,
-		paddingTop: 12,
-		borderTopWidth: 1,
-		borderTopColor: '#e5e7eb',
-	},
-	charNoteText: {
-		fontSize: 12,
-		lineHeight: 18,
-		color: colors.muted,
-		flex: 1,
-	},
-	tipsSection: {
-		...cardStyles.surface,
-		marginHorizontal: 20,
-		padding: 16,
-		gap: 20,
-	},
-	tipsHeader: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		gap: 12,
-		minHeight: 44,
-	},
-	tipsTitle: {
-		fontSize: 14,
-		fontWeight: '600',
-		color: colors.text,
-		flex: 1,
-	},
-	tipsGrid: {
-		gap: 20,
-	},
-	tipItem: {
-		gap: 8,
-	},
-	tipIcon: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		gap: 8,
-	},
-	tipTitle: {
-		fontSize: 15,
-		fontWeight: '600',
-		color: colors.text,
-	},
-	tipDescription: {
-		fontSize: 14,
-		color: '#6b7280',
-		lineHeight: 20,
-		paddingLeft: 28,
-	},
-});
+const createStyles = (colors: ThemeColors) =>
+	StyleSheet.create({
+		container: {
+			flex: 1,
+			backgroundColor: colors.page,
+		},
+		passwordSection: {
+			padding: 20,
+			paddingBottom: 0,
+		},
+		passwordCard: {
+			backgroundColor: colors.primarySoft,
+			borderColor: colors.border,
+			borderWidth: 1,
+			borderRadius: 16,
+			padding: 20,
+			gap: 16,
+		},
+		passwordLabel: {
+			fontSize: 16,
+			fontWeight: '600',
+			color: colors.brand,
+		},
+		passwordText: {
+			fontSize: 22,
+			fontWeight: '600',
+			color: colors.text,
+			fontFamily: 'monospace',
+			lineHeight: 32,
+			letterSpacing: 0.5,
+		},
+		passwordActions: {
+			flexDirection: 'row',
+			gap: 12,
+			paddingTop: 8,
+		},
+		copyButton: {
+			flex: 1,
+			flexDirection: 'row',
+			alignItems: 'center',
+			justifyContent: 'center',
+			gap: 8,
+			backgroundColor: colors.primary,
+			borderRadius: 26,
+			minHeight: 52,
+			padding: 14,
+		},
+		copyButtonText: {
+			fontSize: 15,
+			fontWeight: '600',
+			color: 'white',
+		},
+		refreshButton: {
+			width: 52,
+			height: 52,
+			borderRadius: 12,
+			backgroundColor: colors.card,
+			justifyContent: 'center',
+			alignItems: 'center',
+			borderWidth: 1,
+			borderColor: colors.border,
+		},
+		controlsSection: {
+			padding: 20,
+			gap: 16,
+		},
+		controlCard: {
+			backgroundColor: colors.card,
+			borderColor: colors.border,
+			borderWidth: 1,
+			borderRadius: 16,
+			padding: 16,
+		},
+		controlTitle: {
+			fontSize: 18,
+			fontWeight: '600',
+			color: colors.text,
+		},
+		sectionSubtitle: {
+			fontSize: 14,
+			fontWeight: '500',
+			color: colors.muted,
+			marginBottom: 16,
+		},
+		lengthHeader: {
+			flexDirection: 'row',
+			justifyContent: 'space-between',
+			alignItems: 'center',
+			marginBottom: 16,
+		},
+		lengthValue: {
+			fontSize: 28,
+			fontWeight: '700',
+			color: colors.primary,
+		},
+		lengthPresets: {
+			flexDirection: 'row',
+			flexWrap: 'wrap',
+			gap: 8,
+			marginBottom: 12,
+		},
+		presetBtn: {
+			width: '22%',
+			flexGrow: 1,
+			minHeight: 44,
+			paddingVertical: 10,
+			alignItems: 'center',
+			justifyContent: 'center',
+			borderRadius: 12,
+			backgroundColor: colors.surface,
+			borderWidth: 1,
+			borderColor: colors.border,
+		},
+		presetBtnActive: {
+			backgroundColor: colors.primary,
+			borderColor: colors.primary,
+		},
+		presetBtnText: {
+			fontSize: 15,
+			fontWeight: '500',
+			color: colors.muted,
+		},
+		presetBtnTextActive: {
+			color: 'white',
+			fontWeight: '700',
+		},
+		lengthTips: {
+			marginTop: 8,
+			paddingTop: 12,
+			borderTopWidth: 1,
+			borderTopColor: colors.border,
+		},
+		lengthTipText: {
+			fontSize: 13,
+			color: colors.muted,
+		},
+		switchItem: {
+			flexDirection: 'row',
+			justifyContent: 'space-between',
+			alignItems: 'center',
+			paddingVertical: 12,
+			borderBottomWidth: 1,
+			borderBottomColor: colors.border,
+		},
+		switchLabel: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			gap: 12,
+			flex: 1,
+			paddingRight: 8,
+		},
+		switchIcon: {
+			padding: 8,
+			backgroundColor: colors.surface,
+			borderRadius: 10,
+			borderWidth: 1,
+			borderColor: colors.border,
+		},
+		switchIconActive: {
+			backgroundColor: colors.primarySoft,
+			borderColor: colors.primarySoft,
+		},
+		switchIconText: {
+			fontSize: 12,
+			fontWeight: 'bold',
+			color: colors.muted,
+			textTransform: 'uppercase',
+		},
+		switchIconTextActive: {
+			color: colors.primary,
+		},
+		switchText: {
+			fontSize: 14,
+			color: colors.text,
+			flexShrink: 1,
+		},
+		charNote: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			gap: 6,
+			marginTop: 12,
+			paddingTop: 12,
+			borderTopWidth: 1,
+			borderTopColor: colors.border,
+		},
+		charNoteText: {
+			fontSize: 12,
+			lineHeight: 18,
+			color: colors.muted,
+			flex: 1,
+		},
+		tipsSection: {
+			backgroundColor: colors.surface,
+			borderColor: colors.border,
+			borderWidth: 1,
+			borderRadius: 16,
+			marginHorizontal: 20,
+			padding: 16,
+			gap: 20,
+		},
+		tipsHeader: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			gap: 12,
+			minHeight: 44,
+		},
+		tipsTitle: {
+			fontSize: 14,
+			fontWeight: '600',
+			color: colors.text,
+			flex: 1,
+		},
+		tipsGrid: {
+			gap: 20,
+		},
+		tipItem: {
+			gap: 8,
+		},
+		tipIcon: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			gap: 8,
+		},
+		tipTitle: {
+			fontSize: 15,
+			fontWeight: '600',
+			color: colors.text,
+		},
+		tipDescription: {
+			fontSize: 14,
+			color: colors.muted,
+			lineHeight: 20,
+			paddingLeft: 28,
+		},
+	});

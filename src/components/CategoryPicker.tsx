@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
 	View,
 	Text,
@@ -11,7 +11,7 @@ import {
 	ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { cardStyles } from '../theme';
+import { ThemeColors, useAppTheme } from '../theme';
 
 // ── Config ─────────────────────────────────────────────
 
@@ -41,6 +41,8 @@ export default function CategoryPicker({
 	disabled = false,
 	hasError = false,
 }: CategoryPickerProps) {
+	const { colors } = useAppTheme();
+	const styles = useMemo(() => createStyles(colors), [colors]);
 	const { width: screenWidth } = useWindowDimensions();
 	const [visible, setVisible] = useState(false);
 	const selected = options.find((o) => o.key === value) || options[0];
@@ -110,7 +112,7 @@ export default function CategoryPicker({
 					</View>
 					<Text style={styles.triggerText}>{selected.label}</Text>
 				</View>
-				<Ionicons name="grid-outline" size={18} color="#9ca3af" />
+				<Ionicons name="grid-outline" size={18} color={colors.muted} />
 			</TouchableOpacity>
 
 			{/* 选择弹窗 */}
@@ -126,7 +128,7 @@ export default function CategoryPicker({
 						<View style={styles.sheetHeader}>
 							<Text style={styles.sheetTitle}>选择账号分类</Text>
 							<TouchableOpacity style={styles.closeBtn} onPress={() => close()}>
-								<Ionicons name="close" size={22} color="#6b7280" />
+								<Ionicons name="close" size={22} color={colors.muted} />
 							</TouchableOpacity>
 						</View>
 
@@ -150,7 +152,7 @@ export default function CategoryPicker({
 											<Ionicons
 												name={opt.icon}
 												size={28}
-												color={isActive ? opt.color : '#6b7280'}
+												color={isActive ? opt.color : colors.muted}
 											/>
 										</View>
 										<Text
@@ -182,119 +184,123 @@ export default function CategoryPicker({
 
 // ── Styles ─────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-	trigger: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		justifyContent: 'space-between',
-		backgroundColor: '#f9fafb',
-		borderRadius: 12,
-		borderWidth: 1,
-		borderColor: '#e5e7eb',
-		paddingLeft: 12,
-		paddingRight: 14,
-		paddingVertical: 10,
-		minHeight: 48,
-	},
-	triggerError: {
-		borderColor: '#ef4444',
-		backgroundColor: '#fef2f2',
-	},
-	triggerLeft: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		gap: 10,
-	},
-	iconBadge: {
-		width: 32,
-		height: 32,
-		borderRadius: 8,
-		justifyContent: 'center',
-		alignItems: 'center',
-	},
-	triggerText: {
-		fontSize: 16,
-		color: '#1f2937',
-		fontWeight: '500',
-	},
+const createStyles = (colors: ThemeColors) =>
+	StyleSheet.create({
+		trigger: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			justifyContent: 'space-between',
+			backgroundColor: colors.surface,
+			borderRadius: 12,
+			borderWidth: 1,
+			borderColor: colors.border,
+			paddingLeft: 12,
+			paddingRight: 14,
+			paddingVertical: 10,
+			minHeight: 48,
+		},
+		triggerError: {
+			borderColor: '#ef4444',
+			backgroundColor: colors.surface,
+		},
+		triggerLeft: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			gap: 10,
+		},
+		iconBadge: {
+			width: 32,
+			height: 32,
+			borderRadius: 8,
+			justifyContent: 'center',
+			alignItems: 'center',
+		},
+		triggerText: {
+			fontSize: 16,
+			color: colors.text,
+			fontWeight: '500',
+		},
 
-	// Modal
-	modalWrapper: {
-		flex: 1,
-		justifyContent: 'flex-end',
-	},
-	overlay: {
-		...StyleSheet.absoluteFillObject,
-		backgroundColor: 'rgba(0, 0, 0, 0.4)',
-	},
-	sheet: {
-		backgroundColor: '#ffffff',
-		borderTopLeftRadius: 24,
-		borderTopRightRadius: 24,
-		paddingBottom: 36,
-		paddingTop: 8,
-		maxHeight: '70%',
-	},
-	sheetHeader: {
-		flexDirection: 'row',
-		justifyContent: 'space-between',
-		alignItems: 'center',
-		paddingHorizontal: 24,
-		paddingVertical: 16,
-		borderBottomWidth: 1,
-		borderBottomColor: '#f3f4f6',
-	},
-	sheetTitle: {
-		fontSize: 18,
-		fontWeight: '600',
-		color: '#1f2937',
-	},
-	closeBtn: {
-		padding: 4,
-		borderRadius: 20,
-		backgroundColor: '#f3f4f6',
-	},
+		// Modal
+		modalWrapper: {
+			flex: 1,
+			justifyContent: 'flex-end',
+		},
+		overlay: {
+			...StyleSheet.absoluteFillObject,
+			backgroundColor: 'rgba(0, 0, 0, 0.4)',
+		},
+		sheet: {
+			backgroundColor: colors.card,
+			borderTopLeftRadius: 24,
+			borderTopRightRadius: 24,
+			paddingBottom: 36,
+			paddingTop: 8,
+			maxHeight: '70%',
+		},
+		sheetHeader: {
+			flexDirection: 'row',
+			justifyContent: 'space-between',
+			alignItems: 'center',
+			paddingHorizontal: 24,
+			paddingVertical: 16,
+			borderBottomWidth: 1,
+			borderBottomColor: colors.border,
+		},
+		sheetTitle: {
+			fontSize: 18,
+			fontWeight: '600',
+			color: colors.text,
+		},
+		closeBtn: {
+			padding: 4,
+			borderRadius: 20,
+			backgroundColor: colors.surface,
+		},
 
-	// Grid
-	grid: {
-		flexDirection: 'row',
-		flexWrap: 'wrap',
-		justifyContent: 'space-between',
-		padding: 16,
-		rowGap: 12,
-	},
-	card: {
-		...cardStyles.base,
-		aspectRatio: 1,
-		justifyContent: 'center',
-		alignItems: 'center',
-		padding: 12,
-		gap: 8,
-	},
-	cardActive: {
-		borderColor: '#3b82f6',
-		backgroundColor: '#eff6ff',
-	},
-	cardIconWrap: {
-		width: 52,
-		height: 52,
-		borderRadius: 16,
-		justifyContent: 'center',
-		alignItems: 'center',
-	},
-	cardLabel: {
-		fontSize: 13,
-		fontWeight: '500',
-		color: '#6b7280',
-	},
-	checkmark: {
-		position: 'absolute',
-		top: 8,
-		right: 8,
-		width: 20,
-		height: 20,
-		borderRadius: 10,
-		justifyContent: 'center',
-		alignItems: 'center',
-	},
-});
+		// Grid
+		grid: {
+			flexDirection: 'row',
+			flexWrap: 'wrap',
+			justifyContent: 'space-between',
+			padding: 16,
+			rowGap: 12,
+		},
+		card: {
+			backgroundColor: colors.card,
+			borderColor: colors.border,
+			borderWidth: 1,
+			borderRadius: 16,
+			aspectRatio: 1,
+			justifyContent: 'center',
+			alignItems: 'center',
+			padding: 12,
+			gap: 8,
+		},
+		cardActive: {
+			borderColor: colors.primary,
+			backgroundColor: colors.primarySoft,
+		},
+		cardIconWrap: {
+			width: 52,
+			height: 52,
+			borderRadius: 16,
+			justifyContent: 'center',
+			alignItems: 'center',
+		},
+		cardLabel: {
+			fontSize: 13,
+			fontWeight: '500',
+			color: colors.muted,
+		},
+		checkmark: {
+			position: 'absolute',
+			top: 8,
+			right: 8,
+			width: 20,
+			height: 20,
+			borderRadius: 10,
+			justifyContent: 'center',
+			alignItems: 'center',
+		},
+	});

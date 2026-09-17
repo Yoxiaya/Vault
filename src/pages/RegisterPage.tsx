@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
 	View,
 	Text,
@@ -21,6 +21,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { register, sendVerifyCode } from '../service/api';
 import PasswordStrengthIndicator from '../components/PasswordStrengthIndicator';
 import { useToast } from '../components/Toast';
+import { ThemeColors, useAppTheme } from '../theme';
 
 type RegisterPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'RegisterPage'>;
 
@@ -36,6 +37,8 @@ const RegisterScreen = () => {
 	const navigation = useNavigation<RegisterPageNavigationProp>();
 	const insets = useSafeAreaInsets();
 	const toast = useToast();
+	const { colors, isDark } = useAppTheme();
+	const styles = useMemo(() => createStyles(colors), [colors]);
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
@@ -100,7 +103,7 @@ const RegisterScreen = () => {
 
 	return (
 		<View style={[styles.container, { paddingTop: insets.top }]}>
-			<StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+			<StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.page} />
 
 			<KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardView}>
 				<ScrollView
@@ -113,7 +116,7 @@ const RegisterScreen = () => {
 							{/* 应用图标区域 */}
 							<View style={styles.iconContainer}>
 								<View style={styles.logoContainer}>
-									<Ionicons name="lock-closed" size={48} color="#3b82f6" />
+									<Ionicons name="lock-closed" size={48} color={colors.primary} />
 								</View>
 							</View>
 
@@ -149,7 +152,8 @@ const RegisterScreen = () => {
 											render={({ field: { onChange, onBlur, value } }) => (
 												<TextInput
 													style={styles.formInput}
-													placeholder="请输入用户名"
+											placeholder="请输入用户名"
+											placeholderTextColor={colors.muted}
 													value={value}
 													onChangeText={onChange}
 													onBlur={onBlur}
@@ -162,7 +166,7 @@ const RegisterScreen = () => {
 										<Ionicons
 											name="person-outline"
 											size={20}
-											color="#6b7280"
+											color={colors.muted}
 											style={styles.inputIcon}
 										/>
 									</View>
@@ -185,7 +189,8 @@ const RegisterScreen = () => {
 											render={({ field: { onChange, onBlur, value } }) => (
 												<TextInput
 													style={styles.formInput}
-													placeholder="your@email.com"
+											placeholder="your@email.com"
+											placeholderTextColor={colors.muted}
 													value={value}
 													onChangeText={onChange}
 													onBlur={onBlur}
@@ -199,7 +204,7 @@ const RegisterScreen = () => {
 										<Ionicons
 											name="mail-outline"
 											size={20}
-											color="#6b7280"
+											color={colors.muted}
 											style={styles.inputIcon}
 										/>
 									</View>
@@ -226,7 +231,8 @@ const RegisterScreen = () => {
 											render={({ field: { onChange, onBlur, value } }) => (
 												<TextInput
 													style={styles.codeInput}
-													placeholder="请输入验证码"
+											placeholder="请输入验证码"
+											placeholderTextColor={colors.muted}
 													value={value}
 													onChangeText={onChange}
 													onBlur={onBlur}
@@ -271,7 +277,8 @@ const RegisterScreen = () => {
 											render={({ field: { onChange, onBlur, value } }) => (
 												<TextInput
 													style={styles.formInput}
-													placeholder="设置您的主密码"
+											placeholder="设置您的主密码"
+											placeholderTextColor={colors.muted}
 													value={value}
 													onChangeText={onChange}
 													onBlur={onBlur}
@@ -287,7 +294,7 @@ const RegisterScreen = () => {
 												<Ionicons
 													name={showPassword ? 'eye-off-outline' : 'eye-outline'}
 													size={20}
-													color="#6b7280"
+													color={colors.muted}
 												/>
 											</TouchableOpacity>
 										</View>
@@ -313,7 +320,8 @@ const RegisterScreen = () => {
 											render={({ field: { onChange, onBlur, value } }) => (
 												<TextInput
 													style={styles.formInput}
-													placeholder="再次输入主密码"
+											placeholder="再次输入主密码"
+											placeholderTextColor={colors.muted}
 													value={value}
 													onChangeText={onChange}
 													onBlur={onBlur}
@@ -331,7 +339,7 @@ const RegisterScreen = () => {
 												<Ionicons
 													name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
 													size={20}
-													color="#6b7280"
+													color={colors.muted}
 												/>
 											</TouchableOpacity>
 										</View>
@@ -346,7 +354,7 @@ const RegisterScreen = () => {
 									<Ionicons
 										name="information-circle"
 										size={20}
-										color="#3b82f6"
+										color={colors.primary}
 										style={styles.warningIcon}
 									/>
 									<Text style={styles.warningText}>
@@ -369,7 +377,7 @@ const RegisterScreen = () => {
 			<Modal transparent={true} visible={isLoading} animationType="fade" onRequestClose={() => {}}>
 				<View style={styles.loadingOverlay}>
 					<View style={styles.loadingContainer}>
-						<ActivityIndicator size="large" color="#3b82f6" />
+						<ActivityIndicator size="large" color={colors.primary} />
 						<Text style={styles.loadingText}>正在创建账号...</Text>
 					</View>
 				</View>
@@ -378,10 +386,10 @@ const RegisterScreen = () => {
 	);
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: '#ffffff',
+		backgroundColor: colors.page,
 	},
 	header: {
 		flexDirection: 'row',
@@ -389,9 +397,9 @@ const styles = StyleSheet.create({
 		justifyContent: 'space-between',
 		paddingHorizontal: 16,
 		height: 56,
-		backgroundColor: '#f9fafb',
+		backgroundColor: colors.surface,
 		borderBottomWidth: 1,
-		borderBottomColor: '#e5e7eb',
+		borderBottomColor: colors.border,
 	},
 	backButton: {
 		width: 40,
@@ -399,12 +407,12 @@ const styles = StyleSheet.create({
 		borderRadius: 20,
 		justifyContent: 'center',
 		alignItems: 'center',
-		backgroundColor: '#f9fafb',
+		backgroundColor: colors.surface,
 	},
 	headerTitle: {
 		fontSize: 18,
 		fontWeight: '600',
-		color: '#1f2937',
+		color: colors.text,
 	},
 	headerSpacer: {
 		width: 40,
@@ -437,11 +445,11 @@ const styles = StyleSheet.create({
 		width: 128,
 		height: 128,
 		borderRadius: 64,
-		backgroundColor: '#f9fafb',
+		backgroundColor: colors.primarySoft,
 		justifyContent: 'center',
 		alignItems: 'center',
 		borderWidth: 4,
-		borderColor: '#f9fafb',
+		borderColor: colors.border,
 	},
 	// 标题区域
 	headerTextContainer: {
@@ -452,22 +460,22 @@ const styles = StyleSheet.create({
 	title: {
 		fontSize: 24,
 		fontWeight: '600',
-		color: '#1f2937',
+		color: colors.text,
 		marginBottom: 8,
 	},
 	subtitle: {
 		fontSize: 14,
-		color: '#6b7280',
+		color: colors.muted,
 		textAlign: 'center',
 	},
 	// 表单容器
 	formContainer: {
-		backgroundColor: '#f9fafb',
+		backgroundColor: colors.card,
 		borderRadius: 12,
 		padding: 24,
 		margin: 16,
 		borderWidth: 1,
-		borderColor: '#e5e7eb',
+		borderColor: colors.border,
 		width: '100%',
 	},
 	// 表单组
@@ -477,7 +485,7 @@ const styles = StyleSheet.create({
 	formLabel: {
 		fontSize: 10,
 		fontWeight: 'bold',
-		color: '#6b7280',
+		color: colors.muted,
 		textTransform: 'uppercase',
 		letterSpacing: 1,
 		marginBottom: 8,
@@ -486,14 +494,14 @@ const styles = StyleSheet.create({
 		position: 'relative',
 	},
 	formInput: {
-		backgroundColor: '#f9fafb',
+		backgroundColor: colors.surface,
 		borderRadius: 12,
 		borderWidth: 1,
-		borderColor: '#e5e7eb',
+		borderColor: colors.border,
 		paddingHorizontal: 16,
 		paddingVertical: 12,
 		fontSize: 16,
-		color: '#1f2937',
+		color: colors.text,
 	},
 	inputIcon: {
 		position: 'absolute',
@@ -514,25 +522,25 @@ const styles = StyleSheet.create({
 	},
 	codeInput: {
 		flex: 1,
-		backgroundColor: '#f9fafb',
+		backgroundColor: colors.surface,
 		borderRadius: 12,
 		borderWidth: 1,
-		borderColor: '#e5e7eb',
+		borderColor: colors.border,
 		paddingHorizontal: 16,
 		paddingVertical: 12,
 		fontSize: 16,
-		color: '#1f2937',
+		color: colors.text,
 	},
 	codeButton: {
 		paddingHorizontal: 20,
 		paddingVertical: 12,
-		backgroundColor: '#3b82f6',
+		backgroundColor: colors.primary,
 		borderRadius: 12,
 		justifyContent: 'center',
 		alignItems: 'center',
 	},
 	codeButtonDisabled: {
-		backgroundColor: '#9ca3af',
+		backgroundColor: colors.muted,
 	},
 	codeButtonText: {
 		fontSize: 14,
@@ -540,12 +548,12 @@ const styles = StyleSheet.create({
 		color: 'white',
 	},
 	codeButtonTextDisabled: {
-		color: '#d1d5db',
+		color: colors.border,
 	},
 	// 安全提示
 	securityWarning: {
 		flexDirection: 'row',
-		backgroundColor: 'rgba(216, 227, 248, 0.5)',
+		backgroundColor: colors.primarySoft,
 		borderRadius: 12,
 		padding: 16,
 		marginTop: 16,
@@ -558,7 +566,7 @@ const styles = StyleSheet.create({
 	warningText: {
 		flex: 1,
 		fontSize: 14,
-		color: '#3b82f6',
+		color: colors.primary,
 		lineHeight: 20,
 	},
 	// 主按钮
@@ -568,7 +576,7 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 		justifyContent: 'center',
 		gap: 8,
-		backgroundColor: '#3b82f6',
+		backgroundColor: colors.primary,
 		borderRadius: 24,
 		padding: 16,
 		shadowColor: '#000',
@@ -598,7 +606,7 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 	},
 	loadingContainer: {
-		backgroundColor: 'white',
+		backgroundColor: colors.card,
 		padding: 20,
 		borderRadius: 12,
 		alignItems: 'center',
@@ -608,7 +616,7 @@ const styles = StyleSheet.create({
 	loadingText: {
 		marginTop: 12,
 		fontSize: 16,
-		color: '#1f2937',
+		color: colors.text,
 		fontWeight: '500',
 	},
 });

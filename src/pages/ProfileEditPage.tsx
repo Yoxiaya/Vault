@@ -1,11 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useLayoutEffect, useState } from 'react';
+import { useLayoutEffect, useMemo, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput } from 'react-native';
 import { useUserInfoStore } from '../store';
 import LoadingOverlay from '../components/LoadingOverlay';
 import { RootStackParamList } from '../App';
+import { ThemeColors, useAppTheme } from '../theme';
 
 type ProfileEditPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'ProfileEditPage'>;
 
@@ -13,6 +14,8 @@ export default function ProfileEditPage() {
 	const navigation = useNavigation<ProfileEditPageNavigationProp>();
 	const [profileName, setProfileName] = useState('');
 	const { updateUserInfo, loading } = useUserInfoStore();
+	const { colors } = useAppTheme();
+	const styles = useMemo(() => createStyles(colors), [colors]);
 
 	const saveNickname = async () => {
 		if (!profileName) {
@@ -31,11 +34,11 @@ export default function ProfileEditPage() {
 			title: '修改昵称',
 			headerRight: () => (
 				<TouchableOpacity onPress={saveNickname}>
-					<Text style={{ marginRight: 15, color: '#3b82f6', fontSize: 16 }}>保存</Text>
+					<Text style={{ marginRight: 15, color: colors.primary, fontSize: 16 }}>保存</Text>
 				</TouchableOpacity>
 			),
 		});
-	}, [navigation, profileName]);
+	}, [colors.primary, navigation, profileName]);
 
 	return (
 		<View style={styles.container}>
@@ -43,24 +46,24 @@ export default function ProfileEditPage() {
 			<View style={styles.inputContainer}>
 				<TextInput
 					placeholder="请输入新昵称"
-					placeholderTextColor="#9ca3af"
+					placeholderTextColor={colors.muted}
 					style={styles.input}
 					value={profileName}
 					onChangeText={setProfileName}
 				/>
 				{profileName.length > 0 && (
 					<TouchableOpacity onPress={allClear}>
-						<Ionicons name="close-circle" size={18} color="#9ca3af" />
+						<Ionicons name="close-circle" size={18} color={colors.muted} />
 					</TouchableOpacity>
 				)}
 			</View>
 		</View>
 	);
 }
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: '#ffffff',
+		backgroundColor: colors.page,
 	},
 	inputContainer: {
 		flexDirection: 'row',
@@ -73,10 +76,10 @@ const styles = StyleSheet.create({
 		height: 48,
 		borderRadius: 12,
 		borderWidth: 1,
-		borderColor: '#e5e7eb',
-		backgroundColor: '#f9fafb',
+		borderColor: colors.border,
+		backgroundColor: colors.surface,
 		paddingHorizontal: 16,
 		fontSize: 16,
-		color: '#1f2937',
+		color: colors.text,
 	},
 });

@@ -1,6 +1,7 @@
-import React from 'react';
-import { View } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import React, { useEffect } from 'react';
+import { StatusBar, View } from 'react-native';
+import { useFonts, ZCOOLKuaiLe_400Regular } from '@expo-google-fonts/zcool-kuaile';
+import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import AccountDetailsPage from './pages/AccountDetailsPage';
 import EditAccountPage from './pages/EditAccountPage';
@@ -13,8 +14,10 @@ import { ToastProvider } from './components/Toast';
 import ProfileEditPage from './pages/ProfileEditPage';
 import CategoryManagementPage from './pages/CategoryManagementPage';
 import CategoryEditPage from './pages/CategoryEditPage';
+import ThemeSettingsPage from './pages/ThemeSettingsPage';
 import UnlockPage from './pages/UnlockPage';
-import { useVaultStore } from './store';
+import { useThemeStore, useVaultStore } from './store';
+import { useAppTheme } from './theme';
 
 export type RootStackParamList = {
 	VaultPage: undefined;
@@ -28,21 +31,32 @@ export type RootStackParamList = {
 	ProfileEditPage: undefined;
 	CategoryManagementPage: undefined;
 	CategoryEditPage: { id?: string } | undefined;
+	ThemeSettingsPage: undefined;
 };
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 function AppNavigator() {
 	const { user, isLoading, isReady } = useAuth();
 	const isUnlocked = useVaultStore((state) => state.dek !== null);
+	const { colors } = useAppTheme();
 
 	if (isLoading || !isReady) {
-		return <View style={{ flex: 1, backgroundColor: '#ffffff' }} />;
+		return <View style={{ flex: 1, backgroundColor: colors.page }} />;
 	}
 	return (
 		<Stack.Navigator
 			screenOptions={{
 				headerStyle: {
-					backgroundColor: '#f9fafb',
+					backgroundColor: colors.surface,
+				},
+				headerTintColor: colors.primary,
+				headerTitleStyle: {
+					color: colors.primary,
+					fontWeight: '700',
+				},
+				headerShadowVisible: true,
+				contentStyle: {
+					backgroundColor: colors.page,
 				},
 			}}
 		>
@@ -70,15 +84,34 @@ function AppNavigator() {
 					<Stack.Screen name="ProfileEditPage" component={ProfileEditPage} />
 					<Stack.Screen name="CategoryManagementPage" component={CategoryManagementPage} />
 					<Stack.Screen name="CategoryEditPage" component={CategoryEditPage} />
+					<Stack.Screen name="ThemeSettingsPage" component={ThemeSettingsPage} options={{ title: '主题设置' }} />
 				</>
 			)}
 		</Stack.Navigator>
 	);
 }
 export default function App() {
+	const [fontsLoaded, fontError] = useFonts({ ZCOOLKuaiLe_400Regular });
+	const hydrateTheme = useThemeStore((state) => state.hydrate);
+	const themeHydrated = useThemeStore((state) => state.hydrated);
+	const { colors: themeColors, isDark } = useAppTheme();
+
+	useEffect(() => {
+		void hydrateTheme();
+	}, [hydrateTheme]);
+
+	if ((!fontsLoaded && !fontError) || !themeHydrated) {
+		return <View style={{ flex: 1, backgroundColor: themeColors.background }} />;
+	}
+
 	return (
 		<AuthProvider>
-			<NavigationContainer>
+			<StatusBar
+				barStyle={isDark ? 'light-content' : 'dark-content'}
+				backgroundColor={themeColors.surface}
+				translucent={false}
+			/>
+			<NavigationContainer theme={isDark ? DarkTheme : DefaultTheme}>
 				<ToastProvider>
 					<AppNavigator />
 				</ToastProvider>

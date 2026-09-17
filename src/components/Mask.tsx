@@ -1,18 +1,22 @@
 import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
+import { useMemo } from 'react';
+import { ThemeColors, useAppTheme } from '../theme';
 
 export const LoadingMask = ({ visible }: { visible: boolean }) => {
+	const { colors } = useAppTheme();
+	const styles = useMemo(() => createStyles(colors), [colors]);
 	if (!visible) return null;
 
 	return (
 		<View style={styles.mask}>
 			<View style={styles.loadingContainer}>
-				<ActivityIndicator size="large" color="#3b82f6" />
+				<ActivityIndicator size="large" color={colors.primary} />
 				<Text style={styles.loadingText}>正在保存...</Text>
 			</View>
 		</View>
 	);
 };
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
 	mask: {
 		position: 'absolute',
 		top: 0,
@@ -25,7 +29,7 @@ const styles = StyleSheet.create({
 		zIndex: 1000,
 	},
 	loadingContainer: {
-		backgroundColor: 'white',
+		backgroundColor: colors.card,
 		padding: 20,
 		borderRadius: 12,
 		alignItems: 'center',
@@ -39,7 +43,7 @@ const styles = StyleSheet.create({
 	},
 	loadingText: {
 		fontSize: 16,
-		color: '#1f2937',
+		color: colors.text,
 		fontWeight: '500',
 	},
 });

@@ -9,12 +9,14 @@ import { CategoryColor, CategoryIcon } from '../type';
 import { categoryColorMap, categoryColors, categoryIconMap, categoryIcons } from '../constants/category';
 import { ApiError } from '../service';
 import { useToast } from '../components/Toast';
-import { cardStyles, colors } from '../theme';
+import { ThemeColors, useAppTheme } from '../theme';
 
 type PageRoute = RouteProp<RootStackParamList, 'CategoryEditPage'>;
 type PageNavigation = NativeStackNavigationProp<RootStackParamList, 'CategoryEditPage'>;
 
 export default function CategoryEditPage() {
+	const { colors } = useAppTheme();
+	const styles = useMemo(() => createStyles(colors), [colors]);
 	const route = useRoute<PageRoute>();
 	const navigation = useNavigation<PageNavigation>();
 	const toast = useToast();
@@ -74,7 +76,7 @@ export default function CategoryEditPage() {
 					onChangeText={setName}
 					maxLength={20}
 					placeholder="例如：学习"
-					placeholderTextColor="#98A2B3"
+					placeholderTextColor={colors.muted}
 					style={styles.input}
 				/>
 				<Text style={styles.counter}>{name.length}/20</Text>
@@ -125,13 +127,29 @@ export default function CategoryEditPage() {
 	);
 }
 
-const styles = StyleSheet.create({
-	container: { flex: 1, backgroundColor: colors.background },
+const createStyles = (colors: ThemeColors) =>
+	StyleSheet.create({
+	container: { flex: 1, backgroundColor: colors.page },
 	content: { padding: 20, gap: 18, paddingBottom: 40 },
-	preview: { ...cardStyles.base, padding: 24, alignItems: 'center', gap: 12 },
+	preview: {
+		backgroundColor: colors.card,
+		borderColor: colors.border,
+		borderWidth: 1,
+		borderRadius: 16,
+		padding: 24,
+		alignItems: 'center',
+		gap: 12,
+	},
 	previewIcon: { width: 64, height: 64, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
 	previewName: { fontSize: 18, fontWeight: '700', color: colors.text },
-	section: { ...cardStyles.base, padding: 16, gap: 12 },
+	section: {
+		backgroundColor: colors.card,
+		borderColor: colors.border,
+		borderWidth: 1,
+		borderRadius: 16,
+		padding: 16,
+		gap: 12,
+	},
 	label: { fontSize: 14, fontWeight: '700', color: colors.text },
 	input: {
 		minHeight: 50,
@@ -167,5 +185,5 @@ const styles = StyleSheet.create({
 		justifyContent: 'center',
 	},
 	saveText: { color: 'white', fontSize: 16, fontWeight: '700' },
-	disabled: { opacity: 0.6 },
-});
+		disabled: { opacity: 0.6 },
+	});

@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { calculatePasswordStrength } from '../utils';
+import { ThemeColors, useAppTheme } from '../theme';
 
 type StrengthMode = 'bars' | 'progress';
 
@@ -15,17 +16,20 @@ const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps> = ({
 	showFeedback = true,
 	mode = 'bars',
 }) => {
+	const { colors } = useAppTheme();
+	const styles = useMemo(() => createStyles(colors), [colors]);
 	const strength = useMemo(() => calculatePasswordStrength(password), [password]);
 	const percentage = Math.min((strength.score / 5) * 100, 100);
+	const indicatorColor = strength.score < 2 ? '#EF4444' : strength.score < 3.5 ? '#F59E0B' : colors.primary;
 
 	if (mode === 'progress') {
 		return (
 			<View style={styles.progressContainer}>
 				<View style={styles.progressBarBackground}>
-					<View style={[styles.progressBar, { width: `${percentage}%`, backgroundColor: strength.color }]} />
+					<View style={[styles.progressBar, { width: `${percentage}%`, backgroundColor: indicatorColor }]} />
 				</View>
 				<View style={styles.progressInfo}>
-					<Text style={[styles.levelText, { color: strength.color }]}>密码强度：{strength.level}</Text>
+					<Text style={[styles.levelText, { color: indicatorColor }]}>密码强度：{strength.level}</Text>
 					{showFeedback && strength.feedback && <Text style={styles.feedbackText}>{strength.feedback}</Text>}
 				</View>
 			</View>
@@ -40,20 +44,20 @@ const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps> = ({
 						key={index}
 						style={[
 							styles.bar,
-							index < strength.score ? { backgroundColor: strength.color } : styles.barEmpty,
+							index < strength.score ? { backgroundColor: indicatorColor } : styles.barEmpty,
 						]}
 					/>
 				))}
 			</View>
 			<View style={styles.info}>
-				<Text style={[styles.levelText, { color: strength.color }]}>密码强度：{strength.level}</Text>
+				<Text style={[styles.levelText, { color: indicatorColor }]}>密码强度：{strength.level}</Text>
 				{showFeedback && strength.feedback && <Text style={styles.feedbackText}>{strength.feedback}</Text>}
 			</View>
 		</View>
 	);
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
 	container: {
 		marginTop: 12,
 	},
@@ -68,7 +72,7 @@ const styles = StyleSheet.create({
 		borderRadius: 2,
 	},
 	barEmpty: {
-		backgroundColor: '#f3f4f6',
+		backgroundColor: colors.border,
 	},
 	info: {
 		flexDirection: 'row',
@@ -81,7 +85,7 @@ const styles = StyleSheet.create({
 	},
 	feedbackText: {
 		fontSize: 12,
-		color: '#6b7280',
+		color: colors.muted,
 		flex: 1,
 	},
 	progressContainer: {
@@ -89,7 +93,7 @@ const styles = StyleSheet.create({
 	},
 	progressBarBackground: {
 		height: 6,
-		backgroundColor: '#f3f4f6',
+		backgroundColor: colors.border,
 		borderRadius: 3,
 		overflow: 'hidden',
 	},
