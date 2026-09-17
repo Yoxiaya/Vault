@@ -181,7 +181,10 @@ const LoginScreen = () => {
 							disabled={isLoading}
 						>
 							{isLoading ? (
-								<ActivityIndicator color="#ffffff" size="small" />
+								<View style={styles.loginProgress}>
+									<ActivityIndicator color="#ffffff" size="small" />
+									<Text style={styles.loginButtonText}>正在登录并初始化密码库...</Text>
+								</View>
 							) : (
 								<Text style={styles.loginButtonText}>登录</Text>
 							)}
@@ -289,6 +292,11 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
 		color: '#ffffff',
 		fontSize: 16,
 		fontWeight: '600',
+	},
+	loginProgress: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		gap: 8,
 	},
 	signupButton: {
 		alignItems: 'center',

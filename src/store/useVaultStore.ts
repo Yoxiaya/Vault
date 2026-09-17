@@ -26,11 +26,15 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
 				set({ dek, metadata: metadataResponse.data });
 				return;
 			}
-			const accountsResponse = await getAccounts();
+			// On first use, overlap the legacy-account check with the expensive local
+			// Argon2id key derivation instead of waiting for them one after another.
+			const [accountsResponse, created] = await Promise.all([
+				getAccounts(),
+				createVault(masterPassword),
+			]);
 			if (!accountsResponse.success || !accountsResponse.data)
 				throw new Error(accountsResponse.message || '无法检查现有账号');
 			if (accountsResponse.data.length > 0) throw new Error('密码库缺少加密元数据');
-			const created = await createVault(masterPassword);
 			const result = await createVaultMetadata(created.metadata);
 			if (!result.success) throw new Error(result.message || '初始化密码库失败');
 			set({ dek: created.dek, metadata: result.data ?? created.metadata });
