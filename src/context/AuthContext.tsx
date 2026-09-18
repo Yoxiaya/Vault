@@ -83,17 +83,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		// Keep the login screen mounted until the initial vault attempt finishes.
 		// Setting the user earlier makes AppNavigator briefly render UnlockPage while
 		// the vault is still being created or unlocked.
-		const [profileResult, vaultResult] = await Promise.allSettled([
-			fetchUserInfo(),
-			initializeVault(masterPassword),
-		]);
-		if (profileResult.status === 'rejected') {
-			console.error('Failed to load user profile after sign in', profileResult.reason);
+		// Profile data is not required to enter the vault. Do not let a slow profile
+		// request extend the login critical path.
+		void fetchUserInfo().catch((error) => {
+			console.error('Failed to load user profile after sign in', error);
+		});
+		let vaultError: unknown;
+		try {
+			await initializeVault(masterPassword);
+		} catch (error) {
+			vaultError = error;
 		}
 		// 登录密码与主密码可以不同；初始化失败时仍保留登录态，交由解锁页重试。
 		setUser(fullUser);
-		if (vaultResult.status === 'rejected') {
-			console.error('Failed to initialize vault after sign in', vaultResult.reason);
+		if (vaultError) {
+			console.error('Failed to initialize vault after sign in', vaultError);
 		}
 	};
 

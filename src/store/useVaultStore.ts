@@ -6,6 +6,7 @@ interface VaultStore {
 	dek: Uint8Array | null;
 	metadata: VaultMetadata | null;
 	initializing: boolean;
+	initializingPhase: 'idle' | 'loading' | 'deriving' | 'saving';
 	initializeWithPassword: (masterPassword: string) => Promise<void>;
 	changeMasterPassword: (newMasterPassword: string) => Promise<void>;
 	requireDek: () => Uint8Array;
@@ -16,12 +17,14 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
 	dek: null,
 	metadata: null,
 	initializing: false,
+	initializingPhase: 'idle',
 	initializeWithPassword: async (masterPassword) => {
-		set({ initializing: true });
+		set({ initializing: true, initializingPhase: 'loading' });
 		try {
 			const metadataResponse = await getVaultMetadata();
 			if (!metadataResponse.success) throw new Error(metadataResponse.message || '无法加载密码库元数据');
 			if (metadataResponse.data) {
+				set({ initializingPhase: 'deriving' });
 				const dek = await unlockVault(masterPassword, metadataResponse.data);
 				set({ dek, metadata: metadataResponse.data });
 				return;
@@ -30,11 +33,15 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
 			// Argon2id key derivation instead of waiting for them one after another.
 			const [accountsResponse, created] = await Promise.all([
 				getAccounts(),
-				createVault(masterPassword),
+				(async () => {
+					set({ initializingPhase: 'deriving' });
+					return createVault(masterPassword);
+				})(),
 			]);
 			if (!accountsResponse.success || !accountsResponse.data)
 				throw new Error(accountsResponse.message || '无法检查现有账号');
 			if (accountsResponse.data.length > 0) throw new Error('密码库缺少加密元数据');
+			set({ initializingPhase: 'saving' });
 			const result = await createVaultMetadata(created.metadata);
 			if (!result.success) throw new Error(result.message || '初始化密码库失败');
 			set({ dek: created.dek, metadata: result.data ?? created.metadata });
@@ -42,7 +49,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
 			get().lock();
 			throw error;
 		} finally {
-			set({ initializing: false });
+			set({ initializing: false, initializingPhase: 'idle' });
 		}
 	},
 	changeMasterPassword: async (newMasterPassword) => {

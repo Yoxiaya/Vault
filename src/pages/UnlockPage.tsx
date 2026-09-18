@@ -21,6 +21,7 @@ export default function UnlockPage() {
 	const { signOut } = useAuth();
 	const initializeWithPassword = useVaultStore((state) => state.initializeWithPassword);
 	const initializing = useVaultStore((state) => state.initializing);
+	const initializingPhase = useVaultStore((state) => state.initializingPhase);
 	const [password, setPassword] = useState('');
 	const [showPassword, setShowPassword] = useState(false);
 	const toast = useToast();
@@ -68,7 +69,16 @@ export default function UnlockPage() {
 					onPress={unlock}
 					disabled={!password || initializing}
 				>
-					{initializing ? <ActivityIndicator color="white" /> : <Text style={styles.buttonText}>解锁</Text>}
+					{initializing ? (
+						<View style={styles.buttonProgress}>
+							<ActivityIndicator color="white" />
+							<Text style={styles.buttonText}>
+								{initializingPhase === 'loading' ? '正在连接...' : '正在安全解锁...'}
+							</Text>
+						</View>
+					) : (
+						<Text style={styles.buttonText}>解锁</Text>
+					)}
 				</TouchableOpacity>
 				<TouchableOpacity style={styles.logout} onPress={signOut} disabled={initializing}>
 					<Ionicons name="log-out-outline" size={18} color={colors.muted} />
@@ -132,6 +142,7 @@ const createStyles = (colors: ThemeColors) =>
 		},
 		disabled: { opacity: 0.55 },
 		buttonText: { color: 'white', fontSize: 16, fontWeight: '700' },
+		buttonProgress: { flexDirection: 'row', alignItems: 'center', gap: 8 },
 		logout: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 20, padding: 8 },
 		logoutText: { color: colors.muted, fontSize: 14 },
 	});

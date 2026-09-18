@@ -20,6 +20,7 @@ import { useAuth } from '../context/AuthContext';
 import { useForm, Controller } from 'react-hook-form';
 import { useToast } from '../components/Toast';
 import { ThemeColors, useAppTheme } from '../theme';
+import { useVaultStore } from '../store';
 
 type LoginPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'LoginPage'>;
 
@@ -37,6 +38,15 @@ const LoginScreen = () => {
 	const styles = useMemo(() => createStyles(colors), [colors]);
 	const [showPassword, setShowPassword] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
+	const initializingPhase = useVaultStore((state) => state.initializingPhase);
+	const progressText =
+		initializingPhase === 'loading'
+			? '正在连接密码库...'
+			: initializingPhase === 'deriving'
+				? '正在安全解锁...'
+				: initializingPhase === 'saving'
+					? '正在完成首次设置...'
+					: '正在登录...';
 
 	const {
 		control,
@@ -183,7 +193,7 @@ const LoginScreen = () => {
 							{isLoading ? (
 								<View style={styles.loginProgress}>
 									<ActivityIndicator color="#ffffff" size="small" />
-									<Text style={styles.loginButtonText}>正在登录并初始化密码库...</Text>
+									<Text style={styles.loginButtonText}>{progressText}</Text>
 								</View>
 							) : (
 								<Text style={styles.loginButtonText}>登录</Text>
@@ -203,114 +213,115 @@ const LoginScreen = () => {
 	);
 };
 
-const createStyles = (colors: ThemeColors) => StyleSheet.create({
-	container: {
-		flex: 1,
-		backgroundColor: colors.page,
-	},
-	keyboardView: {
-		flex: 1,
-	},
-	contentContainer: {
-		flex: 1,
-		paddingHorizontal: 24,
-	},
-	// 头部区域
-	headerSection: {
-		marginTop: 60,
-		marginBottom: 48,
-	},
-	loginTitle: {
-		fontSize: 34,
-		fontWeight: '700',
-		color: colors.text,
-		marginBottom: 8,
-	},
-	welcomeText: {
-		fontSize: 14,
-		color: colors.muted,
-	},
-	// 表单区域
-	formWrapper: {
-		width: '100%',
-	},
-	inputGroup: {
-		marginBottom: 20,
-	},
-	inputContainer: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		borderWidth: 1,
-		borderColor: colors.border,
-		borderRadius: 12,
-		backgroundColor: colors.surface,
-		height: 48,
-	},
-	inputContainerError: {
-		borderColor: '#ef4444',
-		backgroundColor: colors.surface,
-	},
-	inputLeftIcon: {
-		marginLeft: 16,
-		marginRight: 8,
-	},
-	input: {
-		flex: 1,
-		fontSize: 16,
-		color: colors.text,
-		paddingVertical: 12,
-		paddingRight: 16,
-	},
-	passwordInput: {
-		paddingRight: 48,
-	},
-	eyeButton: {
-		position: 'absolute',
-		right: 16,
-		padding: 4,
-	},
-	errorText: {
-		color: '#ef4444',
-		fontSize: 12,
-		marginTop: 6,
-		marginLeft: 12,
-	},
-	loginButton: {
-		backgroundColor: colors.primary,
-		borderRadius: 24,
-		height: 52,
-		justifyContent: 'center',
-		alignItems: 'center',
-		marginTop: 8,
-		shadowColor: colors.primary,
-		shadowOffset: { width: 0, height: 4 },
-		shadowOpacity: 0.2,
-		shadowRadius: 8,
-		elevation: 4,
-	},
-	loginButtonText: {
-		color: '#ffffff',
-		fontSize: 16,
-		fontWeight: '600',
-	},
-	loginProgress: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		gap: 8,
-	},
-	signupButton: {
-		alignItems: 'center',
-		marginTop: 24,
-		paddingVertical: 12,
-	},
-	signupText: {
-		fontSize: 14,
-		color: colors.muted,
-	},
-	signupLink: {
-		color: colors.primary,
-		fontWeight: '500',
-	},
-});
+const createStyles = (colors: ThemeColors) =>
+	StyleSheet.create({
+		container: {
+			flex: 1,
+			backgroundColor: colors.page,
+		},
+		keyboardView: {
+			flex: 1,
+		},
+		contentContainer: {
+			flex: 1,
+			paddingHorizontal: 24,
+		},
+		// 头部区域
+		headerSection: {
+			marginTop: 60,
+			marginBottom: 48,
+		},
+		loginTitle: {
+			fontSize: 34,
+			fontWeight: '700',
+			color: colors.text,
+			marginBottom: 8,
+		},
+		welcomeText: {
+			fontSize: 14,
+			color: colors.muted,
+		},
+		// 表单区域
+		formWrapper: {
+			width: '100%',
+		},
+		inputGroup: {
+			marginBottom: 20,
+		},
+		inputContainer: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			borderWidth: 1,
+			borderColor: colors.border,
+			borderRadius: 12,
+			backgroundColor: colors.surface,
+			height: 48,
+		},
+		inputContainerError: {
+			borderColor: '#ef4444',
+			backgroundColor: colors.surface,
+		},
+		inputLeftIcon: {
+			marginLeft: 16,
+			marginRight: 8,
+		},
+		input: {
+			flex: 1,
+			fontSize: 16,
+			color: colors.text,
+			paddingVertical: 12,
+			paddingRight: 16,
+		},
+		passwordInput: {
+			paddingRight: 48,
+		},
+		eyeButton: {
+			position: 'absolute',
+			right: 16,
+			padding: 4,
+		},
+		errorText: {
+			color: '#ef4444',
+			fontSize: 12,
+			marginTop: 6,
+			marginLeft: 12,
+		},
+		loginButton: {
+			backgroundColor: colors.primary,
+			borderRadius: 24,
+			height: 52,
+			justifyContent: 'center',
+			alignItems: 'center',
+			marginTop: 8,
+			shadowColor: colors.primary,
+			shadowOffset: { width: 0, height: 4 },
+			shadowOpacity: 0.2,
+			shadowRadius: 8,
+			elevation: 4,
+		},
+		loginButtonText: {
+			color: '#ffffff',
+			fontSize: 16,
+			fontWeight: '600',
+		},
+		loginProgress: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			gap: 8,
+		},
+		signupButton: {
+			alignItems: 'center',
+			marginTop: 24,
+			paddingVertical: 12,
+		},
+		signupText: {
+			fontSize: 14,
+			color: colors.muted,
+		},
+		signupLink: {
+			color: colors.primary,
+			fontWeight: '500',
+		},
+	});
 
 export default LoginScreen;
