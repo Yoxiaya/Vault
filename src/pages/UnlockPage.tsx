@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
 	ActivityIndicator,
 	KeyboardAvoidingView,
@@ -14,6 +15,8 @@ import { useAuth } from '../context/AuthContext';
 import { useAccountsStore, useVaultStore } from '../store';
 import { useToast } from '../components/Toast';
 import { ThemeColors, useAppTheme } from '../theme';
+import { isTokenExpired } from '../utils';
+import { ApiError } from '../service';
 
 export default function UnlockPage() {
 	const { colors } = useAppTheme();
@@ -26,13 +29,26 @@ export default function UnlockPage() {
 	const [showPassword, setShowPassword] = useState(false);
 	const toast = useToast();
 
+	useEffect(() => {
+		let active = true;
+		void AsyncStorage.getItem('token').then(async (token) => {
+			if (!active || (token && !isTokenExpired(token))) return;
+			toast.error('登录已过期', '请重新登录');
+			await signOut();
+		});
+		return () => {
+			active = false;
+		};
+	}, []);
+
 	const unlock = async () => {
 		if (!password || initializing) return;
 		try {
 			await initializeWithPassword(password);
 			useAccountsStore.getState().clearAccounts();
 			setPassword('');
-		} catch {
+		} catch (error) {
+			if (error instanceof ApiError && error.status === 401) return;
 			toast.error('解锁失败', '主密码错误或密码库数据已损坏');
 		}
 	};

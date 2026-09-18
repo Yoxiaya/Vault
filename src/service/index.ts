@@ -44,7 +44,7 @@ const request = async <T = never>(url: string, config: RequestConfig = {}): Prom
 	const token = auth ? (await AsyncStorage.getItem('token')) || '' : '';
 	if (auth && token && isTokenExpired(token)) {
 		notifyTokenExpired();
-		throw new Error('登录已过期，请重新登录');
+		throw new ApiError('登录已过期，请重新登录', 401);
 	}
 
 	const requestHeaders: Record<string, string> = { ...headers };

@@ -1,18 +1,31 @@
 import React from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import { useAppTheme } from '../../../theme';
 
 export function VaultOverview({ accountCount }: { accountCount: number }) {
-	const { colors, isDark } = useAppTheme();
+	const { colors, isDark, preset } = useAppTheme();
+	const showMintMascot = preset === 'mint';
 
 	return (
 		<View style={[styles.card, { backgroundColor: isDark ? colors.primarySoft : colors.primary }]}>
 			<View style={styles.glowLarge} />
 			<View style={styles.glowSmall} />
-			<View style={styles.icon}>
-				<Ionicons name="shield-checkmark" size={23} color="#FFFFFF" />
-			</View>
+			{showMintMascot ? (
+				<>
+					<View style={styles.mascotHalo} />
+					<Image
+						source={require('../../../../assets/mascot-mint-shield.png')}
+						style={styles.mascot}
+						resizeMode="contain"
+						accessibilityLabel="抱着盾牌的猫娘看板娘"
+					/>
+				</>
+			) : (
+				<View style={styles.icon}>
+					<Ionicons name="shield-checkmark" size={23} color="#FFFFFF" />
+				</View>
+			)}
 			<Text style={styles.eyebrow}>已安全保存</Text>
 			<View style={styles.countRow}>
 				<Text style={styles.count}>{accountCount}</Text>
@@ -53,6 +66,22 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 		justifyContent: 'center',
 		backgroundColor: 'rgba(255,255,255,0.18)',
+	},
+	mascotHalo: {
+		position: 'absolute',
+		right: -20,
+		bottom: -44,
+		width: 190,
+		height: 190,
+		borderRadius: 95,
+		backgroundColor: 'rgba(255,255,255,0.14)',
+	},
+	mascot: {
+		position: 'absolute',
+		right: -2,
+		bottom: -10,
+		width: 150,
+		height: 150,
 	},
 	eyebrow: { color: 'rgba(255,255,255,0.76)', fontSize: 13, fontWeight: '600' },
 	countRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8, marginTop: 8 },

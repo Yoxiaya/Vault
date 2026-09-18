@@ -44,4 +44,7 @@ yarn-error.*
 /ios
 /android
 
+# local image references and discarded drafts
+/assets/ignoreImage/
+
 api.md
